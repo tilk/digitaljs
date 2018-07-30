@@ -77,9 +77,8 @@
 }
 
 .joint-element .body {
-    fill: #68DDD5;
-    stroke: #44CCC3;
-    stroke-opacity: 0.5;
+    fill: white;
+    stroke: black;
     transition: all 0.2s;
 }
 

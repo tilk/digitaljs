@@ -9,7 +9,8 @@ function getCellType(tp) {
         '$and': joint.shapes.digital.And,
         '$or': joint.shapes.digital.Or,
         '$xor': joint.shapes.digital.Xor,
-        '$not': joint.shapes.digital.Not
+        '$not': joint.shapes.digital.Not,
+        '$button': joint.shapes.digital.Button
     };
     if (tp in types) return types[tp];
     else return null; // TODO
@@ -33,7 +34,7 @@ function makeGraph(data) {
     joint.layout.DirectedGraph.layout(graph, {
         nodeSep: 20,
         edgeSep: 30,
-        rankSep: 60,
+        rankSep: 90,
         rankDir: "LR"
     });
     return graph;

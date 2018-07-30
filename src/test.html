@@ -14,9 +14,15 @@
       }, {
         type: '$or',
         id: 'b'
+      }, {
+        type: '$button',
+        id: 'btn'
       }], connectors: [{
         from: 'a.out',
         to: 'b.in1'
+      }, {
+        from: 'btn.out',
+        to: 'a.in1'
       }]});
       const paper = circuit.displayOn($('#paper'));
     </script>

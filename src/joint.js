@@ -15,6 +15,22 @@ joint.shapes.basic.Generic.define('digital.Gate', {
     }
 });
 
+joint.shapes.digital.Gate.define('digital.Button', {
+    size: { width: 30, height: 30 },
+    attrs: {
+        '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
+        '.btnface': { 
+            stroke: 'black', 'stroke-width': 2,
+            'ref': '.body', 'ref-height': .7, 'ref-width': .7, 'ref-x': .5, 'ref-y': .5,
+            'x-alignment': 'middle', 'y-alignment': 'middle'
+        },
+        '.wire': { ref: '.body', 'ref-y': .5, 'ref-dx': 0, d: 'M 0 0 L 30 0' },
+        circle: { ref: '.body', 'ref-dx': 30, 'ref-y': 0.5, magnet: true, 'class': 'output', port: 'out' }
+    }
+}, {
+    markup: '<g class="rotatable"><g class="scalable"><rect class="body"/><rect class="btnface"/></g><path class="wire"/><circle /></g>'
+});
+
 joint.shapes.digital.Gate.define('digital.IO', {
     size: { width: 60, height: 30 },
     attrs: {
