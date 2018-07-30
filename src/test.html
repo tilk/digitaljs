@@ -9,9 +9,14 @@
     </div>
     <script>
       const circuit = new digitaljs.Circuit({devices: [{
-        type: '$and'
+        type: '$and',
+        id: 'a'
       }, {
-        type: '$or'
+        type: '$or',
+        id: 'b'
+      }], connectors: [{
+        from: 'a.out',
+        to: 'b.in1'
       }]});
       const paper = circuit.displayOn($('#paper'));
     </script>
