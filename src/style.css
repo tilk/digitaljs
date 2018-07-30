@@ -489,3 +489,7 @@ Do not allow adding new vertices: .connection-wrap { pointer-events: none; }
 }
 /*  Links  */
 
+.btnface.live {
+    fill: black;
+}
+
