@@ -89,17 +89,25 @@
     stroke-width: 2px;
 }
 
+.joint-element circle.live {
+    stroke: #03c03c;
+}
+
+.joint-element circle.low {
+    stroke: #fc7c68;
+}
+
 .joint-element text {
     fill: #fff;
 }
 
 .joint-link.live > .connection {
-    stroke: #7c68fc;
+    stroke: #03c03c;
     stroke-width: 3px;
 }
 
 .loint-link.live .connection-wrap {
-    stroke: #7C68FD;
+    stroke: #03c03c;
 }
 
 .joint-link.low > .connection {
