@@ -80,7 +80,7 @@ export class Circuit {
         });
         this.listenTo(graph, 'change:signal', function(wire, signal) {
             const gate = graph.getCell(wire.get('target').id);
-            if (gate) this.queue.add(gate);
+            if (gate) setInput(signal, wire.get('target'), gate);
         });
         this.listenTo(graph, 'change:outputSignals', function(gate, sigs) {
             _.chain(graph.getConnectedLinks(gate, {outbound: true}))
@@ -97,16 +97,18 @@ export class Circuit {
                 wire.set('signal', 0);
             }
         });
+        function setInput(sig, end, gate) {
+            gate.set('inputSignals', _.chain(gate.get('inputSignals')).clone().set(end.port, sig).value());
+        }
         this.listenTo(graph, 'change:target', function(wire, end) {
             const gate = graph.getCell(end.id);
             if (gate && 'port' in end) {
-                this.queue.add(gate);
-            } else {
-                const pend = wire.previous('target');
-                const pgate = graph.getCell(pend.id);
-                if (pgate && 'port' in pend) {
-                    this.queue.add(pgate);
-                }
+                setInput(wire.get('signal'), end, gate);
+            } 
+            const pend = wire.previous('target');
+            const pgate = graph.getCell(pend.id);
+            if (pgate && 'port' in pend) {
+                setInput(0, pend, pgate);
             }
         });
         this.listenTo(graph, 'remove', function(cell, coll, opt) {
@@ -114,7 +116,7 @@ export class Circuit {
             const end = cell.get('target');
             const gate = graph.getCell(end.id);
             if (gate && 'port' in end) {
-                this.queue.add(gate);
+                setInput(0, end, gate);
             }
         });
         this.listenTo(graph, 'add', function(cell, coll, opt) {
