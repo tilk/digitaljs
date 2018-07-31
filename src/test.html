@@ -8,26 +8,75 @@
     <div id="paper">
     </div>
     <script>
-      const circuit = new digitaljs.Circuit({devices: [{
-        type: '$and',
-        id: 'a',
-        label: 'xxx'
-      }, {
-        type: '$or',
-        id: 'b'
-      }, {
-        type: '$not',
-        id: 'c'
-      }, {
-        type: '$button',
-        id: 'btn'
-      }], connectors: [{
-        from: 'a.out',
-        to: 'b.in1'
-      }, {
-        from: 'btn.out',
-        to: 'a.in1'
-      }]});
+      const circuit = new digitaljs.Circuit({
+        subcircuits: {
+          'halfadder' : {
+            devices: {
+              and: {
+                type: '$and'
+              },
+              xor: {
+                type: '$xor'
+              },
+              o: {
+                type: '$output'
+              },
+              c: {
+                type: '$output'
+              },
+              a: {
+                type: '$input'
+              },
+              b: {
+                type: '$input'
+              }
+            },
+            connectors: [{
+              from: 'a.out',
+              to: 'and.in1'
+            }, {
+              from: 'a.out',
+              to: 'xor.in1'
+            }, {
+              from: 'b.out',
+              to: 'and.in2'
+            }, {
+              from: 'b.out',
+              to: 'xor.in2'
+            }, {
+              from: 'and.out',
+              to: 'c.in'
+            }, {
+              from: 'xor.out',
+              to: 'o.in'
+            }]
+          }
+        }, devices: {
+          a: {
+            type: '$and',
+            label: 'xxx'
+          }, 
+          b: {
+            type: '$or',
+          }, 
+          c: {
+            type: '$not',
+          }, 
+          h: {
+            type: 'halfadder',
+            label: 'ha1'
+          }, 
+          btn: {
+            type: '$button',
+          }
+        },
+        connectors: [{
+          from: 'a.out',
+          to: 'b.in1'
+        }, {
+          from: 'btn.out',
+          to: 'a.in1'
+        }]});
       const paper = circuit.displayOn($('#paper'));
     </script>
   </body>

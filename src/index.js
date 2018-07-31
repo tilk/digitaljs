@@ -12,10 +12,12 @@ function getCellType(tp) {
         '$or': joint.shapes.digital.Or,
         '$xor': joint.shapes.digital.Xor,
         '$not': joint.shapes.digital.Not,
-        '$button': joint.shapes.digital.Button
+        '$button': joint.shapes.digital.Button,
+        '$input': joint.shapes.digital.Input,
+        '$output': joint.shapes.digital.Output
     };
     if (tp in types) return types[tp];
-    else return null; // TODO
+    else return joint.shapes.digital.Subcircuit;
 }
     
 export class Circuit {
@@ -57,9 +59,13 @@ export class Circuit {
     }
     makeGraph(data) {
         const graph = new joint.dia.Graph();
-        for (const dev of data.devices) {
+        for (const devid in data.devices) {
+            const dev = data.devices[devid];
             const cellType = getCellType(dev.type);
-            const cell = new cellType({ id: dev.id });
+            const cellArgs = { id: devid };
+            if (cellType == joint.shapes.digital.Subcircuit)
+                cellArgs.graph = this.makeGraph(data.subcircuits[dev.type]);
+            const cell = new cellType(cellArgs);
             if ('label' in dev) cell.setLabel(dev.label);
             graph.addCell(cell);
             this.queue.add(cell);

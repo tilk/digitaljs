@@ -86,6 +86,15 @@ joint.shapes.digital.ButtonView = joint.shapes.digital.GateView.extend({
     }
 });
 
+joint.shapes.digital.Gate.define('digital.Subcircuit', {
+}, {
+    initialize: function(args) {
+        console.assert(args.graph instanceof joint.dia.Graph);
+        this.markup = '<g class="rotatable"><g class="scalable"><rect class="body"/></g><text class="label"/></g>';
+        joint.shapes.digital.Gate.prototype.initialize.apply(this, arguments);
+    }
+});
+
 joint.shapes.digital.Gate.define('digital.IO', {
     size: { width: 60, height: 30 },
     attrs: {
