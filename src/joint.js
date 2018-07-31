@@ -8,11 +8,18 @@ joint.shapes.basic.Generic.define('digital.Gate', {
     attrs: {
         '.': { magnet: false },
         '.body': { width: 100, height: 50 },
-        circle: { r: 7, stroke: 'black', fill: 'transparent', 'stroke-width': 2 }
+        circle: { r: 7, stroke: 'black', fill: 'transparent', 'stroke-width': 2 },
+        'text.label': {
+            text: '', ref: '.body', 'ref-x': 0.5, 'ref-dy': 2, 'x-alignment': 'middle', 
+            fill: 'black'
+        }
     }
 }, {
     operation: function() {
         return {};
+    },
+    setLabel: function(lbl) {
+        this.attr("text.label/text", lbl);
     }
 });
 
@@ -113,7 +120,7 @@ joint.shapes.digital.Gate.define('digital.Gate11', {
         '.out': { ref: '.body', 'ref-dx': 2, 'ref-y': 0.5, magnet: true, port: 'out' }
     }
 }, {
-    markup: '<g class="rotatable"><g class="scalable"><image class="body"/></g><circle class="in"/><circle class="out"/></g>',
+    markup: '<g class="rotatable"><g class="scalable"><image class="body"/></g><circle class="in"/><circle class="out"/><text class="label"/></g>',
 });
 
 joint.shapes.digital.Gate.define('digital.Gate21', {
@@ -123,7 +130,7 @@ joint.shapes.digital.Gate.define('digital.Gate21', {
         '.out': { ref: '.body', 'ref-dx': 2, 'ref-y': 0.5, magnet: true, port: 'out' }
     }
 }, {
-    markup: '<g class="rotatable"><g class="scalable"><image class="body"/></g><circle class="in in1"/><circle  class="in in2"/><circle class="out"/></g>',
+    markup: '<g class="rotatable"><g class="scalable"><image class="body"/></g><circle class="in in1"/><circle  class="in in2"/><circle class="out"/><text class="label"/></g>',
 });
 
 joint.shapes.digital.Gate11.define('digital.Repeater', {

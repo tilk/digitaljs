@@ -55,6 +55,7 @@ export class Circuit {
         for (const dev of data.devices) {
             const cellType = getCellType(dev.type);
             const cell = new cellType({ id: dev.id });
+            if ('label' in dev) cell.setLabel(dev.label);
             graph.addCell(cell);
             this.queue.add(dev.id);
         }
