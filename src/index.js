@@ -57,7 +57,7 @@ export class Circuit {
             const cell = new cellType({ id: dev.id });
             if ('label' in dev) cell.setLabel(dev.label);
             graph.addCell(cell);
-            this.queue.add(dev.id);
+            this.queue.add(cell);
         }
         for (const conn of data.connectors) {
             const src = conn.from.split('.');
@@ -74,7 +74,8 @@ export class Circuit {
             rankDir: "LR"
         });
         this.listenTo(graph, 'change:signal', function(wire, signal) {
-            this.queue.add(wire.get('target').id);
+            const gate = graph.getCell(wire.get('target').id);
+            if (gate) this.queue.add(gate);
         });
         this.listenTo(graph, 'change:portSignals', function(gate, sigs) {
             _.chain(graph.getConnectedLinks(gate, {outbound: true}))
@@ -94,12 +95,12 @@ export class Circuit {
         this.listenTo(graph, 'change:target', function(wire, end) {
             const gate = graph.getCell(end.id);
             if (gate && 'port' in end) {
-                this.queue.add(gate.id);
+                this.queue.add(gate);
             } else {
                 const pend = wire.previous('target');
                 const pgate = graph.getCell(pend.id);
                 if (pgate && 'port' in pend) {
-                    this.queue.add(pgate.id);
+                    this.queue.add(pgate);
                 }
             }
         });
@@ -108,7 +109,7 @@ export class Circuit {
             const end = cell.get('target');
             const gate = graph.getCell(end.id);
             if (gate && 'port' in end) {
-                this.queue.add(gate.id);
+                this.queue.add(gate);
             }
         });
         this.listenTo(graph, 'add', function(cell, coll, opt) {
@@ -124,10 +125,10 @@ export class Circuit {
     updateGates() {
         const q = this.queue;
         this.queue = new Set();
-        for (const gname of q) {
-            const gate = this.graph.getCell(gname);
-            if (!gate) continue;
-            const args = _.chain(this.graph.getConnectedLinks(gate, {inbound: true}))
+        for (const gate of q) {
+            const graph = gate.graph;
+            if (!graph) continue;
+            const args = _.chain(graph.getConnectedLinks(gate, {inbound: true}))
                 .groupBy((wire) => wire.get('target').port)
                 .mapValues((wires) => wires[0].get('signal'))
                 .value();
