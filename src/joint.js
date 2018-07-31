@@ -34,8 +34,8 @@ joint.shapes.digital.GateView = joint.dia.ElementView.extend({
     updatePortSignals: function(signal) {
         for (const portname in this.model.ports) {
             const port = this.model.ports[portname];
-            this.$("." + port.id).toggleClass('live', isLive(signal[port.id]));
-            this.$("." + port.id).toggleClass('low', isLow(signal[port.id]));
+            this.$("[port='" + port.id + "']").toggleClass('live', isLive(signal[port.id]));
+            this.$("[port='" + port.id + "']").toggleClass('low', isLow(signal[port.id]));
         }
     }
 });
