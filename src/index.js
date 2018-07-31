@@ -79,7 +79,7 @@ export class Circuit {
             const gate = graph.getCell(wire.get('target').id);
             if (gate) this.queue.add(gate);
         });
-        this.listenTo(graph, 'change:portSignals', function(gate, sigs) {
+        this.listenTo(graph, 'change:outputSignals', function(gate, sigs) {
             _.chain(graph.getConnectedLinks(gate, {outbound: true}))
                 .groupBy((wire) => wire.get('source').port)
                 .forEach((wires, port) => 
@@ -89,7 +89,7 @@ export class Circuit {
         this.listenTo(graph, 'change:source', function(wire, end) {
             const gate = graph.getCell(end.id);
             if (gate && 'port' in end) {
-                wire.set('signal', gate.get('portSignals')[end.port]);
+                wire.set('signal', gate.get('outputSignals')[end.port]);
             } else {
                 wire.set('signal', 0);
             }
@@ -119,7 +119,7 @@ export class Circuit {
             const strt = cell.get('source');
             const sgate = graph.getCell(strt.id);
             if (sgate && 'port' in strt) {
-                cell.set('signal', sgate.get('portSignals')[strt.port]);
+                cell.set('signal', sgate.get('outputSignals')[strt.port]);
             }
         });
         return graph;
@@ -135,10 +135,12 @@ export class Circuit {
                 .mapValues((wires) => wires[0].get('signal'))
                 .value();
             for (const pname in gate.ports) {
+                if (gate.ports[pname].dir !== 'in') continue;
                 if (!(pname in args)) args[pname] = 0;
             }
+            gate.set('inputSignals', args);
             const sigs = gate.operation(args);
-            gate.set('portSignals', sigs);
+            gate.set('outputSignals', sigs);
         }
     }
 };
