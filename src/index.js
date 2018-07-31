@@ -44,7 +44,10 @@ export class Circuit {
                         l.get('target').port === mt.getAttribute('port')
                     );
                     return !link;
-                } else {
+                } else if (e === 'source') { 
+                    const ps = vs.model.ports[ms.getAttribute('port')];
+                    if (typeof ps !== 'object' || ps.dir !== 'out')
+                        return false;
                     return true;
                 }
             }
