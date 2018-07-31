@@ -34,7 +34,9 @@ export class Circuit {
             defaultLink: new joint.shapes.digital.Wire,
             validateConnection: function(vs, ms, vt, mt, e, vl) {
                 if (e === 'target') {
-                    if (!mt || !$(mt).hasClass('in'))
+                    if (!mt) return false;
+                    const pt = vt.model.ports[mt.getAttribute('port')];
+                    if (typeof pt !== 'object' || pt.dir !== 'in')
                         return false;
                     const link = this.model.getConnectedLinks(vt.model).find((l) =>
                         l.id !== vl.model.id &&

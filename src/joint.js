@@ -52,7 +52,7 @@ joint.shapes.digital.Gate.define('digital.Button', {
             cursor: 'pointer'
         },
         '.wire': { ref: '.body', 'ref-y': .5, 'ref-dx': 0, d: 'M 0 0 L 30 0' },
-        '.out': { ref: '.body', 'ref-dx': 30, 'ref-y': 0.5, magnet: true, port: 'out' }
+        '.out': { ref: '.body', 'ref-dx': 30, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out' } }
     }
 }, {
     markup: '<g class="rotatable"><g class="scalable"><rect class="body"/><rect class="btnface"/></g><path class="wire"/><circle class="out" /></g>',
@@ -101,7 +101,7 @@ joint.shapes.digital.Gate.define('digital.IO', {
 joint.shapes.digital.IO.define('digital.Input', {
     attrs: {
         '.wire': { 'ref-dx': 0, d: 'M 0 0 L 23 0' },
-        circle: { ref: '.body', 'ref-dx': 30, 'ref-y': 0.5, magnet: true, 'class': 'output', port: 'out' },
+        circle: { ref: '.body', 'ref-dx': 30, 'ref-y': 0.5, magnet: true, 'class': 'output', port: { id: 'out', dir: 'out' } },
         text: { text: 'input' }
     }
 });
@@ -109,15 +109,15 @@ joint.shapes.digital.IO.define('digital.Input', {
 joint.shapes.digital.IO.define('digital.Output', {
     attrs: {
         '.wire': { 'ref-x': 0, d: 'M 0 0 L -23 0' },
-        circle: { ref: '.body', 'ref-x': -30, 'ref-y': 0.5, magnet: 'passive', 'class': 'input', port: 'in' },
+        circle: { ref: '.body', 'ref-x': -30, 'ref-y': 0.5, magnet: 'passive', 'class': 'input', port: { id: 'in', dir: 'in' } },
         text: { text: 'output' }
     }
 });
 
 joint.shapes.digital.Gate.define('digital.Gate11', {
     attrs: {
-        '.in': { ref: '.body', 'ref-x': -2, 'ref-y': 0.5, magnet: 'passive', port: 'in' },
-        '.out': { ref: '.body', 'ref-dx': 2, 'ref-y': 0.5, magnet: true, port: 'out' }
+        '.in': { ref: '.body', 'ref-x': -2, 'ref-y': 0.5, magnet: 'passive', port: { id: 'in', dir: 'in' } },
+        '.out': { ref: '.body', 'ref-dx': 2, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out' } }
     }
 }, {
     markup: '<g class="rotatable"><g class="scalable"><image class="body"/></g><circle class="in"/><circle class="out"/><text class="label"/></g>',
@@ -125,9 +125,9 @@ joint.shapes.digital.Gate.define('digital.Gate11', {
 
 joint.shapes.digital.Gate.define('digital.Gate21', {
     attrs: {
-        '.in1': { ref: '.body', 'ref-x': -2, 'ref-y': 0.3, magnet: 'passive', port: 'in1' },
-        '.in2': { ref: '.body', 'ref-x': -2, 'ref-y': 0.7, magnet: 'passive', port: 'in2' },
-        '.out': { ref: '.body', 'ref-dx': 2, 'ref-y': 0.5, magnet: true, port: 'out' }
+        '.in1': { ref: '.body', 'ref-x': -2, 'ref-y': 0.3, magnet: 'passive', port: { id: 'in1', dir: 'in' } },
+        '.in2': { ref: '.body', 'ref-x': -2, 'ref-y': 0.7, magnet: 'passive', port: { id: 'in2', dir: 'in' } },
+        '.out': { ref: '.body', 'ref-dx': 2, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out' } }
     }
 }, {
     markup: '<g class="rotatable"><g class="scalable"><image class="body"/></g><circle class="in in1"/><circle  class="in in2"/><circle class="out"/><text class="label"/></g>',
