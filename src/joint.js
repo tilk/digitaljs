@@ -27,15 +27,19 @@ joint.shapes.basic.Generic.define('digital.Gate', {
 joint.shapes.digital.GateView = joint.dia.ElementView.extend({
     initialize: function() {
         joint.dia.ElementView.prototype.initialize.apply(this, arguments);
-        this.updatePortSignals(this.model.get('inputSignals'));
-        this.updatePortSignals(this.model.get('outputSignals'));
-        this.listenTo(this.model, 'change:inputSignals change:outputSignals', function(wire, signal) {
-            this.updatePortSignals(signal);
+        this.updatePortSignals('in', this.model.get('inputSignals'));
+        this.updatePortSignals('out', this.model.get('outputSignals'));
+        this.listenTo(this.model, 'change:inputSignals', function(wire, signal) {
+            this.updatePortSignals('in', signal);
+        });
+        this.listenTo(this.model, 'change:outputSignals', function(wire, signal) {
+            this.updatePortSignals('out', signal);
         });
     },
-    updatePortSignals: function(signal) {
+    updatePortSignals: function(dir, signal) {
         for (const portname in this.model.ports) {
             const port = this.model.ports[portname];
+            if (port.dir !== dir) continue;
             let classes = [port.dir];
             if (isLive(signal[port.id])) classes.push('live');
             if (isLow(signal[port.id])) classes.push('low');
