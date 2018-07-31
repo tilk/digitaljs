@@ -82,6 +82,9 @@ export class Circuit {
             const gate = graph.getCell(wire.get('target').id);
             if (gate) setInput(signal, wire.get('target'), gate);
         });
+        this.listenTo(graph, 'change:inputSignals', function(gate, sigs) {
+            this.queue.add(gate);
+        });
         this.listenTo(graph, 'change:outputSignals', function(gate, sigs) {
             _.chain(graph.getConnectedLinks(gate, {outbound: true}))
                 .groupBy((wire) => wire.get('source').port)
@@ -132,19 +135,26 @@ export class Circuit {
     updateGates() {
         const q = this.queue;
         this.queue = new Set();
+        const changes = [];
         for (const gate of q) {
             const graph = gate.graph;
             if (!graph) continue;
+/*
             const args = _.chain(graph.getConnectedLinks(gate, {inbound: true}))
                 .groupBy((wire) => wire.get('target').port)
                 .mapValues((wires) => wires[0].get('signal'))
                 .value();
+*/
+            const args = gate.get('inputSignals');
             for (const pname in gate.ports) {
                 if (gate.ports[pname].dir !== 'in') continue;
                 if (!(pname in args)) args[pname] = 0;
             }
-            gate.set('inputSignals', args);
             const sigs = gate.operation(args);
+            changes.push([gate, sigs]);
+        }
+        console.assert(this.queue.size == 0);
+        for (const [gate, sigs] of changes) {
             gate.set('outputSignals', sigs);
         }
     }
