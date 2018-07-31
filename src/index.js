@@ -77,11 +77,47 @@ export class Circuit {
             this.queue.add(wire.get('target').id);
         });
         this.listenTo(graph, 'change:portSignals', function(gate, sigs) {
-            _.chain(this.graph.getConnectedLinks(gate, {outbound: true}))
+            _.chain(graph.getConnectedLinks(gate, {outbound: true}))
                 .groupBy((wire) => wire.get('source').port)
                 .forEach((wires, port) => 
                     wires.forEach((wire) => wire.set('signal', sigs[port])))
                 .value();
+        });
+        this.listenTo(graph, 'change:source', function(wire, end) {
+            const gate = graph.getCell(end.id);
+            if (gate && 'port' in end) {
+                wire.set('signal', gate.get('portSignals')[end.port]);
+            } else {
+                wire.set('signal', 0);
+            }
+        });
+        this.listenTo(graph, 'change:target', function(wire, end) {
+            const gate = graph.getCell(end.id);
+            if (gate && 'port' in end) {
+                this.queue.add(gate.id);
+            } else {
+                const pend = wire.previous('target');
+                const pgate = graph.getCell(pend.id);
+                if (pgate && 'port' in pend) {
+                    this.queue.add(pgate.id);
+                }
+            }
+        });
+        this.listenTo(graph, 'remove', function(cell, coll, opt) {
+            if (!cell.isLink()) return;
+            const end = cell.get('target');
+            const gate = graph.getCell(end.id);
+            if (gate && 'port' in end) {
+                this.queue.add(gate.id);
+            }
+        });
+        this.listenTo(graph, 'add', function(cell, coll, opt) {
+            if (!cell.isLink()) return;
+            const strt = cell.get('source');
+            const sgate = graph.getCell(strt.id);
+            if (sgate && 'port' in strt) {
+                cell.set('signal', sgate.get('portSignals')[strt.port]);
+            }
         });
         return graph;
     }
