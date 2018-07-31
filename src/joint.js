@@ -46,7 +46,8 @@ joint.shapes.digital.GateView = joint.dia.ElementView.extend({
 
 joint.shapes.digital.Gate.define('digital.Button', {
     size: { width: 30, height: 30 },
-    outputSignals: { out: -1 },
+    outputSignals: { out: 0 },
+    buttonState: false,
     attrs: {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 50, height: 50 },
         '.btnface': { 
@@ -61,25 +62,23 @@ joint.shapes.digital.Gate.define('digital.Button', {
 }, {
     markup: '<g class="rotatable"><g class="scalable"><rect class="body"/><rect class="btnface"/></g><path class="wire"/><circle class="out" /></g>',
     operation: function() {
-        return this.get('outputSignals');
+        return { out: this.get('buttonState') ? 1 : -1 };
     }
 });
 
 joint.shapes.digital.ButtonView = joint.shapes.digital.GateView.extend({
     initialize: function() {
         joint.shapes.digital.GateView.prototype.initialize.apply(this, arguments);
-        this.$(".btnface").toggleClass('live', isLive(this.model.get('outputSignals').out));
-        this.listenTo(this.model, 'change:outputSignals', function(wire, signal) {
-            this.$(".btnface").toggleClass('live', isLive(signal.out));
+        this.$(".btnface").toggleClass('live', this.model.get('buttonState'));
+        this.listenTo(this.model, 'change:buttonState', function(wire, signal) {
+            this.$(".btnface").toggleClass('live', signal);
         });
     },
     events: {
         "click .btnface": "activateButton"
     },
     activateButton: function() {
-        this.model.set('outputSignals', {
-            out: -this.model.get('outputSignals').out
-        });
+        this.model.set('buttonState', !this.model.get('buttonState'));
     }
 });
 

@@ -75,6 +75,9 @@ export class Circuit {
             rankSep: 90,
             rankDir: "LR"
         });
+        this.listenTo(graph, 'change:buttonState', function(gate, sig) {
+            this.queue.add(gate);
+        });
         this.listenTo(graph, 'change:signal', function(wire, signal) {
             const gate = graph.getCell(wire.get('target').id);
             if (gate) this.queue.add(gate);
