@@ -95,6 +95,7 @@ joint.shapes.digital.Gate.define('digital.Subcircuit', {
     initialize: function(args) {
         console.assert(args.graph instanceof joint.dia.Graph);
         const graph = args.graph;
+        graph.set('subcircuit', this);
         const IOs = graph.getCells()
             .filter((cell) => cell instanceof joint.shapes.digital.IO);
         const inputs = IOs.filter((cell) => cell instanceof joint.shapes.digital.Input);

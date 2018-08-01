@@ -92,7 +92,13 @@ export class Circuit {
             if (gate) setInput(signal, wire.get('target'), gate);
         });
         this.listenTo(graph, 'change:inputSignals', function(gate, sigs) {
-            this.queue.add(gate);
+            // forward the change back from a subcircuit
+            if (gate instanceof joint.shapes.digital.Output) {
+                const subcir = gate.graph.get('subcircuit');
+                console.assert(subcir instanceof joint.shapes.digital.Subcircuit);
+                subcir.set('outputSignals', _.chain(subcir.get('outputSignals'))
+                    .clone().set(gate.id, sigs.in).value());
+            } else this.queue.add(gate);
         });
         this.listenTo(graph, 'change:outputSignals', function(gate, sigs) {
             _.chain(graph.getConnectedLinks(gate, {outbound: true}))
@@ -110,7 +116,14 @@ export class Circuit {
             }
         });
         function setInput(sig, end, gate) {
-            gate.set('inputSignals', _.chain(gate.get('inputSignals')).clone().set(end.port, sig).value());
+            gate.set('inputSignals', _.chain(gate.get('inputSignals'))
+                .clone().set(end.port, sig).value());
+            // forward the input change to a subcircuit
+            if (gate instanceof joint.shapes.digital.Subcircuit) {
+                const input = gate.get('graph').getCell(end.port);
+                console.assert(input instanceof joint.shapes.digital.Input);
+                input.set('outputSignals', { out: sig });
+            }
         }
         this.listenTo(graph, 'change:target', function(wire, end) {
             const gate = graph.getCell(end.id);
@@ -146,6 +159,7 @@ export class Circuit {
         this.queue = new Set();
         const changes = [];
         for (const gate of q) {
+            if (gate instanceof joint.shapes.digital.Subcircuit) continue;
             const graph = gate.graph;
             if (!graph) continue;
 /*
