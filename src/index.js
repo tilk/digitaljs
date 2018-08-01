@@ -98,8 +98,8 @@ export class Circuit {
         }
         joint.layout.DirectedGraph.layout(graph, {
             nodeSep: 20,
-            edgeSep: 30,
-            rankSep: 90,
+            edgeSep: 0,
+            rankSep: 110,
             rankDir: "LR"
         });
         this.listenTo(graph, 'change:buttonState', function(gate, sig) {

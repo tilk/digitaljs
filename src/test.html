@@ -52,30 +52,45 @@
             }]
           }
         }, devices: {
-          a: {
-            type: '$and',
-            label: 'xxx'
-          }, 
-          b: {
+          carry: {
             type: '$or',
           }, 
-          c: {
-            type: '$not',
-          }, 
-          h: {
+          h1: {
             type: 'halfadder',
             label: 'ha1'
           }, 
-          btn: {
+          h2: {
+            type: 'halfadder',
+            label: 'ha2'
+          }, 
+          btn1: {
+            type: '$button',
+          },
+          btn2: {
+            type: '$button',
+          },
+          btn3: {
             type: '$button',
           }
         },
         connectors: [{
-          from: 'a.out',
-          to: 'b.in1'
+          from: 'h1.c',
+          to: 'carry.in1'
         }, {
-          from: 'btn.out',
-          to: 'a.in1'
+          from: 'h2.c',
+          to: 'carry.in2'
+        }, {
+          from: 'h1.o',
+          to: 'h2.a'
+        }, {
+          from: 'btn1.out',
+          to: 'h1.a'
+        }, {
+          from: 'btn2.out',
+          to: 'h1.b'
+        }, {
+          from: 'btn3.out',
+          to: 'h2.b'
         }]});
       const paper = circuit.displayOn($('#paper'));
     </script>

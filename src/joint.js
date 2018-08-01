@@ -60,8 +60,8 @@ joint.shapes.digital.Gate.define('digital.Button', {
             'x-alignment': 'middle', 'y-alignment': 'middle',
             cursor: 'pointer'
         },
-        '.wire': { ref: '.body', 'ref-y': .5, 'ref-dx': 0, d: 'M 0 0 L 30 0' },
-        '.out': { ref: '.body', 'ref-dx': 30, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out' } }
+        '.wire': { ref: '.body', 'ref-y': .5, 'ref-dx': 0, d: 'M 0 0 L 20 0' },
+        '.out': { ref: '.body', 'ref-dx': 20, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out' } }
     }
 }, {
     markup: '<g class="rotatable"><g class="scalable"><rect class="body"/><rect class="btnface"/></g><path class="wire"/><circle class="out" /></g>',
@@ -120,27 +120,27 @@ joint.shapes.digital.Gate.define('digital.Subcircuit', {
         for (const [num, io] of inputs.entries()) {
             const y = num*16+12;
             attrs['circle.io_' + io.id] = {
-                ref: '.body', 'ref-x': -30, 'ref-y': y,
+                ref: '.body', 'ref-x': -20, 'ref-y': y,
                 magnet: 'passive', port: { id: io.id, dir: 'in' }
             };
             attrs['text.io_' + io.id] = {
                 'ref-y': y, 'ref-x': 5, 'x-alignment': 'left', text: io.id
             }
             attrs['path.io_' + io.id] = {
-                'ref-x': 0, 'ref-y': y, d: 'M 0 0 L -23 0'
+                'ref-x': 0, 'ref-y': y, d: 'M 0 0 L -13 0'
             }
         }
         for (const [num, io] of outputs.entries()) {
             const y = num*16+12;
             attrs['circle.io_' + io.id] = {
-                ref: '.body', 'ref-dx': 30, 'ref-y': y,
+                ref: '.body', 'ref-dx': 20, 'ref-y': y,
                 magnet: true, port: { id: io.id, dir: 'out' }
             };
             attrs['text.io_' + io.id] = {
                 'ref-y': y, 'ref-dx': -5, 'x-alignment': 'right', text: io.id
             }
             attrs['path.io_' + io.id] = {
-                'ref-dx': 0, 'ref-y': y, d: 'M 0 0 L 23 0'
+                'ref-dx': 0, 'ref-y': y, d: 'M 0 0 L 13 0'
             }
         }
         markup.push('</g>');
@@ -175,8 +175,8 @@ joint.shapes.digital.Gate.define('digital.IO', {
 
 joint.shapes.digital.IO.define('digital.Input', {
     attrs: {
-        '.wire': { 'ref-dx': 0, d: 'M 0 0 L 23 0' },
-        circle: { ref: '.body', 'ref-dx': 30, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out' } },
+        '.wire': { 'ref-dx': 0, d: 'M 0 0 L 13 0' },
+        circle: { ref: '.body', 'ref-dx': 20, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out' } },
         text: { text: 'input' }
     }
 });
@@ -184,8 +184,8 @@ joint.shapes.digital.InputView = joint.shapes.digital.GateView;
 
 joint.shapes.digital.IO.define('digital.Output', {
     attrs: {
-        '.wire': { 'ref-x': 0, d: 'M 0 0 L -23 0' },
-        circle: { ref: '.body', 'ref-x': -30, 'ref-y': 0.5, magnet: 'passive', port: { id: 'in', dir: 'in' } },
+        '.wire': { 'ref-x': 0, d: 'M 0 0 L -13 0' },
+        circle: { ref: '.body', 'ref-x': -20, 'ref-y': 0.5, magnet: 'passive', port: { id: 'in', dir: 'in' } },
         text: { text: 'output' }
     }
 });
