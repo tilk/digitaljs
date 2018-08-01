@@ -26,5 +26,10 @@
     "jointjs": "^2.1.3",
     "jquery": "^3.3.1",
     "jquery-ui": "^1.12.1"
+  },
+  "homepage": "https://github.com/tilk/digitaljs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tilk/digitaljs.git"
   }
 }
