@@ -87,13 +87,71 @@ joint.shapes.digital.ButtonView = joint.shapes.digital.GateView.extend({
 });
 
 joint.shapes.digital.Gate.define('digital.Subcircuit', {
+    attrs: {
+        'text.iolabel': { fill: 'black', 'y-alignment': 'middle', ref: '.body' },
+        'path.wire' : { ref: '.body', 'ref-y': .5, stroke: 'black' }
+    }
 }, {
     initialize: function(args) {
         console.assert(args.graph instanceof joint.dia.Graph);
-        this.markup = '<g class="rotatable"><g class="scalable"><rect class="body"/></g><text class="label"/></g>';
+        const graph = args.graph;
+        const IOs = graph.getCells()
+            .filter((cell) => cell instanceof joint.shapes.digital.IO);
+        const inputs = IOs.filter((cell) => cell instanceof joint.shapes.digital.Input);
+        const outputs = IOs.filter((cell) => cell instanceof joint.shapes.digital.Output);
+        function sortfun(x, y) {
+            if (x.has('order') || y.has('order'))
+                return x.get('order') - y.get('order');
+            return x.id.localeCompare(y.id);
+        }
+        inputs.sort(sortfun);
+        outputs.sort(sortfun);
+        const vcount = Math.max(inputs.length, outputs.length);
+        const size = { width: 80, height: vcount*16+8 };
+        const markup = [];
+        markup.push('<g class="rotatable"><g class="scalable"><rect class="body"/></g><text class="label"/>');
+        for (const io of IOs) {
+            markup.push('<circle class="io_' + io.id + '"/>');
+            markup.push('<text class="iolabel io_' + io.id + '"/>');
+            markup.push('<path class="wire io_' + io.id + '"/>');
+        }
+        const attrs = { '.body': size };
+        for (const [num, io] of inputs.entries()) {
+            const y = num*16+12;
+            attrs['circle.io_' + io.id] = {
+                ref: '.body', 'ref-x': -30, 'ref-y': y,
+                magnet: 'passive', port: { id: io.id, dir: 'in' }
+            };
+            attrs['text.io_' + io.id] = {
+                'ref-y': y, 'ref-x': 5, 'x-alignment': 'left', text: io.id
+            }
+            attrs['path.io_' + io.id] = {
+                'ref-x': 0, 'ref-y': y, d: 'M 0 0 L -23 0'
+            }
+        }
+        for (const [num, io] of outputs.entries()) {
+            const y = num*16+12;
+            attrs['circle.io_' + io.id] = {
+                ref: '.body', 'ref-dx': 30, 'ref-y': y,
+                magnet: true, port: { id: io.id, dir: 'out' }
+            };
+            attrs['text.io_' + io.id] = {
+                'ref-y': y, 'ref-dx': -5, 'x-alignment': 'right', text: io.id
+            }
+            attrs['path.io_' + io.id] = {
+                'ref-dx': 0, 'ref-y': y, d: 'M 0 0 L 23 0'
+            }
+        }
+        markup.push('</g>');
+        this.markup = markup.join('');
         joint.shapes.digital.Gate.prototype.initialize.apply(this, arguments);
+        this.set('size', size);
+        this.set('circuitInputs', inputs.map((io) => io.id));
+        this.set('circuitOutputs', outputs.map((io) => io.id));
+        this.attr(attrs);
     }
 });
+joint.shapes.digital.SubcircuitView = joint.shapes.digital.GateView;
 
 joint.shapes.digital.Gate.define('digital.IO', {
     size: { width: 60, height: 30 },
