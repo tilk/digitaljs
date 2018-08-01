@@ -25,7 +25,7 @@ function getCellType(tp) {
 export class Circuit {
     constructor(data) {
         this.queue = new Set();
-        this.graph = this.makeGraph(data);
+        this.graph = this.makeGraph(data, data.subcircuits);
         this.interval = setInterval(() => this.updateGates(), 10);
     }
     displayOn(elem) {
@@ -77,14 +77,14 @@ export class Circuit {
         });
         return paper;
     }
-    makeGraph(data) {
+    makeGraph(data, subcircuits) {
         const graph = new joint.dia.Graph();
         for (const devid in data.devices) {
             const dev = data.devices[devid];
             const cellType = getCellType(dev.type);
             const cellArgs = { id: devid, celltype: dev.type };
             if (cellType == joint.shapes.digital.Subcircuit)
-                cellArgs.graph = this.makeGraph(data.subcircuits[dev.type]);
+                cellArgs.graph = this.makeGraph(subcircuits[dev.type], subcircuits);
             if (cellType == joint.shapes.digital.Input ||
                 cellType == joint.shapes.digital.Output) {
                 cellArgs.net = dev.net;
