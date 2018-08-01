@@ -36,23 +36,23 @@
               }
             },
             connectors: [{
-              from: 'in_a.out',
-              to: 'and.in1'
+              from: { id: 'in_a', port: 'out' },
+              to: { id: 'and', port: 'in1' }
             }, {
-              from: 'in_a.out',
-              to: 'xor.in1'
+              from: { id: 'in_a', port: 'out' },
+              to: { id: 'xor', port: 'in1' }
             }, {
-              from: 'in_b.out',
-              to: 'and.in2'
+              from: { id: 'in_b', port: 'out' },
+              to: { id: 'and', port: 'in2' }
             }, {
-              from: 'in_b.out',
-              to: 'xor.in2'
+              from: { id: 'in_b', port: 'out' },
+              to: { id: 'xor', port: 'in2' }
             }, {
-              from: 'and.out',
-              to: 'out_c.in'
+              from: { id: 'and', port: 'out' },
+              to: { id: 'out_c', port: 'in' }
             }, {
-              from: 'xor.out',
-              to: 'out_o.in'
+              from: { id: 'xor', port: 'out' },
+              to: { id: 'out_o', port: 'in' }
             }]
           }
         }, devices: {
@@ -78,23 +78,23 @@
           }
         },
         connectors: [{
-          from: 'h1.c',
-          to: 'carry.in1'
+          from: { id: 'h1', port: 'c' },
+          to: { id: 'carry', port: 'in1' }
         }, {
-          from: 'h2.c',
-          to: 'carry.in2'
+          from: { id: 'h2', port: 'c' },
+          to: { id: 'carry', port: 'in2' }
         }, {
-          from: 'h1.o',
-          to: 'h2.a'
+          from: { id: 'h1', port: 'o' },
+          to: { id: 'h2', port: 'a' }
         }, {
-          from: 'btn1.out',
-          to: 'h1.a'
+          from: { id: 'btn1', port: 'out' },
+          to: { id: 'h1', port: 'a' }
         }, {
-          from: 'btn2.out',
-          to: 'h1.b'
+          from: { id: 'btn2', port: 'out' },
+          to: { id: 'h1', port: 'b' }
         }, {
-          from: 'btn3.out',
-          to: 'h2.b'
+          from: { id: 'btn3', port: 'out' },
+          to: { id: 'h2', port: 'b' }
         }]});
       const paper = circuit.displayOn($('#paper'));
     </script>

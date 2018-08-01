@@ -95,11 +95,9 @@ export class Circuit {
             this.queue.add(cell);
         }
         for (const conn of data.connectors) {
-            const src = conn.from.split('.');
-            const tgt = conn.to.split('.');
             graph.addCell(new joint.shapes.digital.Wire({
-                source: {id: src[0], port: src[1]},
-                target: {id: tgt[0], port: tgt[1]},
+                source: {id: conn.from.id, port: conn.from.port},
+                target: {id: conn.to.id, port: conn.to.port},
             }));
         }
         joint.layout.DirectedGraph.layout(graph, {
