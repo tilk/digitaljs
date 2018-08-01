@@ -183,6 +183,8 @@ export class Circuit {
         const changes = [];
         for (const gate of q) {
             if (gate instanceof joint.shapes.digital.Subcircuit) continue;
+            if (gate instanceof joint.shapes.digital.Input) continue;
+            if (gate instanceof joint.shapes.digital.Output) continue;
             const graph = gate.graph;
             if (!graph) continue;
 /*
