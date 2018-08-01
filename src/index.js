@@ -3,6 +3,8 @@
 import joint from 'jointjs';
 import _ from 'lodash';
 import Backbone from 'backbone';
+import 'jquery-ui/ui/widgets/dialog';
+import 'jquery-ui/themes/base/all.css';
 import './joint.js';
 import './style.css';
     
@@ -27,9 +29,12 @@ export class Circuit {
         this.interval = setInterval(() => this.updateGates(), 10);
     }
     displayOn(elem) {
+        return this.makePaper(elem, this.graph);
+    }
+    makePaper(elem, graph) {
         const paper = new joint.dia.Paper({
             el: elem,
-            model: this.graph,
+            model: graph,
             width: 1000, height: 600, gridSize: 5,
             snapLinks: true,
             linkPinning: false,
@@ -54,7 +59,20 @@ export class Circuit {
                 }
             }
         });
-        this.graph.resetCells(this.graph.getCells());
+        graph.resetCells(graph.getCells());
+        paper.fitToContent({ padding: 30, allowNewOrigin: 'any' });
+        this.listenTo(paper, 'cell:pointerdblclick', function(view, evt) {
+            if (!(view.model instanceof joint.shapes.digital.Subcircuit)) return;
+            const div = $('<div>', { title: 'Subcircuit' });
+            const pdiv = $('<div>');
+            div.append(pdiv);
+            $('body').append(div);
+            const paper = this.makePaper(pdiv, view.model.get('graph'));
+            div.dialog({ minHeight: 'auto', minWidth: 'auto', width: 'auto' });
+            div.on('dialogclose', function(evt) {
+                paper.remove();
+            });
+        });
         return paper;
     }
     makeGraph(data) {

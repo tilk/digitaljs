@@ -176,18 +176,20 @@ joint.shapes.digital.Gate.define('digital.IO', {
 joint.shapes.digital.IO.define('digital.Input', {
     attrs: {
         '.wire': { 'ref-dx': 0, d: 'M 0 0 L 23 0' },
-        circle: { ref: '.body', 'ref-dx': 30, 'ref-y': 0.5, magnet: true, 'class': 'output', port: { id: 'out', dir: 'out' } },
+        circle: { ref: '.body', 'ref-dx': 30, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out' } },
         text: { text: 'input' }
     }
 });
+joint.shapes.digital.InputView = joint.shapes.digital.GateView;
 
 joint.shapes.digital.IO.define('digital.Output', {
     attrs: {
         '.wire': { 'ref-x': 0, d: 'M 0 0 L -23 0' },
-        circle: { ref: '.body', 'ref-x': -30, 'ref-y': 0.5, magnet: 'passive', 'class': 'input', port: { id: 'in', dir: 'in' } },
+        circle: { ref: '.body', 'ref-x': -30, 'ref-y': 0.5, magnet: 'passive', port: { id: 'in', dir: 'in' } },
         text: { text: 'output' }
     }
 });
+joint.shapes.digital.OutputView = joint.shapes.digital.GateView;
 
 joint.shapes.digital.Gate.define('digital.Gate11', {
     attrs: {
