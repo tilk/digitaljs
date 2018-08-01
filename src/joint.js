@@ -103,7 +103,7 @@ joint.shapes.digital.Gate.define('digital.Subcircuit', {
         function sortfun(x, y) {
             if (x.has('order') || y.has('order'))
                 return x.get('order') - y.get('order');
-            return x.id.localeCompare(y.id);
+            return x.get('net').localeCompare(y.get('net'));
         }
         inputs.sort(sortfun);
         outputs.sort(sortfun);
@@ -111,35 +111,37 @@ joint.shapes.digital.Gate.define('digital.Subcircuit', {
         const size = { width: 80, height: vcount*16+8 };
         const markup = [];
         markup.push('<g class="rotatable"><g class="scalable"><rect class="body"/></g><text class="label"/>');
+        const iomap = {};
         for (const io of IOs) {
-            markup.push('<circle class="io_' + io.id + '"/>');
-            markup.push('<text class="iolabel io_' + io.id + '"/>');
-            markup.push('<path class="wire io_' + io.id + '"/>');
+            iomap[io.get('net')] = io.get('id');
+            markup.push('<circle class="io_' + io.get('net') + '"/>');
+            markup.push('<text class="iolabel io_' + io.get('net') + '"/>');
+            markup.push('<path class="wire io_' + io.get('net') + '"/>');
         }
         const attrs = { '.body': size };
         for (const [num, io] of inputs.entries()) {
             const y = num*16+12;
-            attrs['circle.io_' + io.id] = {
+            attrs['circle.io_' + io.get('net')] = {
                 ref: '.body', 'ref-x': -20, 'ref-y': y,
-                magnet: 'passive', port: { id: io.id, dir: 'in' }
+                magnet: 'passive', port: { id: io.get('net'), dir: 'in' }
             };
-            attrs['text.io_' + io.id] = {
-                'ref-y': y, 'ref-x': 5, 'x-alignment': 'left', text: io.id
+            attrs['text.io_' + io.get('net')] = {
+                'ref-y': y, 'ref-x': 5, 'x-alignment': 'left', text: io.get('net')
             }
-            attrs['path.io_' + io.id] = {
+            attrs['path.io_' + io.get('net')] = {
                 'ref-x': 0, 'ref-y': y, d: 'M 0 0 L -13 0'
             }
         }
         for (const [num, io] of outputs.entries()) {
             const y = num*16+12;
-            attrs['circle.io_' + io.id] = {
+            attrs['circle.io_' + io.get('net')] = {
                 ref: '.body', 'ref-dx': 20, 'ref-y': y,
-                magnet: true, port: { id: io.id, dir: 'out' }
+                magnet: true, port: { id: io.get('net'), dir: 'out' }
             };
-            attrs['text.io_' + io.id] = {
-                'ref-y': y, 'ref-dx': -5, 'x-alignment': 'right', text: io.id
+            attrs['text.io_' + io.get('net')] = {
+                'ref-y': y, 'ref-dx': -5, 'x-alignment': 'right', text: io.get('net')
             }
-            attrs['path.io_' + io.id] = {
+            attrs['path.io_' + io.get('net')] = {
                 'ref-dx': 0, 'ref-y': y, d: 'M 0 0 L 13 0'
             }
         }
@@ -147,8 +149,7 @@ joint.shapes.digital.Gate.define('digital.Subcircuit', {
         this.markup = markup.join('');
         joint.shapes.digital.Gate.prototype.initialize.apply(this, arguments);
         this.set('size', size);
-        this.set('circuitInputs', inputs.map((io) => io.id));
-        this.set('circuitOutputs', outputs.map((io) => io.id));
+        this.set('circuitIOmap', iomap);
         this.attr(attrs);
     }
 });

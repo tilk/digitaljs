@@ -83,6 +83,10 @@ export class Circuit {
             const cellArgs = { id: devid };
             if (cellType == joint.shapes.digital.Subcircuit)
                 cellArgs.graph = this.makeGraph(data.subcircuits[dev.type]);
+            if (cellType == joint.shapes.digital.Input ||
+                cellType == joint.shapes.digital.Output) {
+                cellArgs.net = dev.net;
+            }
             const cell = new cellType(cellArgs);
             if ('label' in dev) cell.setLabel(dev.label);
             graph.addCell(cell);
@@ -115,7 +119,7 @@ export class Circuit {
                 const subcir = gate.graph.get('subcircuit');
                 console.assert(subcir instanceof joint.shapes.digital.Subcircuit);
                 subcir.set('outputSignals', _.chain(subcir.get('outputSignals'))
-                    .clone().set(gate.id, sigs.in).value());
+                    .clone().set(gate.get('net'), sigs.in).value());
             } else this.queue.add(gate);
         });
         this.listenTo(graph, 'change:outputSignals', function(gate, sigs) {
@@ -138,7 +142,8 @@ export class Circuit {
                 .clone().set(end.port, sig).value());
             // forward the input change to a subcircuit
             if (gate instanceof joint.shapes.digital.Subcircuit) {
-                const input = gate.get('graph').getCell(end.port);
+                const iomap = gate.get('circuitIOmap');
+                const input = gate.get('graph').getCell(iomap[end.port]);
                 console.assert(input instanceof joint.shapes.digital.Input);
                 input.set('outputSignals', { out: sig });
             }

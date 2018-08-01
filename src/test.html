@@ -18,37 +18,41 @@
               xor: {
                 type: '$xor'
               },
-              o: {
-                type: '$output'
+              out_o: {
+                type: '$output',
+                net: 'o'
               },
-              c: {
-                type: '$output'
+              out_c: {
+                type: '$output',
+                net: 'c'
               },
-              a: {
-                type: '$input'
+              in_a: {
+                type: '$input',
+                net: 'a'
               },
-              b: {
-                type: '$input'
+              in_b: {
+                type: '$input',
+                net: 'b'
               }
             },
             connectors: [{
-              from: 'a.out',
+              from: 'in_a.out',
               to: 'and.in1'
             }, {
-              from: 'a.out',
+              from: 'in_a.out',
               to: 'xor.in1'
             }, {
-              from: 'b.out',
+              from: 'in_b.out',
               to: 'and.in2'
             }, {
-              from: 'b.out',
+              from: 'in_b.out',
               to: 'xor.in2'
             }, {
               from: 'and.out',
-              to: 'c.in'
+              to: 'out_c.in'
             }, {
               from: 'xor.out',
-              to: 'o.in'
+              to: 'out_o.in'
             }]
           }
         }, devices: {
