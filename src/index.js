@@ -63,7 +63,9 @@ export class Circuit {
         paper.fitToContent({ padding: 30, allowNewOrigin: 'any' });
         this.listenTo(paper, 'cell:pointerdblclick', function(view, evt) {
             if (!(view.model instanceof joint.shapes.digital.Subcircuit)) return;
-            const div = $('<div>', { title: 'Subcircuit' });
+            const div = $('<div>', { 
+                title: view.model.get('celltype') + ' ' + view.model.get('label') 
+            });
             const pdiv = $('<div>');
             div.append(pdiv);
             $('body').append(div);
@@ -80,15 +82,15 @@ export class Circuit {
         for (const devid in data.devices) {
             const dev = data.devices[devid];
             const cellType = getCellType(dev.type);
-            const cellArgs = { id: devid };
+            const cellArgs = { id: devid, celltype: dev.type };
             if (cellType == joint.shapes.digital.Subcircuit)
                 cellArgs.graph = this.makeGraph(data.subcircuits[dev.type]);
             if (cellType == joint.shapes.digital.Input ||
                 cellType == joint.shapes.digital.Output) {
                 cellArgs.net = dev.net;
             }
+            if ('label' in dev) cellArgs.label = dev.label;
             const cell = new cellType(cellArgs);
-            if ('label' in dev) cell.setLabel(dev.label);
             graph.addCell(cell);
             this.queue.add(cell);
         }

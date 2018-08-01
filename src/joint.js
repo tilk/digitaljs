@@ -19,8 +19,11 @@ joint.shapes.basic.Generic.define('digital.Gate', {
     operation: function() {
         return {};
     },
-    setLabel: function(lbl) {
-        this.attr("text.label/text", lbl);
+    initialize: function(args) {
+        joint.shapes.basic.Generic.prototype.initialize.apply(this, arguments);
+        if (this.has('label')) {
+            this.attr('text.label/text', this.get('label'));
+        }
     }
 });
 
@@ -165,13 +168,15 @@ joint.shapes.digital.Gate.define('digital.IO', {
             ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
             'text-anchor': 'middle',
             'font-weight': 'bold',
-            'font-variant': 'small-caps',
-            'text-transform': 'capitalize',
             'font-size': '14px'
         }
     }
 }, {
     markup: '<g class="rotatable"><g class="scalable"><rect class="body"/></g><path class="wire"/><circle/><text/></g>',
+    initialize: function(args) {
+        joint.shapes.digital.Gate.prototype.initialize.apply(this, arguments);
+        this.attr('text/text', this.get('net'));
+    }
 });
 
 joint.shapes.digital.IO.define('digital.Input', {
