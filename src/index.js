@@ -16,6 +16,7 @@ function getCellType(tp) {
         '$not': joint.shapes.digital.Not,
         '$button': joint.shapes.digital.Button,
         '$lamp': joint.shapes.digital.Lamp,
+        '$numdisplay': joint.shapes.digital.NumDisplay,
         '$input': joint.shapes.digital.Input,
         '$output': joint.shapes.digital.Output
     };
@@ -44,7 +45,7 @@ export class Circuit {
                 if (e === 'target') {
                     if (!mt) return false;
                     const pt = vt.model.ports[mt.getAttribute('port')];
-                    if (typeof pt !== 'object' || pt.dir !== 'in')
+                    if (typeof pt !== 'object' || pt.dir !== 'in' || pt.bits !== vl.model.get('bits'))
                         return false;
                     const link = this.model.getConnectedLinks(vt.model).find((l) =>
                         l.id !== vl.model.id &&
@@ -54,7 +55,7 @@ export class Circuit {
                     return !link;
                 } else if (e === 'source') { 
                     const ps = vs.model.ports[ms.getAttribute('port')];
-                    if (typeof ps !== 'object' || ps.dir !== 'out')
+                    if (typeof ps !== 'object' || ps.dir !== 'out' || ps.bits !== vl.model.get('bits'))
                         return false;
                     return true;
                 }
@@ -90,6 +91,7 @@ export class Circuit {
                 cellType == joint.shapes.digital.Output) {
                 cellArgs.net = dev.net;
             }
+            if ('bits' in dev) cellArgs.bits = dev.bits;
             if ('label' in dev) cellArgs.label = dev.label;
             const cell = new cellType(cellArgs);
             graph.addCell(cell);
@@ -135,7 +137,7 @@ export class Circuit {
             if (gate && 'port' in end) {
                 wire.set('signal', gate.get('outputSignals')[end.port]);
             } else {
-                wire.set('signal', 0);
+                wire.set('signal', _.times(wire.get('bits'), _.constant(0)));
             }
         });
         function setInput(sig, end, gate) {
@@ -149,6 +151,9 @@ export class Circuit {
                 input.set('outputSignals', { out: sig });
             }
         }
+        function clearInput(end, gate) {
+            setInput(_.times(end.bits, _.constant(0)), end, gate);
+        }
         this.listenTo(graph, 'change:target', function(wire, end) {
             const gate = graph.getCell(end.id);
             if (gate && 'port' in end) {
@@ -157,7 +162,7 @@ export class Circuit {
             const pend = wire.previous('target');
             const pgate = graph.getCell(pend.id);
             if (pgate && 'port' in pend) {
-                setInput(0, pend, pgate);
+                clearInput(pend, pgate);
             }
         });
         this.listenTo(graph, 'remove', function(cell, coll, opt) {
@@ -165,7 +170,7 @@ export class Circuit {
             const end = cell.get('target');
             const gate = graph.getCell(end.id);
             if (gate && 'port' in end) {
-                setInput(0, end, gate);
+                clearInput(end, gate);
             }
         });
         this.listenTo(graph, 'add', function(cell, coll, opt) {
@@ -174,6 +179,7 @@ export class Circuit {
             const sgate = graph.getCell(strt.id);
             if (sgate && 'port' in strt) {
                 cell.set('signal', sgate.get('outputSignals')[strt.port]);
+                cell.set('bits', sgate.ports[strt.port].bits);
             }
         });
         return graph;
