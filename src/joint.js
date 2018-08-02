@@ -38,11 +38,31 @@ joint.shapes.basic.Generic.define('digital.Gate', {
         for (const portname in this.ports) {
             const port = this.ports[portname];
             if (port.dir !== dir) continue;
-            let classes = [port.dir];
+            let classes = [port.dir, 'port_' + port.id];
             if (isLive(signal[port.id])) classes.push('live');
             if (isLow(signal[port.id])) classes.push('low');
             this.attr("[port='" + port.id + "']/class", classes.join(' '));
         }
+    },
+    addWire: function(args, side, loc, port) {
+        const wire_args = {
+            ref: 'circle.port_' + port.id, 'ref-y': .5, 'ref-x': .5,
+            d: 'M 0 0 L ' + (side == 'left' ? '40 0' : '-40 0')
+        };
+        const circle_args = {
+            ref: '.body',
+            magnet: port.dir == 'in' ? true : 'passive',
+            port: port
+        };
+        circle_args['ref-y'] = loc;
+        if (side == 'left') {
+            circle_args['ref-x'] = -20;
+        } else if (side == 'right') {
+            circle_args['ref-dx'] = 20;
+        } else console.assert(false);
+        _.set(args, ['attrs', 'path.wire.port_' + port.id], wire_args);
+        _.set(args, ['attrs', 'circle.port_' + port.id], circle_args);
+        return '<path class="wire port_' + port.id + '"/><circle class="port_' + port.id + '"/>';
     }
 });
 
@@ -54,25 +74,25 @@ joint.shapes.digital.Gate.define('digital.Lamp', {
     inputSignals: { in: [0] },
     attrs: {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 50, height: 50 },
-        '.wire': { ref: '.body', 'ref-y': .5, 'ref-x': 0, d: 'M 0 0 L -20 0' },
-        '.in': { ref: '.body', 'ref-x': -20, 'ref-y': 0.5, magnet: true, port: { id: 'in', dir: 'in', bits: 1 } },
         '.led': {
             ref: '.body', 'ref-x': .5, 'ref-y': .5,
             'x-alignment': 'middle', 'y-alignment': 'middle', r: 15
         }
     }
 }, {
-    markup: [
-        '<g class="rotatable">',
-        '<g class="scalable">',
-        '<rect class="body"/>',
-        '<circle class="led"/>',
-        '</g>',
-        '<path class="wire"/>',
-        '<circle class="in"/>',
-        '<text class="label"/>',
-        '</g>'
-    ].join('')
+    constructor: function(args) {
+        this.markup = [
+            '<g class="rotatable">',
+            this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: 1 }),
+            '<g class="scalable">',
+            '<rect class="body"/>',
+            '<circle class="led"/>',
+            '</g>',
+            '<text class="label"/>',
+            '</g>'
+        ].join('')
+        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+    }
 });
 joint.shapes.digital.LampView = joint.shapes.digital.GateView.extend({
     initialize: function() {
@@ -89,8 +109,6 @@ joint.shapes.digital.Gate.define('digital.NumDisplay', {
     inputSignals: { in: [0] },
     attrs: {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
-        '.wire': { ref: '.body', 'ref-y': .5, stroke: 'black', 'ref-x': 0, d: 'M 0 0 L -13 0' },
-        circle: { ref: '.body', 'ref-x': -20, 'ref-y': 0.5, magnet: 'passive', port: { id: 'in', dir: 'in', bits: 1 } },
         'text.value': { 
             text: '',
             fill: 'black',
@@ -101,23 +119,20 @@ joint.shapes.digital.Gate.define('digital.NumDisplay', {
         }
     }
 }, {
-    markup: [
-        '<g class="rotatable">',
-        '<g class="scalable">',
-        '<rect class="body"/>',
-        '</g>',
-        '<path class="wire"/>',
-        '<circle/>',
-        '<text class="value"/>',
-        '<text class="label"/>',
-        '</g>'
-    ].join(''),
     constructor: function(args) {
-        if ('bits' in args) {
-            _.set(args, ['attrs', 'circle', 'port', 'bits'], args.bits);
-            if (!('inputSignals' in args))
-                args.inputSignals = { in : _.times(args.bits, _.constant(0)) };
-        }
+        if (!args.bits) args.bits = 1;
+        if (!('inputSignals' in args))
+            args.inputSignals = { in : _.times(args.bits, _.constant(0)) };
+        this.markup = [
+            '<g class="rotatable">',
+            this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: args.bits }),
+            '<g class="scalable">',
+            '<rect class="body"/>',
+            '</g>',
+            '<text class="value"/>',
+            '<text class="label"/>',
+            '</g>'
+        ].join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     },
     initialize: function(args) {
@@ -141,22 +156,22 @@ joint.shapes.digital.Gate.define('digital.Button', {
             'ref': '.body', 'ref-height': .8, 'ref-width': .8, 'ref-x': .5, 'ref-y': .5,
             'x-alignment': 'middle', 'y-alignment': 'middle',
             cursor: 'pointer'
-        },
-        '.wire': { ref: '.body', 'ref-y': .5, 'ref-dx': 0, d: 'M 0 0 L 20 0' },
-        '.out': { ref: '.body', 'ref-dx': 20, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out', bits: 1 } }
+        }
     }
 }, {
-    markup: [
-        '<g class="rotatable">',
-        '<g class="scalable">',
-        '<rect class="body"/>',
-        '<rect class="btnface"/>',
-        '</g>',
-        '<path class="wire"/>',
-        '<circle class="out" />',
-        '<text class="label"/>',
-        '</g>'
-    ].join(''),
+    constructor: function(args) {
+        this.markup = [
+            '<g class="rotatable">',
+            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: 1 }),
+            '<g class="scalable">',
+            '<rect class="body"/>',
+            '<rect class="btnface"/>',
+            '</g>',
+            '<text class="label"/>',
+            '</g>'
+        ].join('');
+        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+    },
     operation: function() {
         return { out: [this.get('buttonState') ? 1 : -1] };
     }
@@ -201,46 +216,32 @@ joint.shapes.digital.Gate.define('digital.Subcircuit', {
         const vcount = Math.max(inputs.length, outputs.length);
         const size = { width: 80, height: vcount*16+8 };
         const markup = [];
-        markup.push('<g class="rotatable"><g class="scalable"><rect class="body"/></g><text class="label"/>');
+        markup.push('<g class="rotatable">');
         const iomap = {};
-        for (const io of IOs) {
-            iomap[io.get('net')] = io.get('id');
-            markup.push('<circle class="io_' + io.get('net') + '"/>');
-            markup.push('<text class="iolabel io_' + io.get('net') + '"/>');
-            markup.push('<path class="wire io_' + io.get('net') + '"/>');
-        }
-        const attrs = { '.body': size };
+        _.set(args, ['attrs', '.body'], size);
         for (const [num, io] of inputs.entries()) {
             const y = num*16+12;
-            attrs['circle.io_' + io.get('net')] = {
-                ref: '.body', 'ref-x': -20, 'ref-y': y,
-                magnet: 'passive', port: { id: io.get('net'), dir: 'in', bits: io.get('bits') }
-            };
-            attrs['text.io_' + io.get('net')] = {
+            markup.push(this.addWire(args, 'left', y, { id: io.get('net'), dir: 'in', bits: io.get('bits') }));
+            args.attrs['text.port_' + io.get('net')] = {
                 'ref-y': y, 'ref-x': 5, 'x-alignment': 'left', text: io.get('net')
-            }
-            attrs['path.io_' + io.get('net')] = {
-                'ref-x': 0, 'ref-y': y, d: 'M 0 0 L -13 0'
             }
         }
         for (const [num, io] of outputs.entries()) {
             const y = num*16+12;
-            attrs['circle.io_' + io.get('net')] = {
-                ref: '.body', 'ref-dx': 20, 'ref-y': y,
-                magnet: true, port: { id: io.get('net'), dir: 'out', bits: io.get('bits') }
-            };
-            attrs['text.io_' + io.get('net')] = {
+            markup.push(this.addWire(args, 'right', y, { id: io.get('net'), dir: 'in', bits: io.get('bits') }));
+            args.attrs['text.port_' + io.get('net')] = {
                 'ref-y': y, 'ref-dx': -5, 'x-alignment': 'right', text: io.get('net')
             }
-            attrs['path.io_' + io.get('net')] = {
-                'ref-dx': 0, 'ref-y': y, d: 'M 0 0 L 13 0'
-            }
+        }
+        markup.push('<g class="scalable"><rect class="body"/></g><text class="label"/>');
+        for (const io of IOs) {
+            iomap[io.get('net')] = io.get('id');
+            markup.push('<text class="iolabel port_' + io.get('net') + '"/>');
         }
         markup.push('</g>');
         this.markup = markup.join('');
         args.size = size;
         args.circuitIOmap = iomap;
-        args.attrs = attrs;
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     }
 });
@@ -261,17 +262,17 @@ joint.shapes.digital.Gate.define('digital.IO', {
         }
     }
 }, {
-    markup: [
-        '<g class="rotatable">',
-        '<g class="scalable">',
-        '<rect class="body"/>',
-        '</g>',
-        '<path class="wire"/>',
-        '<circle/>',
-        '<text/>',
-        '</g>'
-    ].join(''),
     constructor: function(args) {
+        if (!args.bits) args.bits = 1;
+        this.markup = [
+            '<g class="rotatable">',
+            this.addWire(args, this.io_dir == 'out' ? 'right' : 'left', 0.5, { id: this.io_dir, dir: this.io_dir, bits: args.bits }),
+            '<g class="scalable">',
+            '<rect class="body"/>',
+            '</g>',
+            '<text/>',
+            '</g>'
+        ].join('');
         if ('bits' in args) _.set(args, ['attrs', 'circle', 'port', 'bits'], args.bits);
         _.set(args, ['attrs', 'text', 'text'], args.net);
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
@@ -279,63 +280,60 @@ joint.shapes.digital.Gate.define('digital.IO', {
 });
 
 joint.shapes.digital.IO.define('digital.Input', {
-    attrs: {
-        '.wire': { 'ref-dx': 0, d: 'M 0 0 L 13 0' },
-        circle: { ref: '.body', 'ref-dx': 20, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out', bits: 1 } },
-        text: { text: 'input' }
-    }
+}, {
+    io_dir: 'out'
 });
 joint.shapes.digital.InputView = joint.shapes.digital.GateView;
 
 joint.shapes.digital.IO.define('digital.Output', {
-    attrs: {
-        '.wire': { 'ref-x': 0, d: 'M 0 0 L -13 0' },
-        circle: { ref: '.body', 'ref-x': -20, 'ref-y': 0.5, magnet: 'passive', port: { id: 'in', dir: 'in', bits: 1 } },
-        text: { text: 'output' }
-    }
+}, {
+    io_dir: 'in'
 });
 joint.shapes.digital.OutputView = joint.shapes.digital.GateView;
 
 joint.shapes.digital.Gate.define('digital.Gate11', {
     size: { width: 60, height: 40 },
     attrs: {
-        '.body': { width: 75, height: 50 },
-        '.in': { ref: '.body', 'ref-x': -20, 'ref-y': 0.5, magnet: 'passive', port: { id: 'in', dir: 'in', bits: 1 } },
-        '.out': { ref: '.body', 'ref-dx': 20, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out', bits: 1 } }
+        '.body': { width: 75, height: 50 }
     }
 }, {
-    markup: [
-        '<g class="rotatable">',
-        '<g class="scalable">',
-        '<image class="body"/>',
-        '</g>',
-        '<circle class="in"/>',
-        '<circle class="out"/>',
-        '<text class="label"/>',
-        '</g>'
-    ].join(''),
+    constructor: function(args) {
+        if (!args.bits) args.bits = 1;
+        this.markup = [
+            '<g class="rotatable">',
+            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits }),
+            this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: args.bits }),
+            '<g class="scalable">',
+            '<image class="body"/>',
+            '</g>',
+            '<text class="label"/>',
+            '</g>'
+        ].join('');
+        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+    },
 });
 
 joint.shapes.digital.Gate.define('digital.Gate21', {
     size: { width: 60, height: 40 },
     attrs: {
-        '.body': { width: 75, height: 50 },
-        '.in1': { ref: '.body', 'ref-x': -20, 'ref-y': 0.3, magnet: 'passive', port: { id: 'in1', dir: 'in', bits: 1 } },
-        '.in2': { ref: '.body', 'ref-x': -20, 'ref-y': 0.7, magnet: 'passive', port: { id: 'in2', dir: 'in', bits: 1 } },
-        '.out': { ref: '.body', 'ref-dx': 20, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out', bits: 1 } }
+        '.body': { width: 75, height: 50 }
     }
 }, {
-    markup: [
-        '<g class="rotatable">',
-        '<g class="scalable">',
-        '<image class="body"/>',
-        '</g>',
-        '<circle class="in in1"/>',
-        '<circle  class="in in2"/>',
-        '<circle class="out"/>',
-        '<text class="label"/>',
-        '</g>'
-    ].join('')
+    constructor: function(args) {
+        if (!args.bits) args.bits = 1;
+        this.markup = [
+            '<g class="rotatable">',
+            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits }),
+            this.addWire(args, 'left', 0.3, { id: 'in1', dir: 'in', bits: args.bits }),
+            this.addWire(args, 'left', 0.7, { id: 'in2', dir: 'in', bits: args.bits }),
+            '<g class="scalable">',
+            '<image class="body"/>',
+            '</g>',
+            '<text class="label"/>',
+            '</g>'
+        ].join('');
+        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+    },
 });
 
 joint.shapes.digital.Gate11.define('digital.Repeater', {
