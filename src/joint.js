@@ -62,7 +62,17 @@ joint.shapes.digital.Gate.define('digital.Lamp', {
         }
     }
 }, {
-    markup: '<g class="rotatable"><g class="scalable"><rect class="body"/><circle class="led"/></g><path class="wire"/><circle class="in"/><text class="label"/></g>'
+    markup: [
+        '<g class="rotatable">',
+        '<g class="scalable">',
+        '<rect class="body"/>',
+        '<circle class="led"/>',
+        '</g>',
+        '<path class="wire"/>',
+        '<circle class="in"/>',
+        '<text class="label"/>',
+        '</g>'
+    ].join('')
 });
 joint.shapes.digital.LampView = joint.shapes.digital.GateView.extend({
     initialize: function() {
@@ -91,7 +101,17 @@ joint.shapes.digital.Gate.define('digital.NumDisplay', {
         }
     }
 }, {
-    markup: '<g class="rotatable"><g class="scalable"><rect class="body"/></g><path class="wire"/><circle/><text class="value"/><text class="label"/></g>',
+    markup: [
+        '<g class="rotatable">',
+        '<g class="scalable">',
+        '<rect class="body"/>',
+        '</g>',
+        '<path class="wire"/>',
+        '<circle/>',
+        '<text class="value"/>',
+        '<text class="label"/>',
+        '</g>'
+    ].join(''),
     constructor: function(args) {
         if ('bits' in args) {
             _.set(args, ['attrs', 'circle', 'port', 'bits'], args.bits);
@@ -126,7 +146,17 @@ joint.shapes.digital.Gate.define('digital.Button', {
         '.out': { ref: '.body', 'ref-dx': 20, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out', bits: 1 } }
     }
 }, {
-    markup: '<g class="rotatable"><g class="scalable"><rect class="body"/><rect class="btnface"/></g><path class="wire"/><circle class="out" /><text class="label"/></g>',
+    markup: [
+        '<g class="rotatable">',
+        '<g class="scalable">',
+        '<rect class="body"/>',
+        '<rect class="btnface"/>',
+        '</g>',
+        '<path class="wire"/>',
+        '<circle class="out" />',
+        '<text class="label"/>',
+        '</g>'
+    ].join(''),
     operation: function() {
         return { out: [this.get('buttonState') ? 1 : -1] };
     }
@@ -231,7 +261,16 @@ joint.shapes.digital.Gate.define('digital.IO', {
         }
     }
 }, {
-    markup: '<g class="rotatable"><g class="scalable"><rect class="body"/></g><path class="wire"/><circle/><text/></g>',
+    markup: [
+        '<g class="rotatable">',
+        '<g class="scalable">',
+        '<rect class="body"/>',
+        '</g>',
+        '<path class="wire"/>',
+        '<circle/>',
+        '<text/>',
+        '</g>'
+    ].join(''),
     constructor: function(args) {
         if ('bits' in args) _.set(args, ['attrs', 'circle', 'port', 'bits'], args.bits);
         _.set(args, ['attrs', 'text', 'text'], args.net);
@@ -263,7 +302,16 @@ joint.shapes.digital.Gate.define('digital.Gate11', {
         '.out': { ref: '.body', 'ref-dx': 2, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out', bits: 1 } }
     }
 }, {
-    markup: '<g class="rotatable"><g class="scalable"><image class="body"/></g><circle class="in"/><circle class="out"/><text class="label"/></g>',
+    markup: [
+        '<g class="rotatable">',
+        '<g class="scalable">',
+        '<image class="body"/>',
+        '</g>',
+        '<circle class="in"/>',
+        '<circle class="out"/>',
+        '<text class="label"/>',
+        '</g>'
+    ].join(''),
 });
 
 joint.shapes.digital.Gate.define('digital.Gate21', {
@@ -273,7 +321,17 @@ joint.shapes.digital.Gate.define('digital.Gate21', {
         '.out': { ref: '.body', 'ref-dx': 2, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out', bits: 1 } }
     }
 }, {
-    markup: '<g class="rotatable"><g class="scalable"><image class="body"/></g><circle class="in in1"/><circle  class="in in2"/><circle class="out"/><text class="label"/></g>',
+    markup: [
+        '<g class="rotatable">',
+        '<g class="scalable">',
+        '<image class="body"/>',
+        '</g>',
+        '<circle class="in in1"/>',
+        '<circle  class="in in2"/>',
+        '<circle class="out"/>',
+        '<text class="label"/>',
+        '</g>'
+    ].join('')
 });
 
 joint.shapes.digital.Gate11.define('digital.Repeater', {
