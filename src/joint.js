@@ -22,31 +22,31 @@ joint.shapes.basic.Generic.define('digital.Gate', {
     constructor: function(args) {
         if ('label' in args) _.set(args, ['attrs', 'text.label', 'text'], args.label);
         joint.shapes.basic.Generic.prototype.constructor.apply(this, arguments);
-    }
-});
-
-joint.shapes.digital.GateView = joint.dia.ElementView.extend({
+    },
     initialize: function() {
-        joint.dia.ElementView.prototype.initialize.apply(this, arguments);
-        this.updatePortSignals('in', this.model.get('inputSignals'));
-        this.updatePortSignals('out', this.model.get('outputSignals'));
-        this.listenTo(this.model, 'change:inputSignals', function(wire, signal) {
+        joint.shapes.basic.Generic.prototype.initialize.apply(this, arguments);
+        this.updatePortSignals('in', this.get('inputSignals'));
+        this.updatePortSignals('out', this.get('outputSignals'));
+        this.listenTo(this, 'change:inputSignals', function(wire, signal) {
             this.updatePortSignals('in', signal);
         });
-        this.listenTo(this.model, 'change:outputSignals', function(wire, signal) {
+        this.listenTo(this, 'change:outputSignals', function(wire, signal) {
             this.updatePortSignals('out', signal);
         });
     },
     updatePortSignals: function(dir, signal) {
-        for (const portname in this.model.ports) {
-            const port = this.model.ports[portname];
+        for (const portname in this.ports) {
+            const port = this.ports[portname];
             if (port.dir !== dir) continue;
             let classes = [port.dir];
             if (isLive(signal[port.id])) classes.push('live');
             if (isLow(signal[port.id])) classes.push('low');
-            this.model.attr("[port='" + port.id + "']/class", classes.join(' '));
+            this.attr("[port='" + port.id + "']/class", classes.join(' '));
         }
     }
+});
+
+joint.shapes.digital.GateView = joint.dia.ElementView.extend({
 });
 
 joint.shapes.digital.Gate.define('digital.Lamp', {
