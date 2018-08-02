@@ -15,6 +15,7 @@ function getCellType(tp) {
         '$xor': joint.shapes.digital.Xor,
         '$not': joint.shapes.digital.Not,
         '$button': joint.shapes.digital.Button,
+        '$lamp': joint.shapes.digital.Lamp,
         '$input': joint.shapes.digital.Input,
         '$output': joint.shapes.digital.Output
     };

@@ -9,7 +9,7 @@ joint.shapes.basic.Generic.define('digital.Gate', {
     attrs: {
         '.': { magnet: false },
         '.body': { width: 100, height: 50 },
-        circle: { r: 7, stroke: 'black', fill: 'transparent', 'stroke-width': 2 },
+        'circle[port]': { r: 7, stroke: 'black', fill: 'transparent', 'stroke-width': 2 },
         'text.label': {
             text: '', ref: '.body', 'ref-x': 0.5, 'ref-dy': 2, 'x-alignment': 'middle', 
             fill: 'black'
@@ -51,6 +51,31 @@ joint.shapes.digital.GateView = joint.dia.ElementView.extend({
     }
 });
 
+joint.shapes.digital.Gate.define('digital.Lamp', {
+    size: { width: 30, height: 30 },
+    inputSignals: { in: 0 },
+    attrs: {
+        '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 50, height: 50 },
+        '.wire': { ref: '.body', 'ref-y': .5, 'ref-x': 0, d: 'M 0 0 L -20 0' },
+        '.in': { ref: '.body', 'ref-x': -20, 'ref-y': 0.5, magnet: true, port: { id: 'in', dir: 'in' } },
+        '.led': {
+            ref: '.body', 'ref-x': .5, 'ref-y': .5,
+            'x-alignment': 'middle', 'y-alignment': 'middle', r: 15
+        }
+    }
+}, {
+    markup: '<g class="rotatable"><g class="scalable"><rect class="body"/><circle class="led"/></g><path class="wire"/><circle class="in"/><text class="label"/></g>'
+});
+joint.shapes.digital.LampView = joint.shapes.digital.GateView.extend({
+    initialize: function() {
+        joint.shapes.digital.GateView.prototype.initialize.apply(this, arguments);
+        this.listenTo(this.model, 'change:inputSignals', function(wire, signal) {
+            this.$(".led").toggleClass('live', isLive(signal.in));
+            this.$(".led").toggleClass('low', isLow(signal.in));
+        });
+    }
+});
+
 joint.shapes.digital.Gate.define('digital.Button', {
     size: { width: 30, height: 30 },
     outputSignals: { out: 0 },
@@ -67,7 +92,7 @@ joint.shapes.digital.Gate.define('digital.Button', {
         '.out': { ref: '.body', 'ref-dx': 20, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out' } }
     }
 }, {
-    markup: '<g class="rotatable"><g class="scalable"><rect class="body"/><rect class="btnface"/></g><path class="wire"/><circle class="out" /></g>',
+    markup: '<g class="rotatable"><g class="scalable"><rect class="body"/><rect class="btnface"/></g><path class="wire"/><circle class="out" /><text class="label"/></g>',
     operation: function() {
         return { out: this.get('buttonState') ? 1 : -1 };
     }
