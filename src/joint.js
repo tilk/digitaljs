@@ -297,9 +297,11 @@ joint.shapes.digital.IO.define('digital.Output', {
 joint.shapes.digital.OutputView = joint.shapes.digital.GateView;
 
 joint.shapes.digital.Gate.define('digital.Gate11', {
+    size: { width: 60, height: 40 },
     attrs: {
-        '.in': { ref: '.body', 'ref-x': -2, 'ref-y': 0.5, magnet: 'passive', port: { id: 'in', dir: 'in', bits: 1 } },
-        '.out': { ref: '.body', 'ref-dx': 2, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out', bits: 1 } }
+        '.body': { width: 75, height: 50 },
+        '.in': { ref: '.body', 'ref-x': -20, 'ref-y': 0.5, magnet: 'passive', port: { id: 'in', dir: 'in', bits: 1 } },
+        '.out': { ref: '.body', 'ref-dx': 20, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out', bits: 1 } }
     }
 }, {
     markup: [
@@ -315,10 +317,12 @@ joint.shapes.digital.Gate.define('digital.Gate11', {
 });
 
 joint.shapes.digital.Gate.define('digital.Gate21', {
+    size: { width: 60, height: 40 },
     attrs: {
-        '.in1': { ref: '.body', 'ref-x': -2, 'ref-y': 0.3, magnet: 'passive', port: { id: 'in1', dir: 'in', bits: 1 } },
-        '.in2': { ref: '.body', 'ref-x': -2, 'ref-y': 0.7, magnet: 'passive', port: { id: 'in2', dir: 'in', bits: 1 } },
-        '.out': { ref: '.body', 'ref-dx': 2, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out', bits: 1 } }
+        '.body': { width: 75, height: 50 },
+        '.in1': { ref: '.body', 'ref-x': -20, 'ref-y': 0.3, magnet: 'passive', port: { id: 'in1', dir: 'in', bits: 1 } },
+        '.in2': { ref: '.body', 'ref-x': -20, 'ref-y': 0.7, magnet: 'passive', port: { id: 'in2', dir: 'in', bits: 1 } },
+        '.out': { ref: '.body', 'ref-dx': 20, 'ref-y': 0.5, magnet: true, port: { id: 'out', dir: 'out', bits: 1 } }
     }
 }, {
     markup: [
