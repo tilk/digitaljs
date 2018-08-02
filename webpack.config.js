@@ -6,6 +6,9 @@ module.exports = {
         library: 'digitaljs'
     },
     devtool: "source-map",
+    resolve: {
+        extensions: ['.js', '.jsx', '.json', '.css']
+    },
     module: {
         rules: [
             {
@@ -19,6 +22,12 @@ module.exports = {
                 test: /\.png/,
                 use: [
                     'file-loader'
+                ]
+            },
+            {
+                test: /\.svg/,
+                use: [
+                    'base64-inline-loader?limit=1000&name=[name].[ext]'
                 ]
             },
             {
