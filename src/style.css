@@ -97,6 +97,10 @@
     stroke: #fc7c68;
 }
 
+.joint-element circle.defined {
+    stroke: #779ecb;
+}
+
 .joint-element circle.led.live {
     fill: #03c03c;
 }
@@ -128,6 +132,14 @@
 }
 .loint-link.low .connection-wrap {
     stroke: #FD7C68;
+}
+
+.joint-link.defined > .connection {
+    stroke: #779ecb;
+    stroke-width: 3px;
+}
+.loint-link.defined .connection-wrap {
+    stroke: #779ecb;
 }
 
 .joint-element.live .body {
@@ -540,6 +552,7 @@ foreignObject body input[type='text'] {
     position: absolute;
     transform: translate(0, -50%);
     top: 50%;
+    font-family: 'monospace';
 }
 
 input.invalid {

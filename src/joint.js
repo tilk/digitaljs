@@ -42,8 +42,7 @@ joint.shapes.basic.Generic.define('digital.Gate', {
             const port = this.ports[portname];
             if (port.dir !== dir) continue;
             let classes = [port.dir, 'port_' + port.id];
-            if (isLive(signal[port.id])) classes.push('live');
-            if (isLow(signal[port.id])) classes.push('low');
+            classes.push(sigClass(signal[port.id]));
             this.attr("[port='" + port.id + "']/class", classes.join(' '));
         }
     },
@@ -538,6 +537,17 @@ function isLow(sig) {
     return _.every(sig, (x) => x < 0);
 }
 
+function isDefined(sig) {
+    return _.some(sig, (x) => x != 0);
+}
+
+function sigClass(sig) {
+    if (isLive(sig)) return 'live';
+    else if (isLow(sig)) return 'low';
+    else if (isDefined(sig)) return 'defined';
+    else return '';
+}
+
 function sig2binary(sig) {
     const digitmap = new Map([[-1, '0'], [0, 'x'], [1, '1']]);
     return sig.map((x) => digitmap.get(x)).join('');
@@ -546,11 +556,15 @@ function sig2binary(sig) {
 joint.shapes.digital.WireView = joint.dia.LinkView.extend({
     initialize: function() {
         joint.dia.LinkView.prototype.initialize.apply(this, arguments);
-        this.$el.toggleClass('live', isLive(this.model.get('signal')));
-        this.$el.toggleClass('low', isLow(this.model.get('signal')));
+        const cl = sigClass(this.model.get('signal'));
+        this.$el.toggleClass('live', cl == 'live');
+        this.$el.toggleClass('low', cl == 'low');
+        this.$el.toggleClass('defined', cl == 'defined');
         this.listenTo(this.model, 'change:signal', function(wire, signal) {
-            this.$el.toggleClass('live', isLive(signal));
-            this.$el.toggleClass('low', isLow(signal));
+            const cl = sigClass(this.model.get('signal'));
+            this.$el.toggleClass('live', cl == 'live');
+            this.$el.toggleClass('low', cl == 'low');
+            this.$el.toggleClass('defined', cl == 'defined');
         });
     }
 });
