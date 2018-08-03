@@ -13,6 +13,9 @@ joint.shapes.basic.Generic.define('digital.Gate', {
         'text.label': {
             text: '', ref: '.body', 'ref-x': 0.5, 'ref-dy': 2, 'x-alignment': 'middle', 
             fill: 'black'
+        },
+        'text.bits': {
+            fill: 'black'
         }
     }
 }, {
@@ -62,7 +65,23 @@ joint.shapes.basic.Generic.define('digital.Gate', {
         } else console.assert(false);
         _.set(args, ['attrs', 'path.wire.port_' + port.id], wire_args);
         _.set(args, ['attrs', 'circle.port_' + port.id], circle_args);
-        return '<path class="wire port_' + port.id + '"/><circle class="port_' + port.id + '"/>';
+        let markup = '<path class="wire port_' + port.id + '"/><circle class="port_' + port.id + '"/>';
+        if (port.bits > 1) {
+            markup += '<text class="bits port_' + port.id + '"/>';
+            const bits_args = {
+                text: port.bits,
+                ref: 'circle.port_' + port.id,
+                'ref-y': -3,
+                'text-anchor': 'middle'
+            };
+            if (side == 'left') {
+                bits_args['ref-dx'] = 6;
+            } else if (side == 'right') {
+                bits_args['ref-x'] = -6;
+            } else console.assert(false);
+            _.set(args, ['attrs', 'text.bits.port_' + port.id], bits_args);
+        }
+        return '<g>' + markup + '</g>';
     }
 });
 
@@ -252,7 +271,6 @@ joint.shapes.digital.Gate.define('digital.IO', {
     bits: 1,
     attrs: {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
-        '.wire': { ref: '.body', 'ref-y': .5, stroke: 'black' },
         text: {
             fill: 'black',
             ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',

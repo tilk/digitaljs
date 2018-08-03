@@ -107,7 +107,10 @@
 
 .joint-element text {
     font-size: 8pt;
-/*    fill: #fff;*/
+}
+
+.joint-element text.bits {
+    font-size: 7pt;
 }
 
 .joint-link.live > .connection {
