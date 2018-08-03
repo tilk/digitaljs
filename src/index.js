@@ -17,6 +17,7 @@ function getCellType(tp) {
         '$button': joint.shapes.digital.Button,
         '$lamp': joint.shapes.digital.Lamp,
         '$numdisplay': joint.shapes.digital.NumDisplay,
+        '$numentry': joint.shapes.digital.NumEntry,
         '$input': joint.shapes.digital.Input,
         '$output': joint.shapes.digital.Output
     };
@@ -152,7 +153,7 @@ export class Circuit {
             }
         }
         function clearInput(end, gate) {
-            setInput(_.times(end.bits, _.constant(0)), end, gate);
+            setInput(_.times(gate.ports[end.port].bits, _.constant(0)), end, gate);
         }
         this.listenTo(graph, 'change:target', function(wire, end) {
             const gate = graph.getCell(end.id);

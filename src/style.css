@@ -520,3 +520,29 @@ body {
     fill: black;
 }
 
+foreignObject body {
+    display: block;
+    margin: 0;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+foreignObject body input {
+    pointer-events: all;
+}
+
+foreignObject body input[type='text'] {
+    width: 100%;
+    font-size: 8pt;
+    border: 1px solid gray;
+    box-sizing: border-box;
+    position: absolute;
+    transform: translate(0, -50%);
+    top: 50%;
+}
+
+input.invalid {
+    background: #ffaaaa;
+}
+

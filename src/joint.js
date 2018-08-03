@@ -54,7 +54,7 @@ joint.shapes.basic.Generic.define('digital.Gate', {
         };
         const circle_args = {
             ref: '.body',
-            magnet: port.dir == 'in' ? true : 'passive',
+            magnet: port.dir == 'out' ? true : 'passive',
             port: port
         };
         circle_args['ref-y'] = loc;
@@ -158,11 +158,69 @@ joint.shapes.digital.Gate.define('digital.NumDisplay', {
         joint.shapes.digital.Gate.prototype.initialize.apply(this, arguments);
         this.attr('text.value/text', sig2binary(this.get('inputSignals').in));
         this.listenTo(this, 'change:inputSignals', function(wire, signal) {
-            this.attr('text.value/text', sig2binary(signal));
+            this.attr('text.value/text', sig2binary(signal.in));
         });
     }
 });
 joint.shapes.digital.NumDisplayView = joint.shapes.digital.GateView;
+
+joint.shapes.digital.Gate.define('digital.NumEntry', {
+    bits: 1,
+    outputSignals: { out: [0] },
+    buttonState: [0],
+    attrs: {
+        '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
+        'foreignObject': {
+            ref: '.body', 'ref-x': 0.5, 'ref-y': 0.5,
+            width: 60, height: 30,
+            'x-alignment': 'middle', 'y-alignment': 'middle'
+        }
+    }
+}, {
+    constructor: function(args) {
+        if (!args.bits) args.bits = 1;
+        if (!('outputSignals' in args))
+            args.outputSignals = { out : _.times(args.bits, _.constant(0)) };
+        args.buttonState = args.outputSignals.out;
+        this.markup = [
+            '<g class="rotatable">',
+            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits }),
+            '<g class="scalable">',
+            '<rect class="body"/>',
+            '</g>',
+            '<text class="label"/>',
+            '<foreignObject requiredExtensions="http://www.w3.org/1999/xhtml">',
+            '<body xmlns="http://www.w3.org/1999/xhtml">',
+            '<input type="text" />',
+            '</body></foreignObject>',
+            '</g>'
+        ].join('');
+        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+    },
+    operation: function() {
+        return { out: this.get('buttonState') };
+    },
+});
+joint.shapes.digital.NumEntryView = joint.shapes.digital.GateView.extend({
+    events: {
+        "click input": "stopprop",
+        "mousedown input": "stopprop",
+        "change input": "change"
+    },
+    stopprop: function(evt) {
+        evt.stopPropagation();
+    },
+    change: function(evt) {
+        if (validNumber(evt.target.value)) {
+            const val = binary2sig(evt.target.value, this.model.get('bits'));
+            this.model.set('buttonState', val);
+            this.$('input').val(sig2binary(val));
+            this.$('input').removeClass('invalid');
+        } else {
+            this.$('input').addClass('invalid');
+        }
+    }
+});
 
 joint.shapes.digital.Gate.define('digital.Button', {
     size: { width: 30, height: 30 },
@@ -204,10 +262,14 @@ joint.shapes.digital.ButtonView = joint.shapes.digital.GateView.extend({
         });
     },
     events: {
-        "click .btnface": "activateButton"
+        "click .btnface": "activateButton",
+        "mousedown .btnface": "stopprop"
     },
     activateButton: function() {
         this.model.set('buttonState', !this.model.get('buttonState'));
+    },
+    stopprop: function(evt) {
+        evt.stopPropagation();
     }
 });
 
@@ -247,7 +309,7 @@ joint.shapes.digital.Gate.define('digital.Subcircuit', {
         }
         for (const [num, io] of outputs.entries()) {
             const y = num*16+12;
-            markup.push(this.addWire(args, 'right', y, { id: io.get('net'), dir: 'in', bits: io.get('bits') }));
+            markup.push(this.addWire(args, 'right', y, { id: io.get('net'), dir: 'out', bits: io.get('bits') }));
             args.attrs['text.port_' + io.get('net')] = {
                 'ref-y': y, 'ref-dx': -5, 'x-alignment': 'right', text: io.get('net')
             }
@@ -456,8 +518,20 @@ joint.dia.Link.define('digital.Wire', {
     ].join('')
 });
 
+function validNumber(str) {
+    const re = /^[01x]+$/;
+    return re.test(str);
+}
+
+function binary2sig(str, bits) {
+    if (str.length > bits) str = str.substring(str.length - bits);
+    const lettermap = new Map([['x', 0], ['0', -1], ['1', 1]]);
+    return _.times(bits - str.length, _.constant(str[0] == 'x' ? 0 : -1))
+        .concat(str.split('').map((x => lettermap.get(x))));
+}
+
 function isLive(sig) {
-    return _.some(sig, (x) => x > 0);
+    return _.every(sig, (x) => x > 0);
 }
 
 function isLow(sig) {
