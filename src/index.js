@@ -19,7 +19,9 @@ function getCellType(tp) {
         '$numdisplay': joint.shapes.digital.NumDisplay,
         '$numentry': joint.shapes.digital.NumEntry,
         '$input': joint.shapes.digital.Input,
-        '$output': joint.shapes.digital.Output
+        '$output': joint.shapes.digital.Output,
+        '$busgroup': joint.shapes.digital.BusGroup,
+        '$busungroup': joint.shapes.digital.BusUngroup
     };
     if (tp in types) return types[tp];
     else return joint.shapes.digital.Subcircuit;
@@ -94,6 +96,7 @@ export class Circuit {
             }
             if ('bits' in dev) cellArgs.bits = dev.bits;
             if ('label' in dev) cellArgs.label = dev.label;
+            if ('groups' in dev) cellArgs.groups = dev.groups;
             const cell = new cellType(cellArgs);
             graph.addCell(cell);
             this.queue.add(cell);

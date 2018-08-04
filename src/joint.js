@@ -81,6 +81,11 @@ joint.shapes.basic.Generic.define('digital.Gate', {
             } else console.assert(false);
             _.set(args, ['attrs', 'text.bits.port_' + port.id], bits_args);
         }
+        const signame = port.dir == 'in' ? 'inputSignals' : 'outputSignals';
+        if (_.get(args, [signame, port.id]) === undefined) {
+            _.set(args, [signame, port.id],
+                _.times(port.bits, _.constant(0)));
+        }
         return '<g>' + markup + '</g>';
     }
 });
@@ -91,7 +96,6 @@ joint.shapes.digital.GateView = joint.dia.ElementView.extend({
 // Lamp model -- displays a single-bit input
 joint.shapes.digital.Gate.define('digital.Lamp', {
     size: { width: 30, height: 30 },
-    inputSignals: { in: [0] },
     attrs: {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 50, height: 50 },
         '.led': {
@@ -127,7 +131,6 @@ joint.shapes.digital.LampView = joint.shapes.digital.GateView.extend({
 // Numeric display -- displays a number
 joint.shapes.digital.Gate.define('digital.NumDisplay', {
     bits: 1,
-    inputSignals: { in: [0] },
     attrs: {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
         'text.value': { 
@@ -142,8 +145,6 @@ joint.shapes.digital.Gate.define('digital.NumDisplay', {
 }, {
     constructor: function(args) {
         if (!args.bits) args.bits = 1;
-        if (!('inputSignals' in args))
-            args.inputSignals = { in : _.times(args.bits, _.constant(0)) };
         this.markup = [
             '<g class="rotatable">',
             this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: args.bits }),
@@ -169,7 +170,6 @@ joint.shapes.digital.NumDisplayView = joint.shapes.digital.GateView;
 // Numeric entry -- parses a number from a text box
 joint.shapes.digital.Gate.define('digital.NumEntry', {
     bits: 1,
-    outputSignals: { out: [0] },
     buttonState: [0],
     attrs: {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
@@ -182,9 +182,6 @@ joint.shapes.digital.Gate.define('digital.NumEntry', {
 }, {
     constructor: function(args) {
         if (!args.bits) args.bits = 1;
-        if (!('outputSignals' in args))
-            args.outputSignals = { out : _.times(args.bits, _.constant(0)) };
-        args.buttonState = args.outputSignals.out;
         this.markup = [
             '<g class="rotatable">',
             this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits }),
@@ -198,6 +195,7 @@ joint.shapes.digital.Gate.define('digital.NumEntry', {
             '</body></foreignObject>',
             '</g>'
         ].join('');
+        args.buttonState = args.outputSignals.out;
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     },
     operation: function() {
@@ -228,7 +226,6 @@ joint.shapes.digital.NumEntryView = joint.shapes.digital.GateView.extend({
 // Button model -- single-bit clickable input
 joint.shapes.digital.Gate.define('digital.Button', {
     size: { width: 30, height: 30 },
-    outputSignals: { out: [0] },
     buttonState: false,
     attrs: {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 50, height: 50 },
@@ -378,6 +375,60 @@ joint.shapes.digital.IO.define('digital.Output', {
     io_dir: 'in'
 });
 joint.shapes.digital.OutputView = joint.shapes.digital.GateView;
+
+// Bus grouping
+joint.shapes.digital.Gate.define('digital.BusRegroup', {
+}, {
+    constructor: function(args) {
+        const markup = [];
+        args.bits = 0;
+        markup.push('<g class="rotatable">');
+        const size = { width: 40, height: args.groups.length*16+8 };
+        _.set(args, ['attrs', '.body'], size);
+        args.size = size;
+        for (const [num, gbits] of args.groups.entries()) {
+            const y = num*16+12;
+            args.bits += gbits;
+            markup.push(this.addWire(args, this.group_dir == 'out' ? 'right' : 'left', y,
+                { id: this.group_dir + num, dir: this.group_dir, bits: gbits }));
+        }
+        const contra = this.group_dir == 'out' ? 'in' : 'out';
+        markup.push(this.addWire(args, this.group_dir == 'out' ? 'left' : 'right', 0.5,
+            { id: contra, dir: contra, bits: args.bits }));
+        markup.push('<g class="scalable"><rect class="body"/></g><text class="label"/>');
+        markup.push('</g>');
+        this.markup = markup.join('');
+        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+    }
+});
+
+joint.shapes.digital.BusRegroup.define('digital.BusGroup', {
+}, {
+    group_dir : 'in',
+    operation: function(data) {
+        const outdata = [];
+        for (const num of this.get('groups').keys()) {
+            outdata.push(data['in' + num]);
+        }
+        return { out : _.flatten(outdata) };
+    }
+});
+joint.shapes.digital.BusGroupView = joint.shapes.digital.GateView;
+
+joint.shapes.digital.BusRegroup.define('digital.BusUngroup', {
+}, {
+    group_dir : 'out',
+    operation: function(data) {
+        const outdata = {};
+        let pos = 0;
+        for (const [num, gbits] of this.get('groups').entries()) {
+            outdata['out' + num] = data.in.slice(pos, pos + gbits);
+            pos += gbits;
+        }
+        return outdata;
+    }
+});
+joint.shapes.digital.BusUngroupView = joint.shapes.digital.GateView;
 
 // Single-input gate model
 joint.shapes.digital.Gate.define('digital.Gate11', {
