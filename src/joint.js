@@ -2,6 +2,7 @@
 
 import joint from 'jointjs';
 
+// Common base class for gate models
 joint.shapes.basic.Generic.define('digital.Gate', {
     size: { width: 80, height: 40 },
     inputSignals: {},
@@ -87,6 +88,7 @@ joint.shapes.basic.Generic.define('digital.Gate', {
 joint.shapes.digital.GateView = joint.dia.ElementView.extend({
 });
 
+// Lamp model -- displays a single-bit input
 joint.shapes.digital.Gate.define('digital.Lamp', {
     size: { width: 30, height: 30 },
     inputSignals: { in: [0] },
@@ -122,6 +124,7 @@ joint.shapes.digital.LampView = joint.shapes.digital.GateView.extend({
     }
 });
 
+// Numeric display -- displays a number
 joint.shapes.digital.Gate.define('digital.NumDisplay', {
     bits: 1,
     inputSignals: { in: [0] },
@@ -163,6 +166,7 @@ joint.shapes.digital.Gate.define('digital.NumDisplay', {
 });
 joint.shapes.digital.NumDisplayView = joint.shapes.digital.GateView;
 
+// Numeric entry -- parses a number from a text box
 joint.shapes.digital.Gate.define('digital.NumEntry', {
     bits: 1,
     outputSignals: { out: [0] },
@@ -221,6 +225,7 @@ joint.shapes.digital.NumEntryView = joint.shapes.digital.GateView.extend({
     }
 });
 
+// Button model -- single-bit clickable input
 joint.shapes.digital.Gate.define('digital.Button', {
     size: { width: 30, height: 30 },
     outputSignals: { out: [0] },
@@ -272,6 +277,7 @@ joint.shapes.digital.ButtonView = joint.shapes.digital.GateView.extend({
     }
 });
 
+// Subcircuit model -- embeds a circuit graph in an element
 joint.shapes.digital.Gate.define('digital.Subcircuit', {
     attrs: {
         'text.iolabel': { fill: 'black', 'y-alignment': 'middle', ref: '.body' },
@@ -327,6 +333,7 @@ joint.shapes.digital.Gate.define('digital.Subcircuit', {
 });
 joint.shapes.digital.SubcircuitView = joint.shapes.digital.GateView;
 
+// Input/output model
 joint.shapes.digital.Gate.define('digital.IO', {
     size: { width: 60, height: 30 },
     bits: 1,
@@ -358,18 +365,21 @@ joint.shapes.digital.Gate.define('digital.IO', {
     }
 });
 
+// Input model
 joint.shapes.digital.IO.define('digital.Input', {
 }, {
     io_dir: 'out'
 });
 joint.shapes.digital.InputView = joint.shapes.digital.GateView;
 
+// Output model
 joint.shapes.digital.IO.define('digital.Output', {
 }, {
     io_dir: 'in'
 });
 joint.shapes.digital.OutputView = joint.shapes.digital.GateView;
 
+// Single-input gate model
 joint.shapes.digital.Gate.define('digital.Gate11', {
     size: { width: 60, height: 40 },
     attrs: {
@@ -392,6 +402,7 @@ joint.shapes.digital.Gate.define('digital.Gate11', {
     },
 });
 
+// Two-input gate model
 joint.shapes.digital.Gate.define('digital.Gate21', {
     size: { width: 60, height: 40 },
     attrs: {
@@ -415,6 +426,7 @@ joint.shapes.digital.Gate.define('digital.Gate21', {
     },
 });
 
+// Repeater (buffer) gate model
 joint.shapes.digital.Gate11.define('digital.Repeater', {
     attrs: { image: { 'xlink:href': require('./gate-repeater.svg') }}
 }, {
@@ -423,6 +435,7 @@ joint.shapes.digital.Gate11.define('digital.Repeater', {
     }
 });
 
+// Not gate model
 joint.shapes.digital.Gate11.define('digital.Not', {
     attrs: { image: { 'xlink:href': require('./gate-not.svg') }}
 }, {
@@ -432,6 +445,7 @@ joint.shapes.digital.Gate11.define('digital.Not', {
 });
 joint.shapes.digital.NotView = joint.shapes.digital.GateView;
 
+// Or gate model
 joint.shapes.digital.Gate21.define('digital.Or', {
     attrs: { image: { 'xlink:href': require('./gate-or.svg') }}
 }, {
@@ -441,6 +455,7 @@ joint.shapes.digital.Gate21.define('digital.Or', {
 });
 joint.shapes.digital.OrView = joint.shapes.digital.GateView;
 
+// And gate model
 joint.shapes.digital.Gate21.define('digital.And', {
     attrs: { image: { 'xlink:href': require('./gate-and.svg') }}
 
@@ -451,6 +466,7 @@ joint.shapes.digital.Gate21.define('digital.And', {
 });
 joint.shapes.digital.AndView = joint.shapes.digital.GateView;
 
+// Nor gate model
 joint.shapes.digital.Gate21.define('digital.Nor', {
     attrs: { image: { 'xlink:href': require('./gate-nor.svg') }}
 }, {
@@ -460,6 +476,7 @@ joint.shapes.digital.Gate21.define('digital.Nor', {
 });
 joint.shapes.digital.NorView = joint.shapes.digital.GateView;
 
+// Nand gate model
 joint.shapes.digital.Gate21.define('digital.Nand', {
     attrs: { image: { 'xlink:href': require('./gate-nand.svg') }}
 }, {
@@ -469,6 +486,7 @@ joint.shapes.digital.Gate21.define('digital.Nand', {
 });
 joint.shapes.digital.NandView = joint.shapes.digital.GateView;
 
+// Xor gate model
 joint.shapes.digital.Gate21.define('digital.Xor', {
     attrs: { image: { 'xlink:href': require('./gate-xor.svg') }}
 }, {
@@ -478,6 +496,7 @@ joint.shapes.digital.Gate21.define('digital.Xor', {
 });
 joint.shapes.digital.XorView = joint.shapes.digital.GateView;
 
+// Xnor gate model
 joint.shapes.digital.Gate21.define('digital.Xnor', {
     attrs: { image: { 'xlink:href': require('./gate-xnor.svg') }}
 }, {
@@ -487,6 +506,7 @@ joint.shapes.digital.Gate21.define('digital.Xnor', {
 });
 joint.shapes.digital.XnorView = joint.shapes.digital.GateView;
 
+// Connecting wire model
 joint.dia.Link.define('digital.Wire', {
     attrs: {
         '.connection': { 'stroke-width': 2 },
@@ -515,6 +535,22 @@ joint.dia.Link.define('digital.Wire', {
         '</g>',
         '</g>'
     ].join('')
+});
+
+joint.shapes.digital.WireView = joint.dia.LinkView.extend({
+    initialize: function() {
+        joint.dia.LinkView.prototype.initialize.apply(this, arguments);
+        const cl = sigClass(this.model.get('signal'));
+        this.$el.toggleClass('live', cl == 'live');
+        this.$el.toggleClass('low', cl == 'low');
+        this.$el.toggleClass('defined', cl == 'defined');
+        this.listenTo(this.model, 'change:signal', function(wire, signal) {
+            const cl = sigClass(this.model.get('signal'));
+            this.$el.toggleClass('live', cl == 'live');
+            this.$el.toggleClass('low', cl == 'low');
+            this.$el.toggleClass('defined', cl == 'defined');
+        });
+    }
 });
 
 function validNumber(str) {
@@ -552,20 +588,4 @@ function sig2binary(sig) {
     const digitmap = new Map([[-1, '0'], [0, 'x'], [1, '1']]);
     return sig.map((x) => digitmap.get(x)).join('');
 }
-
-joint.shapes.digital.WireView = joint.dia.LinkView.extend({
-    initialize: function() {
-        joint.dia.LinkView.prototype.initialize.apply(this, arguments);
-        const cl = sigClass(this.model.get('signal'));
-        this.$el.toggleClass('live', cl == 'live');
-        this.$el.toggleClass('low', cl == 'low');
-        this.$el.toggleClass('defined', cl == 'defined');
-        this.listenTo(this.model, 'change:signal', function(wire, signal) {
-            const cl = sigClass(this.model.get('signal'));
-            this.$el.toggleClass('live', cl == 'live');
-            this.$el.toggleClass('low', cl == 'low');
-            this.$el.toggleClass('defined', cl == 'defined');
-        });
-    }
-});
 
