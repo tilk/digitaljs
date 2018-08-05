@@ -14,6 +14,7 @@ function getCellType(tp) {
         '$or': joint.shapes.digital.Or,
         '$xor': joint.shapes.digital.Xor,
         '$not': joint.shapes.digital.Not,
+        '$constant': joint.shapes.digital.Constant,
         '$button': joint.shapes.digital.Button,
         '$lamp': joint.shapes.digital.Lamp,
         '$numdisplay': joint.shapes.digital.NumDisplay,
@@ -97,6 +98,7 @@ export class Circuit {
             if ('bits' in dev) cellArgs.bits = dev.bits;
             if ('label' in dev) cellArgs.label = dev.label;
             if ('groups' in dev) cellArgs.groups = dev.groups;
+            if ('constant' in dev) cellArgs.constant = dev.constant;
             const cell = new cellType(cellArgs);
             graph.addCell(cell);
             this.queue.add(cell);

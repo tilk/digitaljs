@@ -376,6 +376,40 @@ joint.shapes.digital.IO.define('digital.Output', {
 });
 joint.shapes.digital.OutputView = joint.shapes.digital.GateView;
 
+// Constant
+joint.shapes.digital.Gate.define('digital.Constant', {
+    attrs: {
+        '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
+        'text.value': { 
+            text: '',
+            fill: 'black',
+            ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
+            'text-anchor': 'middle',
+            'font-size': '14px',
+            'font-family': 'monospace'
+        }
+    }
+}, {
+    constructor: function(args) {
+        args.outputSignals = args.constant;
+        _.set(args, ['attrs', 'text.value', 'text'], sig2binary(args.constant));
+        this.markup = [
+            '<g class="rotatable">',
+            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.constant.length }),
+            '<g class="scalable">',
+            '<rect class="body"/>',
+            '</g>',
+            '<text class="label" />',
+            '<text class="value" />',
+            '</g>'
+        ].join('');
+        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+    },
+    operation: function() {
+        return { out: this.get('constant') };
+    }
+});
+
 // Bus grouping
 joint.shapes.digital.Gate.define('digital.BusRegroup', {
 }, {
