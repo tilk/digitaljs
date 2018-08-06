@@ -415,6 +415,55 @@ joint.shapes.digital.Gate.define('digital.Constant', {
     }
 });
 
+// Bit extending
+joint.shapes.digital.Gate.define('digital.BitExtend', {
+    attrs: {
+        "text.value": {
+            fill: 'black',
+            ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
+            'text-anchor': 'middle',
+            'font-size': '14px'
+        }
+    }
+}, {
+    constructor: function(args) {
+        console.assert(args.extend.input <= args.extend.output);
+        this.markup = [
+            '<g class="rotatable">',
+            this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: args.extend.input}),
+            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.extend.output}),
+            '<g class="scalable"><rect class="body"/></g><text class="label"/>',
+            '<text class="value"/>',
+            '</g>'
+        ].join('');
+        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+    },
+    operation: function(data) {
+        const ex = this.get('extend');
+        return { out: data.in.concat(Array(ex.output - ex.input).fill(this.extbit(data.in))) };
+    }
+});
+
+joint.shapes.digital.BitExtend.define('digital.ZeroExtend', {
+    attrs: {
+        "text.value": { text: 'zero-extend' }
+    }
+}, {
+    extbit: function(i) {
+        return -1;
+    }
+});
+
+joint.shapes.digital.BitExtend.define('digital.SignExtend', {
+    attrs: {
+        "text.value": { text: 'sign-extend' }
+    }
+}, {
+    extbit: function(i) {
+        return i.slice(-1)[0];
+    }
+});
+
 // Bus slicing
 joint.shapes.digital.Gate.define('digital.BusSlice', {
     size: { width: 40, height: 24 },

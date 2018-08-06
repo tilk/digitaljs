@@ -23,7 +23,9 @@ function getCellType(tp) {
         '$output': joint.shapes.digital.Output,
         '$busgroup': joint.shapes.digital.BusGroup,
         '$busungroup': joint.shapes.digital.BusUngroup,
-        '$busslice': joint.shapes.digital.BusSlice
+        '$busslice': joint.shapes.digital.BusSlice,
+        '$zeroextend': joint.shapes.digital.ZeroExtend,
+        '$signextend': joint.shapes.digital.SignExtend
     };
     if (tp in types) return types[tp];
     else return joint.shapes.digital.Subcircuit;
