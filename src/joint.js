@@ -685,7 +685,7 @@ function binary2sig(str, bits) {
     if (str.length > bits) str = str.substring(str.length - bits);
     const lettermap = new Map([['x', 0], ['0', -1], ['1', 1]]);
     return _.times(bits - str.length, _.constant(str[0] == 'x' ? 0 : -1))
-        .concat(str.split('').map((x => lettermap.get(x))));
+        .concat(str.split('').map((x => lettermap.get(x)))).reverse();
 }
 
 function isLive(sig) {
@@ -709,6 +709,6 @@ function sigClass(sig) {
 
 function sig2binary(sig) {
     const digitmap = new Map([[-1, '0'], [0, 'x'], [1, '1']]);
-    return sig.map((x) => digitmap.get(x)).join('');
+    return sig.map((x) => digitmap.get(x)).reverse().join('');
 }
 
