@@ -657,7 +657,15 @@ joint.dia.Link.define('digital.Wire', {
         '</path>',
         '</g>',
         '</g>'
-    ].join('')
+    ].join(''),
+
+    initialize: function() {
+        joint.dia.Link.prototype.initialize.apply(this, arguments);
+        this.router('metro', {
+            startDirections: ['right'],
+            endDirections: ['left']
+        });
+    }
 });
 
 joint.shapes.digital.WireView = joint.dia.LinkView.extend({
