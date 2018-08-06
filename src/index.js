@@ -22,7 +22,8 @@ function getCellType(tp) {
         '$input': joint.shapes.digital.Input,
         '$output': joint.shapes.digital.Output,
         '$busgroup': joint.shapes.digital.BusGroup,
-        '$busungroup': joint.shapes.digital.BusUngroup
+        '$busungroup': joint.shapes.digital.BusUngroup,
+        '$busslice': joint.shapes.digital.BusSlice
     };
     if (tp in types) return types[tp];
     else return joint.shapes.digital.Subcircuit;
@@ -99,6 +100,7 @@ export class Circuit {
             if ('label' in dev) cellArgs.label = dev.label;
             if ('groups' in dev) cellArgs.groups = dev.groups;
             if ('constant' in dev) cellArgs.constant = dev.constant;
+            if ('slice' in dev) cellArgs.slice = dev.slice;
             const cell = new cellType(cellArgs);
             graph.addCell(cell);
             this.queue.add(cell);

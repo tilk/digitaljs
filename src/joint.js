@@ -410,6 +410,44 @@ joint.shapes.digital.Gate.define('digital.Constant', {
     }
 });
 
+// Bus slicing
+joint.shapes.digital.Gate.define('digital.BusSlice', {
+    size: { width: 40, height: 24 },
+    attrs: {
+        ".body": {
+            size: { width: 40, height: 24 }
+        },
+        "text.value": {
+            text: '',
+            fill: 'black',
+            ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
+            'text-anchor': 'middle',
+            'font-size': '14px'
+        }
+    }
+}, {
+    constructor: function(args) {
+        const markup = [];
+        args.bits = 0;
+        this.markup = [
+            '<g class="rotatable">',
+            this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: args.slice.total}),
+            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.slice.count}),
+            '<g class="scalable"><rect class="body"/></g><text class="label"/>',
+            '<text class="value"/>',
+            '</g>'
+        ].join('');
+        const val = args.slice.count == 1 ? args.slice.first : 
+            args.slice.first + "-" + (args.slice.first + args.slice.count - 1);
+        _.set(args, ["attrs", "text.value", "text"], val);
+        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+    },
+    operation: function(data) {
+        const s = this.get('slice');
+        return { out: data.in.slice(s.first, s.first + s.count) };
+    }
+});
+
 // Bus grouping
 joint.shapes.digital.Gate.define('digital.BusRegroup', {
 }, {
