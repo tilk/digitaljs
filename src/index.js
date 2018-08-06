@@ -71,7 +71,7 @@ export class Circuit {
         this.listenTo(paper, 'cell:pointerdblclick', function(view, evt) {
             if (!(view.model instanceof joint.shapes.digital.Subcircuit)) return;
             const div = $('<div>', { 
-                title: view.model.get('type') + ' ' + view.model.get('label') 
+                title: view.model.get('celltype') + ' ' + view.model.get('label') 
             });
             const pdiv = $('<div>');
             div.append(pdiv);
@@ -88,11 +88,11 @@ export class Circuit {
         const graph = new joint.dia.Graph();
         for (const devid in data.devices) {
             const dev = data.devices[devid];
-            const cellType = getCellType(dev.type);
+            const cellType = getCellType(dev.celltype);
             const cellArgs = _.clone(dev);
             cellArgs.id = devid;
             if (cellType == joint.shapes.digital.Subcircuit)
-                cellArgs.graph = this.makeGraph(subcircuits[dev.type], subcircuits);
+                cellArgs.graph = this.makeGraph(subcircuits[dev.celltype], subcircuits);
             const cell = new cellType(cellArgs);
             graph.addCell(cell);
             this.queue.add(cell);

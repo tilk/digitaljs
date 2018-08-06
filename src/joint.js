@@ -306,7 +306,7 @@ joint.shapes.digital.Gate.define('digital.Subcircuit', {
         markup.push('<g class="rotatable">');
         const iomap = {};
         _.set(args, ['attrs', '.body'], size);
-        _.set(args, ['attrs', 'text.type', 'text'], args.type);
+        _.set(args, ['attrs', 'text.type', 'text'], args.celltype);
         for (const [num, io] of inputs.entries()) {
             const y = num*16+12;
             markup.push(this.addWire(args, 'left', y, { id: io.get('net'), dir: 'in', bits: io.get('bits') }));
