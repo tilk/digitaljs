@@ -4,12 +4,12 @@ import joint from 'jointjs';
 
 // Common base class for gate models
 joint.shapes.basic.Generic.define('digital.Gate', {
-    size: { width: 80, height: 40 },
+    size: { width: 80, height: 30 },
     inputSignals: {},
     outputSignals: {},
     attrs: {
         '.': { magnet: false },
-        '.body': { width: 100, height: 50 },
+        '.body': { width: 80, height: 30 },
         'circle[port]': { r: 7, stroke: 'black', fill: 'transparent', 'stroke-width': 2 },
         'text.label': {
             text: '', ref: '.body', 'ref-x': 0.5, 'ref-dy': 2, 'x-alignment': 'middle', 
@@ -278,7 +278,11 @@ joint.shapes.digital.ButtonView = joint.shapes.digital.GateView.extend({
 joint.shapes.digital.Gate.define('digital.Subcircuit', {
     attrs: {
         'text.iolabel': { fill: 'black', 'y-alignment': 'middle', ref: '.body' },
-        'path.wire' : { ref: '.body', 'ref-y': .5, stroke: 'black' }
+        'path.wire' : { ref: '.body', 'ref-y': .5, stroke: 'black' },
+        'text.type': {
+            text: '', ref: '.body', 'ref-x': 0.5, 'ref-y': -2, 'x-alignment': 'middle',
+            'y-alignment': 'bottom', fill: 'black'
+        },
     }
 }, {
     constructor: function(args) {
@@ -302,6 +306,7 @@ joint.shapes.digital.Gate.define('digital.Subcircuit', {
         markup.push('<g class="rotatable">');
         const iomap = {};
         _.set(args, ['attrs', '.body'], size);
+        _.set(args, ['attrs', 'text.type', 'text'], args.type);
         for (const [num, io] of inputs.entries()) {
             const y = num*16+12;
             markup.push(this.addWire(args, 'left', y, { id: io.get('net'), dir: 'in', bits: io.get('bits') }));
@@ -316,7 +321,7 @@ joint.shapes.digital.Gate.define('digital.Subcircuit', {
                 'ref-y': y, 'ref-dx': -5, 'x-alignment': 'right', text: io.get('net')
             }
         }
-        markup.push('<g class="scalable"><rect class="body"/></g><text class="label"/>');
+        markup.push('<g class="scalable"><rect class="body"/></g><text class="label"/><text class="type"/>');
         for (const io of IOs) {
             iomap[io.get('net')] = io.get('id');
             markup.push('<text class="iolabel port_' + io.get('net') + '"/>');
@@ -439,7 +444,7 @@ joint.shapes.digital.Gate.define('digital.BusSlice', {
         ].join('');
         const val = args.slice.count == 1 ? args.slice.first : 
             args.slice.first + "-" + (args.slice.first + args.slice.count - 1);
-        _.set(args, ["attrs", "text.value", "text"], val);
+        _.set(args, ["attrs", "text.value", "text"], '[' + val + ']');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     },
     operation: function(data) {

@@ -71,7 +71,7 @@ export class Circuit {
         this.listenTo(paper, 'cell:pointerdblclick', function(view, evt) {
             if (!(view.model instanceof joint.shapes.digital.Subcircuit)) return;
             const div = $('<div>', { 
-                title: view.model.get('celltype') + ' ' + view.model.get('label') 
+                title: view.model.get('type') + ' ' + view.model.get('label') 
             });
             const pdiv = $('<div>');
             div.append(pdiv);
@@ -89,18 +89,10 @@ export class Circuit {
         for (const devid in data.devices) {
             const dev = data.devices[devid];
             const cellType = getCellType(dev.type);
-            const cellArgs = { id: devid, celltype: dev.type };
+            const cellArgs = _.clone(dev);
+            cellArgs.id = devid;
             if (cellType == joint.shapes.digital.Subcircuit)
                 cellArgs.graph = this.makeGraph(subcircuits[dev.type], subcircuits);
-            if (cellType == joint.shapes.digital.Input ||
-                cellType == joint.shapes.digital.Output) {
-                cellArgs.net = dev.net;
-            }
-            if ('bits' in dev) cellArgs.bits = dev.bits;
-            if ('label' in dev) cellArgs.label = dev.label;
-            if ('groups' in dev) cellArgs.groups = dev.groups;
-            if ('constant' in dev) cellArgs.constant = dev.constant;
-            if ('slice' in dev) cellArgs.slice = dev.slice;
             const cell = new cellType(cellArgs);
             graph.addCell(cell);
             this.queue.add(cell);
