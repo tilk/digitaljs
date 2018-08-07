@@ -10,10 +10,15 @@ import './style.css';
     
 function getCellType(tp) {
     const types = {
+        '$not': joint.shapes.digital.Not,
         '$and': joint.shapes.digital.And,
         '$or': joint.shapes.digital.Or,
         '$xor': joint.shapes.digital.Xor,
-        '$not': joint.shapes.digital.Not,
+        '$xnor': joint.shapes.digital.Xnor,
+        '$reduce_and': joint.shapes.digital.AndReduce,
+        '$reduce_or': joint.shapes.digital.OrReduce,
+        '$reduce_xor': joint.shapes.digital.XorReduce,
+        '$reduce_xnor': joint.shapes.digital.XnorReduce,
         '$constant': joint.shapes.digital.Constant,
         '$neg': joint.shapes.digital.Negation,
         '$pos': joint.shapes.digital.UnaryPlus,

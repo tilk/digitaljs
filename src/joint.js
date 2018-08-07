@@ -604,6 +604,29 @@ joint.shapes.digital.Gate.define('digital.Gate21', {
     },
 });
 
+// Reducing gate model
+joint.shapes.digital.Gate.define('digital.GateReduce', {
+    size: { width: 60, height: 40 },
+    attrs: {
+        '.body': { width: 75, height: 50 }
+    }
+}, {
+    constructor: function(args) {
+        if (!args.bits) args.bits = 1;
+        this.markup = [
+            '<g class="rotatable">',
+            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: 1 }),
+            this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: args.bits }),
+            '<g class="scalable">',
+            '<image class="body"/>',
+            '</g>',
+            '<text class="label"/>',
+            '</g>'
+        ].join('');
+        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+    },
+});
+
 // Repeater (buffer) gate model
 joint.shapes.digital.Gate11.define('digital.Repeater', {
     attrs: { image: { 'xlink:href': require('./gate-repeater.svg') }}
@@ -683,6 +706,42 @@ joint.shapes.digital.Gate21.define('digital.Xnor', {
     }
 });
 joint.shapes.digital.XnorView = joint.shapes.digital.GateView;
+
+// Reducing Or gate model
+joint.shapes.digital.GateReduce.define('digital.OrReduce', {
+    attrs: { image: { 'xlink:href': require('./gate-or.svg') }}
+}, {
+    operation: function(data) {
+        return { out: [Math.max(...data.in)] };
+    }
+});
+
+// Reducing And gate model
+joint.shapes.digital.GateReduce.define('digital.AndReduce', {
+    attrs: { image: { 'xlink:href': require('./gate-and.svg') }}
+}, {
+    operation: function(data) {
+        return { out: [Math.min(...data.in)] };
+    }
+});
+
+// Reducing Xor gate model
+joint.shapes.digital.GateReduce.define('digital.XorReduce', {
+    attrs: { image: { 'xlink:href': require('./gate-xor.svg') }}
+}, {
+    operation: function(data) {
+        return { out: [data.in.reduce((a, b) => -a * b)] };
+    }
+});
+
+// Reducing Xor gate model
+joint.shapes.digital.GateReduce.define('digital.XnorReduce', {
+    attrs: { image: { 'xlink:href': require('./gate-xor.svg') }}
+}, {
+    operation: function(data) {
+        return { out: [data.in.reduce((a, b) => a * b)] };
+    }
+});
 
 // Unary arithmetic operations
 joint.shapes.digital.Gate.define('digital.Arith11', {
