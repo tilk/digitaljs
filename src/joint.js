@@ -1,6 +1,7 @@
 "use strict";
 
 import joint from 'jointjs';
+import bigInt from 'big-integer';
 
 // Common base class for gate models
 joint.shapes.basic.Generic.define('digital.Gate', {
@@ -683,6 +684,160 @@ joint.shapes.digital.Gate21.define('digital.Xnor', {
 });
 joint.shapes.digital.XnorView = joint.shapes.digital.GateView;
 
+// Unary arithmetic operations
+joint.shapes.digital.Gate.define('digital.Arith11', {
+    size: { width: 40, height: 40 },
+    attrs: {
+        'circle.body': { r: 20 },
+        'text.oper': {
+            fill: 'black',
+            ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
+            'text-anchor': 'middle',
+            'font-size': '14px'
+        }
+    }
+}, {
+    constructor: function(args) {
+        if (!args.bits) args.bits = { in: 1, out: 1 };
+        if (!args.signed) args.signed = false;
+        this.markup = [
+            '<g class="rotatable">',
+            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits.out }),
+            this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: args.bits.in }),
+            '<g class="scalable">',
+            '<circle class="body"/>',
+            '</g>',
+            '<text class="label"/>',
+            '<text class="oper"/>',
+            '</g>'
+        ].join('');
+        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+    },
+    operation: function(data) {
+        const bits = this.get('bits');
+        if (data.in.some(x => x == 0))
+            return { out: Array(bits.out).fill(0) };
+        return {
+            out: bigint2sig(this.arithop(sig2bigint(data.in, this.get('signed'))), bits.out)
+        };
+    }
+});
+
+// Binary arithmetic operations
+joint.shapes.digital.Gate.define('digital.Arith21', {
+    size: { width: 40, height: 40 },
+    attrs: {
+        'circle.body': { r: 20 },
+        'text.oper': {
+            fill: 'black',
+            ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
+            'text-anchor': 'middle',
+            'font-size': '14px'
+        }
+    }
+}, {
+    constructor: function(args) {
+        if (!args.bits) args.bits = { in1: 1, in2: 1, out: 1 };
+        if (!args.signed) args.signed = { in1: false, in2: false };
+        this.markup = [
+            '<g class="rotatable">',
+            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits.out }),
+            this.addWire(args, 'left', 0.3, { id: 'in1', dir: 'in', bits: args.bits.in1 }),
+            this.addWire(args, 'left', 0.7, { id: 'in2', dir: 'in', bits: args.bits.in2 }),
+            '<g class="scalable">',
+            '<circle class="body"/>',
+            '</g>',
+            '<text class="label"/>',
+            '<text class="oper"/>',
+            '</g>'
+        ].join('');
+        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+    },
+    operation: function(data) {
+        const bits = this.get('bits');
+        const sgn = this.get('signed');
+        if (data.in1.some(x => x == 0) || data.in2.some(x => x == 0))
+            return { out: Array(bits.out).fill(0) };
+        return {
+            out: bigint2sig(this.arithop(
+                    sig2bigint(data.in1, sgn.in1),
+                    sig2bigint(data.in2, sgn.in2)), bits.out)
+        };
+    }
+});
+
+// Negation
+joint.shapes.digital.Arith11.define('digital.Negation', {
+    attrs: {
+        'text.oper': { text: '-' }
+    }
+}, {
+    arithop: i => bigInt.zero.minus(i)
+});
+
+// Unary plus
+joint.shapes.digital.Arith11.define('digital.UnaryPlus', {
+    attrs: {
+        'text.oper': { text: '+' }
+    }
+}, {
+    arithop: i => i
+});
+
+// Addition
+joint.shapes.digital.Arith21.define('digital.Addition', {
+    attrs: {
+        'text.oper': { text: '+' }
+    }
+}, {
+    arithop: (i, j) => i.plus(j)
+});
+
+// Subtraction
+joint.shapes.digital.Arith21.define('digital.Subtraction', {
+    attrs: {
+        'text.oper': { text: '-' }
+    }
+}, {
+    arithop: (i, j) => i.minus(j)
+});
+
+// Multiplication
+joint.shapes.digital.Arith21.define('digital.Multiplication', {
+    attrs: {
+        'text.oper': { text: '×' }
+    }
+}, {
+    arithop: (i, j) => i.multiply(j)
+});
+
+// Division
+joint.shapes.digital.Arith21.define('digital.Division', {
+    attrs: {
+        'text.oper': { text: '÷' }
+    }
+}, {
+    arithop: (i, j) => i.divide(j)
+});
+
+// Modulo
+joint.shapes.digital.Arith21.define('digital.Modulo', {
+    attrs: {
+        'text.oper': { text: '%' }
+    }
+}, {
+    arithop: (i, j) => i.mod(j)
+});
+
+// Power
+joint.shapes.digital.Arith21.define('digital.Power', {
+    attrs: {
+        'text.oper': { text: '**' }
+    }
+}, {
+    arithop: (i, j) => i.pow(j)
+});
+
 // Connecting wire model
 joint.dia.Link.define('digital.Wire', {
     attrs: {
@@ -772,5 +927,20 @@ function sigClass(sig) {
 function sig2binary(sig) {
     const digitmap = new Map([[-1, '0'], [0, 'x'], [1, '1']]);
     return sig.map((x) => digitmap.get(x)).reverse().join('');
+}
+
+function bigint2sig(i, bits) {
+    const j = i.isNegative() ? bigInt.one.shiftLeft(bits).plus(i) : i;
+    return j.toArray(2).value
+        .reverse()
+        .map(x => (x<<1)-1)
+        .concat(Array(bits).fill(-1))
+        .slice(0, bits);
+}
+
+function sig2bigint(sig, signed) {
+    const sign = signed && sig.slice(-1)[0] == 1;
+    const j = bigInt.fromArray(sig.slice().reverse().map(x => (x+1)>>1), 2);
+    return sign ? j.minus(bigInt.one.shiftLeft(sig.length)) : j;
 }
 
