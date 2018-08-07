@@ -13,25 +13,25 @@
           'halfadder' : {
             devices: {
               and: {
-                type: '$and'
+                celltype: '$and'
               },
               xor: {
-                type: '$xor'
+                celltype: '$xor'
               },
               out_o: {
-                type: '$output',
+                celltype: '$output',
                 net: 'o'
               },
               out_c: {
-                type: '$output',
+                celltype: '$output',
                 net: 'c'
               },
               in_a: {
-                type: '$input',
+                celltype: '$input',
                 net: 'a'
               },
               in_b: {
-                type: '$input',
+                celltype: '$input',
                 net: 'b'
               }
             },
@@ -57,24 +57,35 @@
           }
         }, devices: {
           carry: {
-            type: '$or',
+            celltype: '$or',
           }, 
           h1: {
-            type: 'halfadder',
+            celltype: 'halfadder',
             label: 'ha1'
           }, 
           h2: {
-            type: 'halfadder',
+            celltype: 'halfadder',
             label: 'ha2'
           }, 
           btn1: {
-            type: '$button',
+            celltype: '$button',
+            label: 'in1',
           },
           btn2: {
-            type: '$button',
+            celltype: '$button',
+            label: 'in2'
           },
           btn3: {
-            type: '$button',
+            celltype: '$button',
+            label: 'in3'
+          },
+          l1: {
+            celltype: '$lamp',
+            label: 'out'
+          },
+          l2: {
+            celltype: '$lamp',
+            label: 'carry'
           }
         },
         connectors: [{
@@ -95,6 +106,12 @@
         }, {
           from: { id: 'btn3', port: 'out' },
           to: { id: 'h2', port: 'b' }
+        }, {
+          from: { id: 'h2', port: 'o' },
+          to: { id: 'l1', port: 'in' }
+        }, {
+          from: { id: 'carry', port: 'out' },
+          to: { id: 'l2', port: 'in' }
         }]});
       const paper = circuit.displayOn($('#paper'));
     </script>

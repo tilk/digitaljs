@@ -18,14 +18,14 @@ module.exports = {
                     'css-loader'
                 ]
             },
-            {
+/*            {
                 test: /\.png/,
                 use: [
                     'file-loader'
                 ]
-            },
+            },*/
             {
-                test: /\.svg/,
+                test: /\.svg|\.png/,
                 use: [
                     'base64-inline-loader?limit=1000&name=[name].[ext]'
                 ]
@@ -48,7 +48,8 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            template: 'src/test.html',
+            template: 'src/test/fulladder.html',
+            filename: 'test/fulladder.html',
             inject: 'head'
         })
     ]
