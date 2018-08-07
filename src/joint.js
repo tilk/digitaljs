@@ -702,7 +702,7 @@ joint.shapes.digital.Gate21.define('digital.Xnor', {
     attrs: { image: { 'xlink:href': require('./gate-xnor.svg') }}
 }, {
     operation: function(data) {
-        return { out: _.zipWith(data.in1, data.in2, (x, y) => -x * y) };
+        return { out: _.zipWith(data.in1, data.in2, (x, y) => x * y) };
     }
 });
 joint.shapes.digital.XnorView = joint.shapes.digital.GateView;
