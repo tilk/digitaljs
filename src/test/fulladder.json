@@ -1,0 +1,105 @@
+{
+        "subcircuits": {
+          "halfadder": {
+            "devices": {
+              "and": {
+                "celltype": "$and"
+              },
+              "xor": {
+                "celltype": "$xor"
+              },
+              "out_o": {
+                "celltype": "$output",
+                "net": "o"
+              },
+              "out_c": {
+                "celltype": "$output",
+                "net": "c"
+              },
+              "in_a": {
+                "celltype": "$input",
+                "net": "a"
+              },
+              "in_b": {
+                "celltype": "$input",
+                "net": "b"
+              }
+            },
+            "connectors": [{
+              "from": { "id": "in_a", "port": "out" },
+              "to": { "id": "and", "port": "in1" }
+            }, {
+              "from": { "id": "in_a", "port": "out" },
+              "to": { "id": "xor", "port": "in1" }
+            }, {
+              "from": { "id": "in_b", "port": "out" },
+              "to": { "id": "and", "port": "in2" }
+            }, {
+              "from": { "id": "in_b", "port": "out" },
+              "to": { "id": "xor", "port": "in2" }
+            }, {
+              "from": { "id": "and", "port": "out" },
+              "to": { "id": "out_c", "port": "in" }
+            }, {
+              "from": { "id": "xor", "port": "out" },
+              "to": { "id": "out_o", "port": "in" }
+            }]
+          }
+        }, "devices": {
+          "carry": {
+            "celltype": "$or"
+          }, 
+          "h1": {
+            "celltype": "halfadder",
+            "label": "ha1"
+          }, 
+          "h2": {
+            "celltype": "halfadder",
+            "label": "ha2"
+          }, 
+          "btn1": {
+            "celltype": "$button",
+            "label": "in1"
+          },
+          "btn2": {
+            "celltype": "$button",
+            "label": "in2"
+          },
+          "btn3": {
+            "celltype": "$button",
+            "label": "in3"
+          },
+          "l1": {
+            "celltype": "$lamp",
+            "label": "out"
+          },
+          "l2": {
+            "celltype": "$lamp",
+            "label": "carry"
+          }
+        },
+        "connectors": [{
+          "from": { "id": "h1", "port": "c" },
+          "to": { "id": "carry", "port": "in1" }
+        }, {
+          "from": { "id": "h2", "port": "c" },
+          "to": { "id": "carry", "port": "in2" }
+        }, {
+          "from": { "id": "h1", "port": "o" },
+          "to": { "id": "h2", "port": "a" }
+        }, {
+          "from": { "id": "btn1", "port": "out" },
+          "to": { "id": "h1", "port": "a" }
+        }, {
+          "from": { "id": "btn2", "port": "out" },
+          "to": { "id": "h1", "port": "b" }
+        }, {
+          "from": { "id": "btn3", "port": "out" },
+          "to": { "id": "h2", "port": "b" }
+        }, {
+          "from": { "id": "h2", "port": "o" },
+          "to": { "id": "l1", "port": "in" }
+        }, {
+          "from": { "id": "carry", "port": "out" },
+          "to": { "id": "l2", "port": "in" }
+        }]}

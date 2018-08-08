@@ -48,7 +48,9 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            template: 'src/test/fulladder.html',
+            title: 'Full Adder',
+            template: 'src/test/template.html',
+            test: JSON.stringify(require('./src/test/fulladder.json')),
             filename: 'test/fulladder.html',
             inject: 'head'
         })
