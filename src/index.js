@@ -25,6 +25,8 @@ function getCellType(tp) {
         '$reduce_xnor': joint.shapes.digital.XnorReduce,
         '$reduce_bool': joint.shapes.digital.OrReduce,
         '$logic_not': joint.shapes.digital.NorReduce,
+        '$shl': joint.shapes.digital.ShiftLeft,
+        '$shr': joint.shapes.digital.ShiftRight,
         '$lt': joint.shapes.digital.Lt,
         '$le': joint.shapes.digital.Le,
         '$eq': joint.shapes.digital.Eq,
