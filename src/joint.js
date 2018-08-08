@@ -843,6 +843,49 @@ joint.shapes.digital.Gate.define('digital.Arith21', {
     }
 });
 
+// Comparison operations
+joint.shapes.digital.Gate.define('digital.Compare', {
+    size: { width: 40, height: 40 },
+    attrs: {
+        'circle.body': { r: 20 },
+        'text.oper': {
+            fill: 'black',
+            ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
+            'text-anchor': 'middle',
+            'font-size': '14px'
+        }
+    }
+}, {
+    constructor: function(args) {
+        if (!args.bits) args.bits = { in1: 1, in2: 1 };
+        if (!args.signed) args.signed = { in1: false, in2: false };
+        this.markup = [
+            '<g class="rotatable">',
+            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: 1 }),
+            this.addWire(args, 'left', 0.3, { id: 'in1', dir: 'in', bits: args.bits.in1 }),
+            this.addWire(args, 'left', 0.7, { id: 'in2', dir: 'in', bits: args.bits.in2 }),
+            '<g class="scalable">',
+            '<circle class="body"/>',
+            '</g>',
+            '<text class="label"/>',
+            '<text class="oper"/>',
+            '</g>'
+        ].join('');
+        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+    },
+    operation: function(data) {
+        const bits = this.get('bits');
+        const sgn = this.get('signed');
+        if (data.in1.some(x => x == 0) || data.in2.some(x => x == 0))
+            return { out: [0] };
+        return {
+            out: [this.arithcomp(
+                    sig2bigint(data.in1, sgn.in1),
+                    sig2bigint(data.in2, sgn.in2)) ? 1 : -1]
+        };
+    }
+});
+
 // Negation
 joint.shapes.digital.Arith11.define('digital.Negation', {
     attrs: {
@@ -913,6 +956,60 @@ joint.shapes.digital.Arith21.define('digital.Power', {
     }
 }, {
     arithop: (i, j) => i.pow(j)
+});
+
+// Less than operator
+joint.shapes.digital.Compare.define('digital.Lt', {
+    attrs: {
+        'text.oper': { text: '<' }
+    }
+}, {
+    arithcomp: (i, j) => i.lt(j)
+});
+
+// Less or equal operator
+joint.shapes.digital.Compare.define('digital.Le', {
+    attrs: {
+        'text.oper': { text: '≤' }
+    }
+}, {
+    arithcomp: (i, j) => i.leq(j)
+});
+
+// Greater than operator
+joint.shapes.digital.Compare.define('digital.Gt', {
+    attrs: {
+        'text.oper': { text: '>' }
+    }
+}, {
+    arithcomp: (i, j) => i.gt(j)
+});
+
+// Less than operator
+joint.shapes.digital.Compare.define('digital.Ge', {
+    attrs: {
+        'text.oper': { text: '≥' }
+    }
+}, {
+    arithcomp: (i, j) => i.geq(j)
+});
+
+// Equality operator
+joint.shapes.digital.Compare.define('digital.Eq', {
+    attrs: {
+        'text.oper': { text: '=' }
+    }
+}, {
+    arithcomp: (i, j) => i.lesser(j)
+});
+
+// Nonequality operator
+joint.shapes.digital.Compare.define('digital.Ne', {
+    attrs: {
+        'text.oper': { text: '≠' }
+    }
+}, {
+    arithcomp: (i, j) => i.lesser(j)
 });
 
 // Connecting wire model
