@@ -716,12 +716,30 @@ joint.shapes.digital.GateReduce.define('digital.OrReduce', {
     }
 });
 
+// Reducing Nor gate model
+joint.shapes.digital.GateReduce.define('digital.NorReduce', {
+    attrs: { image: { 'xlink:href': require('./gate-nor.svg') }}
+}, {
+    operation: function(data) {
+        return { out: [-Math.max(...data.in)] };
+    }
+});
+
 // Reducing And gate model
 joint.shapes.digital.GateReduce.define('digital.AndReduce', {
     attrs: { image: { 'xlink:href': require('./gate-and.svg') }}
 }, {
     operation: function(data) {
         return { out: [Math.min(...data.in)] };
+    }
+});
+
+// Reducing Nand gate model
+joint.shapes.digital.GateReduce.define('digital.NandReduce', {
+    attrs: { image: { 'xlink:href': require('./gate-nand.svg') }}
+}, {
+    operation: function(data) {
+        return { out: [-Math.min(...data.in)] };
     }
 });
 
