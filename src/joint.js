@@ -897,6 +897,46 @@ joint.shapes.digital.Arith21.define('digital.Power', {
     arithop: (i, j) => i.pow(j)
 });
 
+// Multiplexers
+joint.shapes.digital.Gate.define('digital.GenMux', {
+    attrs: {
+    }
+}, {
+    constructor: function(args) {
+        if (!args.bits) args.bits = { in: 1, sel: 1 };
+        const n_ins = this.muxNumInputs(args.bits.sel);
+        const size = { width: 40, height: (n_ins+1)*16+8 };
+        _.set(args, ['attrs', '.body', 'points'], 
+            [[0,0],[40,10],[40,size.height-10],[0,size.height]]
+                .map(x => x.join(',')).join(' '));
+        args.size = size;
+        const markup = [];
+        markup.push('<g class="rotatable">');
+        for (const num of Array(n_ins).keys()) {
+            const y = num*16+12;
+            markup.push(this.addWire(args, 'left', y, { id: 'in' + num, dir: 'in', bits: args.bits.in }));
+        }
+        markup.push(this.addWire(args, 'left', n_ins*16+12, { id: 'sel', dir: 'in', bits: args.bits.sel }));
+        markup.push(this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits.in }));
+        markup.push('<g class="scalable"><polygon class="body"/></g><text class="label"/>');
+        markup.push('</g>');
+        this.markup = markup.join('');
+        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+    },
+    operation: function(data) {
+        const i = this.muxInput(data.sel);
+        if (i === undefined) return { out: Array(this.get('bits').in).fill(0) };
+        return { out: data['in' + this.muxInput(data.sel)] };
+    }
+});
+
+// Multiplexer with binary selection
+joint.shapes.digital.GenMux.define('digital.Mux', {
+}, {
+    muxNumInputs: n => 1 << n,
+    muxInput: i => i.some(x => x == 0) ? undefined : sig2bigint(i).toString()
+});
+
 // Connecting wire model
 joint.dia.Link.define('digital.Wire', {
     attrs: {
