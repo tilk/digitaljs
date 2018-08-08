@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+    <title><%= htmlWebpackPlugin.options.title %></title>
+  </head>
+  <body>
+    <div id="paper">
+    </div>
+    <script>
+      const circuit = new digitaljs.Circuit(<%= htmlWebpackPlugin.options.test %>);
+      const paper = circuit.displayOn($('#paper'));
+    </script>
+  </body>
+</html>
