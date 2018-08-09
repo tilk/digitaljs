@@ -1047,6 +1047,14 @@ joint.shapes.digital.GenMux.define('digital.Mux', {
     muxInput: i => i.some(x => x == 0) ? undefined : sig2bigint(i).toString()
 });
 
+// Multiplexer with one-hot selection
+joint.shapes.digital.GenMux.define('digital.Mux1Hot', {
+}, {
+    muxNumInputs: n => n + 1,
+    muxInput: i => i.some(x => x == 0) || i.filter(x => x == 1).length > 1
+        ? undefined : String(i.indexOf(1)+1)
+});
+
 // Shift left operator
 joint.shapes.digital.Shift.define('digital.ShiftLeft', {
     attrs: {
