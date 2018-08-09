@@ -1127,6 +1127,52 @@ joint.shapes.digital.Compare.define('digital.Ne', {
     arithcomp: (i, j) => i.neq(j)
 });
 
+joint.shapes.digital.Gate.define('digital.Dff', {
+}, {
+    constructor: function(args) {
+        _.defaults(args, { bits: 1, clock: { polarity: true }});
+        if (args.arst && !args.arst.value)
+            args.arst.value = 0;
+        const markup = [];
+        markup.push('<g class="rotatable">');
+        markup.push(this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits }));
+        let num = 0;
+        markup.push(this.addWire(args, 'left', (num++*16)+12, { id: 'in', dir: 'in', bits: args.bits }));
+        markup.push(this.addWire(args, 'left', (num++*16)+12, { id: 'clk', dir: 'in', bits: 1 }));
+        if ('arst' in args)
+            markup.push(this.addWire(args, 'left', (num++*16)+12, { id: 'arst', dir: 'in', bits: 1 }));
+        if ('enable' in args)
+            markup.push(this.addWire(args, 'left', (num++*16)+12, { id: 'en', dir: 'in', bits: 1 }));
+        markup.push('<g class="scalable"><rect class="body"/></g><text class="label"/>');
+        markup.push('</g>');
+        this.markup = markup.join('');
+        const size = { width: 80, height: vcount*16+8 };
+        args.size = size;
+        _.set(args, ['attrs', '.body'], size);
+        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        this.last_clk = 0;
+    },
+    operation: function(data) {
+        const last_clk = this.last_clk;
+        this.last_clk = data.clk[0];
+        function polarity(what) {
+            return this.get(what).polarity ? 1 : -1
+        }
+        if (this.has('enable') && data.en[0] != polarity('enable'))
+            return this.get('outputSignals');
+        if (this.has('arst') && data.arst[0] == polarity('arst'))
+            return { out: bigint2sig(bigInt(this.get('arst').value), this.get('bits')) };
+        if (this.get('clock').level) {
+            if (data.clk[0] == polarity('clock'))
+                return { out: data.in };
+        } else {
+            if (data.clk[0] == polarity('clock') && last_clk == -polarity('clock'))
+                return { out: data.in };
+        }
+        return this.get('outputSignals');
+    }
+});
+
 // Connecting wire model
 joint.dia.Link.define('digital.Wire', {
     attrs: {
