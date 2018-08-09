@@ -1115,7 +1115,7 @@ joint.shapes.digital.Compare.define('digital.Eq', {
         'text.oper': { text: '=' }
     }
 }, {
-    arithcomp: (i, j) => i.lesser(j)
+    arithcomp: (i, j) => i.eq(j)
 });
 
 // Nonequality operator
@@ -1124,7 +1124,7 @@ joint.shapes.digital.Compare.define('digital.Ne', {
         'text.oper': { text: '≠' }
     }
 }, {
-    arithcomp: (i, j) => i.lesser(j)
+    arithcomp: (i, j) => i.neq(j)
 });
 
 // Connecting wire model
