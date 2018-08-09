@@ -1146,7 +1146,7 @@ joint.shapes.digital.Gate.define('digital.Dff', {
         markup.push('<g class="scalable"><rect class="body"/></g><text class="label"/>');
         markup.push('</g>');
         this.markup = markup.join('');
-        const size = { width: 80, height: vcount*16+8 };
+        const size = { width: 80, height: num*16+8 };
         args.size = size;
         _.set(args, ['attrs', '.body'], size);
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
@@ -1155,9 +1155,7 @@ joint.shapes.digital.Gate.define('digital.Dff', {
     operation: function(data) {
         const last_clk = this.last_clk;
         this.last_clk = data.clk[0];
-        function polarity(what) {
-            return this.get(what).polarity ? 1 : -1
-        }
+        const polarity = what => this.get(what).polarity ? 1 : -1
         if (this.has('enable') && data.en[0] != polarity('enable'))
             return this.get('outputSignals');
         if (this.has('arst') && data.arst[0] == polarity('arst'))
