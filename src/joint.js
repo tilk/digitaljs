@@ -1223,6 +1223,12 @@ joint.shapes.digital.WireView = joint.dia.LinkView.extend({
             this.$el.toggleClass('low', cl == 'low');
             this.$el.toggleClass('defined', cl == 'defined');
         });
+    },
+
+    // Quick-and-dirty performance fix
+    onEndModelChange: function(endType, endModel, opt) {
+        if ('inputSignals' in endModel.changed || 'outputSignals' in endModel.changed) return;
+        joint.dia.LinkView.prototype.onEndModelChange.apply(this, arguments);
     }
 });
 
