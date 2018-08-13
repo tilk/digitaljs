@@ -1242,12 +1242,21 @@ function validNumber(str) {
     return re.test(str);
 }
 
-function binary2sig(str, bits) {
-    if (str.length > bits) str = str.substring(str.length - bits);
-    const lettermap = new Map([['x', 0], ['0', -1], ['1', 1]]);
-    return _.times(bits - str.length, _.constant(str[0] == 'x' ? 0 : -1))
-        .concat(str.split('').map((x => lettermap.get(x)))).reverse();
+function mk_num2sig(bw) {
+    const num2sig_map = {x: Array(bw).fill(0)};
+    for (const x of Array(1 << bw).keys()) {
+        num2sig_map[x.toString(36)] = bigint2sig(bigInt(x), bw);
+    }
+    Object.freeze(num2sig_map);
+
+    return (str, bits) => [].concat(...str.split('').reverse().map(x => num2sig_map[x]))
+        .concat(Array(Math.max(0, bits - str.length * bw)).fill(str[0] == 'x' ? 0 : -1))
+        .slice(0, bits);
 }
+
+const binary2sig = mk_num2sig(1);
+const oct2sig = mk_num2sig(3);
+const hex2sig = mk_num2sig(4);
 
 function isLive(sig) {
     return _.every(sig, (x) => x > 0);
