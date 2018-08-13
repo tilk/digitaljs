@@ -206,6 +206,7 @@ export class Circuit {
             graph.addCell(new joint.shapes.digital.Wire({
                 source: {id: conn.from.id, port: conn.from.port},
                 target: {id: conn.to.id, port: conn.to.port},
+                netname: conn.name
             }));
         }
         joint.layout.DirectedGraph.layout(graph, {

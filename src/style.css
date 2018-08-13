@@ -133,6 +133,10 @@
     stroke-width: 4px;
 }
 
+.joint-link .label > text {
+    font-size: 8pt;
+}
+
 .joint-element.live .body {
     fill: #FEB662;
     stroke: #CF9452;

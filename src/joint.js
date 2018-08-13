@@ -1208,6 +1208,25 @@ joint.dia.Link.define('digital.Wire', {
             endDirections: ['left'],
             maximumLoops: 4000
         });
+        if (this.has('netname')) {
+            this.label(0, {
+                markup: [
+                    {
+                        tagName: 'text',
+                        selector: 'label'
+                    }
+                ],
+                attrs: {
+                    label: {
+                        text: this.get('netname'),
+                        fill: 'black'
+                    }
+                },
+                position: {
+                    distance: 0.5
+                }
+            });
+        }
     }
 });
 
