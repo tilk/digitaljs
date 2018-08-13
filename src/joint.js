@@ -1277,10 +1277,22 @@ function sigClass(sig) {
     else return '';
 }
 
-function sig2binary(sig) {
-    const digitmap = new Map([[-1, '0'], [0, 'x'], [1, '1']]);
-    return sig.map((x) => digitmap.get(x)).reverse().join('');
+function mk_sig2num(bw) {
+    return sig => {
+        const csig = sig.slice();
+        const sg = [];
+        while (csig.length > 0) sg.push(csig.splice(0, bw));
+        sg.reverse();
+        while (sg[0].length < bw) sg[0].push(-1);
+        return sg
+            .map(l => l.some(x => x == 0) ? 'x' : l.reduceRight((a, b) => (a << 1) + ((b + 1) >> 1), 0).toString(36))
+            .join('');
+    }
 }
+
+const sig2binary = mk_sig2num(1);
+const sig2oct = mk_sig2num(3);
+const sig2hex = mk_sig2num(4);
 
 function bigint2sig(i, bits) {
     const j = i.isNegative() ? bigInt.one.shiftLeft(bits).plus(i) : i;
