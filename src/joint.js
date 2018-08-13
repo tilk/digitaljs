@@ -1259,15 +1259,15 @@ const oct2sig = mk_num2sig(3);
 const hex2sig = mk_num2sig(4);
 
 function isLive(sig) {
-    return _.every(sig, (x) => x > 0);
+    return sig.every(x => x > 0);
 }
 
 function isLow(sig) {
-    return _.every(sig, (x) => x < 0);
+    return sig.every(x => x < 0);
 }
 
 function isDefined(sig) {
-    return _.some(sig, (x) => x != 0);
+    return sig.some(x => x != 0);
 }
 
 function sigClass(sig) {
