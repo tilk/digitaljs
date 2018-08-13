@@ -119,27 +119,18 @@
 
 .joint-link.live > .connection {
     stroke: #03c03c;
-    stroke-width: 3px;
-}
-
-.loint-link.live .connection-wrap {
-    stroke: #03c03c;
 }
 
 .joint-link.low > .connection {
     stroke: #fc7c68;
-    stroke-width: 3px;
-}
-.loint-link.low .connection-wrap {
-    stroke: #FD7C68;
 }
 
 .joint-link.defined > .connection {
     stroke: #779ecb;
-    stroke-width: 3px;
 }
-.loint-link.defined .connection-wrap {
-    stroke: #779ecb;
+
+.joint-link.bus > .connection {
+    stroke-width: 4px;
 }
 
 .joint-element.live .body {

@@ -118,29 +118,6 @@ export class Circuit {
     }
     makeGraph(data, subcircuits) {
         const graph = new joint.dia.Graph();
-        for (const devid in data.devices) {
-            const dev = data.devices[devid];
-            const cellType = getCellType(dev.celltype);
-            const cellArgs = _.clone(dev);
-            cellArgs.id = devid;
-            if (cellType == joint.shapes.digital.Subcircuit)
-                cellArgs.graph = this.makeGraph(subcircuits[dev.celltype], subcircuits);
-            const cell = new cellType(cellArgs);
-            graph.addCell(cell);
-            this.queue.add(cell);
-        }
-        for (const conn of data.connectors) {
-            graph.addCell(new joint.shapes.digital.Wire({
-                source: {id: conn.from.id, port: conn.from.port},
-                target: {id: conn.to.id, port: conn.to.port},
-            }));
-        }
-        joint.layout.DirectedGraph.layout(graph, {
-            nodeSep: 20,
-            edgeSep: 0,
-            rankSep: 110,
-            rankDir: "LR"
-        });
         this.listenTo(graph, 'change:buttonState', function(gate, sig) {
             this.queue.add(gate);
         });
@@ -213,6 +190,29 @@ export class Circuit {
                 cell.set('signal', sgate.get('outputSignals')[strt.port]);
                 cell.set('bits', sgate.ports[strt.port].bits);
             }
+        });
+        for (const devid in data.devices) {
+            const dev = data.devices[devid];
+            const cellType = getCellType(dev.celltype);
+            const cellArgs = _.clone(dev);
+            cellArgs.id = devid;
+            if (cellType == joint.shapes.digital.Subcircuit)
+                cellArgs.graph = this.makeGraph(subcircuits[dev.celltype], subcircuits);
+            const cell = new cellType(cellArgs);
+            graph.addCell(cell);
+            this.queue.add(cell);
+        }
+        for (const conn of data.connectors) {
+            graph.addCell(new joint.shapes.digital.Wire({
+                source: {id: conn.from.id, port: conn.from.port},
+                target: {id: conn.to.id, port: conn.to.port},
+            }));
+        }
+        joint.layout.DirectedGraph.layout(graph, {
+            nodeSep: 20,
+            edgeSep: 0,
+            rankSep: 110,
+            rankDir: "LR"
         });
         return graph;
     }

@@ -1201,7 +1201,7 @@ joint.dia.Link.define('digital.Wire', {
         '</g>'
     ].join(''),
 
-    initialize: function() {
+    initialize: function(args) {
         joint.dia.Link.prototype.initialize.apply(this, arguments);
         this.router('metro', {
             startDirections: ['right'],
@@ -1218,22 +1218,32 @@ joint.shapes.digital.WireView = joint.dia.LinkView.extend({
         this.$el.toggleClass('live', cl == 'live');
         this.$el.toggleClass('low', cl == 'low');
         this.$el.toggleClass('defined', cl == 'defined');
+        this.$el.toggleClass('bus', this.model.get('bits') > 1);
         this.listenTo(this.model, 'change:signal', function(wire, signal) {
             const cl = sigClass(this.model.get('signal'));
             this.$el.toggleClass('live', cl == 'live');
             this.$el.toggleClass('low', cl == 'low');
             this.$el.toggleClass('defined', cl == 'defined');
         });
-        this.hackcnt = 0;
+        this.listenTo(this.model, 'change:bits', function(wire, bits) {
+            this.$el.toggleClass('bus', bits > 1);
+        });
+        this.prevModels = { source: null, target: null };
     },
+
+    // custom options:
+    options: joint.util.defaults({
+        doubleLinkTools: true,
+    }, joint.dia.LinkView.prototype.options),
 
     // Quick-and-dirty performance fix
     onEndModelChange: function(endType, endModel, opt) {
         if (typeof endModel == 'object' && endModel != null &&
-            Object.keys(endModel.changed).length > 0 && this.hackcnt > 1 &&
+            endModel == this.prevModels[endType] &&
+            Object.keys(endModel.changed).length > 0 &&
             !('position' in endModel.changed)) return;
         joint.dia.LinkView.prototype.onEndModelChange.apply(this, arguments);
-        this.hackcnt++;
+        this.prevModels[endType] = endModel;
     }
 });
 
