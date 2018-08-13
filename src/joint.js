@@ -1205,7 +1205,8 @@ joint.dia.Link.define('digital.Wire', {
         joint.dia.Link.prototype.initialize.apply(this, arguments);
         this.router('metro', {
             startDirections: ['right'],
-            endDirections: ['left']
+            endDirections: ['left'],
+            maximumLoops: 4000
         });
     }
 });
