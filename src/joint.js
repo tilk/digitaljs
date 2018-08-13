@@ -397,7 +397,7 @@ joint.shapes.digital.Gate.define('digital.Constant', {
     }
 }, {
     constructor: function(args) {
-        args.outputSignals = args.constant;
+        args.outputSignals = { out: args.constant };
         _.set(args, ['attrs', 'text.value', 'text'], sig2binary(args.constant));
         this.markup = [
             '<g class="rotatable">',
