@@ -530,27 +530,52 @@ body {
 foreignObject body {
     display: block;
     margin: 0;
-    position: absolute;
+    position: relative;
     width: 100%;
     height: 100%;
 }
 
-foreignObject body input {
+foreignObject body input,
+foreignObject body select {
     pointer-events: all;
 }
 
-foreignObject body input[type='text'] {
-    width: 100%;
+foreignObject body input[type='text'],
+foreignObject body select {
     font-size: 8pt;
     border: 1px solid gray;
     box-sizing: border-box;
     position: absolute;
     transform: translate(0, -50%);
     top: 50%;
+}
+
+foreignObject body input[type='text'] {
     font-family: 'monospace';
+    width: 100%;
 }
 
 input.invalid {
     background: #ffaaaa;
+}
+
+foreignObject.tooltip {
+    visibility: hidden;
+    opacity:0;
+    transition:visibility 0s linear 0.5s,opacity 0.5s linear;
+}
+
+foreignObject.tooltip:hover,
+g:hover > foreignObject.tooltip {
+    visibility: visible;
+    opacity:1;
+    transition-delay:0s;
+}
+
+foreignObject.tooltip body {
+    border: 1px solid gray;
+    box-sizing: border-box;
+    background: white;
+    padding: 5px;
 }
 

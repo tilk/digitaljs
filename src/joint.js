@@ -92,6 +92,9 @@ joint.shapes.basic.Generic.define('digital.Gate', {
 });
 
 joint.shapes.digital.GateView = joint.dia.ElementView.extend({
+    stopprop: function(evt) {
+        evt.stopPropagation();
+    },
 });
 
 // Lamp model -- displays a single-bit input
@@ -132,6 +135,7 @@ joint.shapes.digital.LampView = joint.shapes.digital.GateView.extend({
 // Numeric display -- displays a number
 joint.shapes.digital.Gate.define('digital.NumDisplay', {
     bits: 1,
+    numbase: 'bin',
     attrs: {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
         'text.value': { 
@@ -141,7 +145,11 @@ joint.shapes.digital.Gate.define('digital.NumDisplay', {
             'text-anchor': 'middle',
             'font-size': '14px',
             'font-family': 'monospace'
-        }
+        },
+        '.tooltip': {
+            ref: '.body', 'ref-x': 0, 'ref-y': 0, 'y-alignment': 'bottom',
+            width: 80, height: 30
+        },
     }
 }, {
     constructor: function(args) {
@@ -152,6 +160,14 @@ joint.shapes.digital.Gate.define('digital.NumDisplay', {
             '<g class="scalable">',
             '<rect class="body"/>',
             '</g>',
+            '<foreignObject requiredExtensions="http://www.w3.org/1999/xhtml" class="tooltip">',
+            '<body xmlns="http://www.w3.org/1999/xhtml">',
+            '<select>',
+            '<option value="bin">bin</option>',
+            '<option value="oct">oct</option>',
+            '<option value="hex">hex</option>',
+            '</select>',
+            '</body></foreignObject>',
             '<text class="value"/>',
             '<text class="label"/>',
             '</g>'
@@ -160,13 +176,24 @@ joint.shapes.digital.Gate.define('digital.NumDisplay', {
     },
     initialize: function(args) {
         joint.shapes.digital.Gate.prototype.initialize.apply(this, arguments);
-        this.attr('text.value/text', sig2binary(this.get('inputSignals').in));
-        this.listenTo(this, 'change:inputSignals', function(wire, signal) {
-            this.attr('text.value/text', sig2binary(signal.in));
-        });
+        const settext = () => {
+            this.attr('text.value/text', sig2base(this.get('inputSignals').in, this.get('numbase')));
+        }
+        settext();
+        this.listenTo(this, 'change:inputSignals', settext);
+        this.listenTo(this, 'change:numbase', settext);
+    },
+});
+joint.shapes.digital.NumDisplayView = joint.shapes.digital.GateView.extend({
+    events: {
+        "click select": "stopprop",
+        "mousedown select": "stopprop",
+        "change select": "change"
+    },
+    change: function(evt) {
+        this.model.set('numbase', evt.target.value || 'bin');
     }
 });
-joint.shapes.digital.NumDisplayView = joint.shapes.digital.GateView;
 
 // Numeric entry -- parses a number from a text box
 joint.shapes.digital.Gate.define('digital.NumEntry', {
@@ -208,9 +235,6 @@ joint.shapes.digital.NumEntryView = joint.shapes.digital.GateView.extend({
         "click input": "stopprop",
         "mousedown input": "stopprop",
         "change input": "change"
-    },
-    stopprop: function(evt) {
-        evt.stopPropagation();
     },
     change: function(evt) {
         if (validNumber(evt.target.value)) {
@@ -270,9 +294,6 @@ joint.shapes.digital.ButtonView = joint.shapes.digital.GateView.extend({
     activateButton: function() {
         this.model.set('buttonState', !this.model.get('buttonState'));
     },
-    stopprop: function(evt) {
-        evt.stopPropagation();
-    }
 });
 
 // Subcircuit model -- embeds a circuit graph in an element
@@ -1322,6 +1343,14 @@ function mk_sig2num(bw) {
 const sig2binary = mk_sig2num(1);
 const sig2oct = mk_sig2num(3);
 const sig2hex = mk_sig2num(4);
+
+function sig2base(sig, base) {
+    switch(base) {
+        case 'bin': return sig2binary(sig);
+        case 'oct': return sig2oct(sig);
+        case 'hex': return sig2hex(sig);
+    }
+}
 
 function bigint2sig(i, bits) {
     const j = i.isNegative() ? bigInt.one.shiftLeft(bits).plus(i) : i;
