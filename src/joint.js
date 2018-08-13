@@ -805,7 +805,7 @@ joint.shapes.digital.GateReduce.define('digital.XnorReduce', {
 joint.shapes.digital.Gate.define('digital.Arith11', {
     size: { width: 40, height: 40 },
     attrs: {
-        'circle.body': { r: 20 },
+        'circle.body': { r: 20, cx: 20, cy: 20 },
         'text.oper': {
             fill: 'black',
             ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
@@ -844,7 +844,7 @@ joint.shapes.digital.Gate.define('digital.Arith11', {
 joint.shapes.digital.Gate.define('digital.Arith21', {
     size: { width: 40, height: 40 },
     attrs: {
-        'circle.body': { r: 20 },
+        'circle.body': { r: 20, cx: 20, cy: 20 },
         'text.oper': {
             fill: 'black',
             ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
@@ -887,7 +887,7 @@ joint.shapes.digital.Gate.define('digital.Arith21', {
 joint.shapes.digital.Gate.define('digital.Shift', {
     size: { width: 40, height: 40 },
     attrs: {
-        'circle.body': { r: 20 },
+        'circle.body': { r: 20, cx: 20, cy: 20 },
         'text.oper': {
             fill: 'black',
             ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
