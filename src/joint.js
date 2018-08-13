@@ -1229,7 +1229,7 @@ joint.shapes.digital.WireView = joint.dia.LinkView.extend({
 
     // Quick-and-dirty performance fix
     onEndModelChange: function(endType, endModel, opt) {
-        if (typeof endModel == 'object' &&
+        if (typeof endModel == 'object' && endModel != null &&
             Object.keys(endModel.changed).length > 0 && this.hackcnt > 1 &&
             !('position' in endModel.changed)) return;
         joint.dia.LinkView.prototype.onEndModelChange.apply(this, arguments);
