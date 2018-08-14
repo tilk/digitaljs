@@ -946,7 +946,7 @@ joint.shapes.digital.Gate.define('digital.Shift', {
 joint.shapes.digital.Gate.define('digital.Compare', {
     size: { width: 40, height: 40 },
     attrs: {
-        'circle.body': { r: 20 },
+        'circle.body': { r: 20, cx: 20, cy: 20 },
         'text.oper': {
             fill: 'black',
             ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
