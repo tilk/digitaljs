@@ -352,14 +352,14 @@ joint.shapes.digital.Gate.define('digital.Subcircuit', {
         for (const [num, io] of inputs.entries()) {
             const y = num*16+12;
             markup.push(this.addWire(args, 'left', y, { id: io.get('net'), dir: 'in', bits: io.get('bits') }));
-            args.attrs['text.port_' + io.get('net')] = {
+            args.attrs['text.iolabel.port_' + io.get('net')] = {
                 'ref-y': y, 'ref-x': 5, 'x-alignment': 'left', text: io.get('net')
             }
         }
         for (const [num, io] of outputs.entries()) {
             const y = num*16+12;
             markup.push(this.addWire(args, 'right', y, { id: io.get('net'), dir: 'out', bits: io.get('bits') }));
-            args.attrs['text.port_' + io.get('net')] = {
+            args.attrs['text.iolabel.port_' + io.get('net')] = {
                 'ref-y': y, 'ref-dx': -5, 'x-alignment': 'right', text: io.get('net')
             }
         }
