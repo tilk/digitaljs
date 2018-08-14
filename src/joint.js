@@ -145,7 +145,7 @@ joint.shapes.digital.Gate.define('digital.NumBase', {
     numbaseMarkup: [
         '<foreignObject requiredExtensions="http://www.w3.org/1999/xhtml" class="tooltip">',
         '<body xmlns="http://www.w3.org/1999/xhtml">',
-        '<select>',
+        '<select class="numbase">',
         '<option value="bin">bin</option>',
         '<option value="oct">oct</option>',
         '<option value="hex">hex</option>',
@@ -154,11 +154,11 @@ joint.shapes.digital.Gate.define('digital.NumBase', {
 });
 joint.shapes.digital.NumBaseView = joint.shapes.digital.GateView.extend({
     events: {
-        "click select": "stopprop",
-        "mousedown select": "stopprop",
-        "change select": "change"
+        "click select.numbase": "stopprop",
+        "mousedown select.numbase": "stopprop",
+        "change select.numbase": "changeNumbase"
     },
-    change: function(evt) {
+    changeNumbase: function(evt) {
         this.model.set('numbase', evt.target.value || 'bin');
     }
 });
@@ -206,12 +206,12 @@ joint.shapes.digital.NumBase.define('digital.NumDisplay', {
 joint.shapes.digital.NumDisplayView = joint.shapes.digital.NumBaseView;
 
 // Numeric entry -- parses a number from a text box
-joint.shapes.digital.Gate.define('digital.NumEntry', {
+joint.shapes.digital.NumBase.define('digital.NumEntry', {
     bits: 1,
     buttonState: [0],
     attrs: {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
-        'foreignObject': {
+        'foreignObject.valinput': {
             ref: '.body', 'ref-x': 0.5, 'ref-y': 0.5,
             width: 60, height: 30,
             'x-alignment': 'middle', 'y-alignment': 'middle'
@@ -226,32 +226,42 @@ joint.shapes.digital.Gate.define('digital.NumEntry', {
             '<g class="scalable">',
             '<rect class="body"/>',
             '</g>',
+            this.numbaseMarkup,
             '<text class="label"/>',
-            '<foreignObject requiredExtensions="http://www.w3.org/1999/xhtml">',
+            '<foreignObject class="valinput" requiredExtensions="http://www.w3.org/1999/xhtml">',
             '<body xmlns="http://www.w3.org/1999/xhtml">',
             '<input type="text" />',
             '</body></foreignObject>',
             '</g>'
         ].join('');
         args.buttonState = args.outputSignals.out;
-        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        joint.shapes.digital.NumBase.prototype.constructor.apply(this, arguments);
     },
     operation: function() {
         return { out: this.get('buttonState') };
     },
 });
-joint.shapes.digital.NumEntryView = joint.shapes.digital.GateView.extend({
-    events: {
+joint.shapes.digital.NumEntryView = joint.shapes.digital.NumBaseView.extend({
+    events: _.merge({
         "click input": "stopprop",
         "mousedown input": "stopprop",
         "change input": "change"
+    }, joint.shapes.digital.NumBaseView.prototype.events),
+    initialize: function(args) {
+        joint.shapes.digital.NumBaseView.prototype.initialize.apply(this, arguments);
+        const settext = () => {
+            this.$('input').val(sig2base(this.model.get('buttonState'), this.model.get('numbase')));
+            this.$('input').removeClass('invalid');
+        };
+        settext();
+        this.listenTo(this.model, 'change:buttonState', settext);
+        this.listenTo(this.model, 'change:numbase', settext);
     },
     change: function(evt) {
-        if (validNumber(evt.target.value)) {
-            const val = binary2sig(evt.target.value, this.model.get('bits'));
+        const numbase = this.model.get('numbase');
+        if (validNumber(evt.target.value, numbase)) {
+            const val = base2sig(evt.target.value, this.model.get('bits'), numbase);
             this.model.set('buttonState', val);
-            this.$('input').val(sig2binary(val));
-            this.$('input').removeClass('invalid');
         } else {
             this.$('input').addClass('invalid');
         }
@@ -1306,8 +1316,14 @@ joint.shapes.digital.WireView = joint.dia.LinkView.extend({
     }
 });
 
-function validNumber(str) {
-    const re = /^[01x]+$/;
+function validNumber(str, base) {
+    const binary_re = /^[01x]+$/;
+    const oct_re = /^[0-7x]+$/;
+    const hex_re = /^[0-9a-fx]+$/;
+    const re =
+        base == 'bin' ? binary_re :
+        base == 'oct' ? oct_re :
+        base == 'hex' ? hex_re : /^$/;
     return re.test(str);
 }
 
@@ -1326,6 +1342,14 @@ function mk_num2sig(bw) {
 const binary2sig = mk_num2sig(1);
 const oct2sig = mk_num2sig(3);
 const hex2sig = mk_num2sig(4);
+
+function base2sig(str, bits, base) {
+    switch(base) {
+        case 'bin': return binary2sig(str, bits);
+        case 'oct': return oct2sig(str, bits);
+        case 'hex': return hex2sig(str, bits);
+    }
+}
 
 function isLive(sig) {
     return sig.every(x => x > 0);
