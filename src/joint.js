@@ -101,7 +101,7 @@ joint.shapes.digital.GateView = joint.dia.ElementView.extend({
 joint.shapes.digital.Gate.define('digital.Lamp', {
     size: { width: 30, height: 30 },
     attrs: {
-        '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 50, height: 50 },
+        'rect.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 50, height: 50 },
         '.led': {
             ref: '.body', 'ref-x': .5, 'ref-y': .5,
             'x-alignment': 'middle', 'y-alignment': 'middle', r: 15
