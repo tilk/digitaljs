@@ -6,6 +6,7 @@ import * as help from '@app/help.js';
 
 // Bit extending
 joint.shapes.digital.Gate.define('digital.BitExtend', {
+    propagation: 0,
     attrs: {
         "text.value": {
             fill: 'black',
@@ -55,6 +56,7 @@ joint.shapes.digital.BitExtend.define('digital.SignExtend', {
 
 // Bus slicing
 joint.shapes.digital.Gate.define('digital.BusSlice', {
+    propagation: 0,
     size: { width: 40, height: 24 },
     attrs: {
         ".body": {
@@ -93,6 +95,7 @@ joint.shapes.digital.Gate.define('digital.BusSlice', {
 
 // Bus grouping
 joint.shapes.digital.Gate.define('digital.BusRegroup', {
+    propagation: 0,
 }, {
     constructor: function(args) {
         const markup = [];

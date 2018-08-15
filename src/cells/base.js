@@ -9,6 +9,7 @@ joint.shapes.basic.Generic.define('digital.Gate', {
     size: { width: 80, height: 30 },
     inputSignals: {},
     outputSignals: {},
+    propagation: 1,
     attrs: {
         '.': { magnet: false },
         'rect.body': { width: 80, height: 30 },

@@ -63,7 +63,8 @@ function getCellType(tp) {
     
 export class Circuit {
     constructor(data) {
-        this.queue = new Set();
+        this.queue = new Map();
+        this.tick = 0;
         this.graph = this.makeGraph(data, data.subcircuits);
         this.interval = setInterval(() => this.updateGates(), 10);
     }
@@ -119,7 +120,7 @@ export class Circuit {
     makeGraph(data, subcircuits) {
         const graph = new joint.dia.Graph();
         this.listenTo(graph, 'change:buttonState', function(gate, sig) {
-            this.queue.add(gate);
+            this.enqueue(gate);
         });
         this.listenTo(graph, 'change:signal', function(wire, signal) {
             const gate = graph.getCell(wire.get('target').id);
@@ -132,7 +133,7 @@ export class Circuit {
                 console.assert(subcir instanceof joint.shapes.digital.Subcircuit);
                 subcir.set('outputSignals', _.chain(subcir.get('outputSignals'))
                     .clone().set(gate.get('net'), sigs.in).value());
-            } else this.queue.add(gate);
+            } else this.enqueue(gate);
         });
         this.listenTo(graph, 'change:outputSignals', function(gate, sigs) {
             _.chain(graph.getConnectedLinks(gate, {outbound: true}))
@@ -200,7 +201,7 @@ export class Circuit {
                 cellArgs.graph = this.makeGraph(subcircuits[dev.celltype], subcircuits);
             const cell = new cellType(cellArgs);
             graph.addCell(cell);
-            this.queue.add(cell);
+            this.enqueue(cell);
         }
         for (const conn of data.connectors) {
             graph.addCell(new joint.shapes.digital.Wire({
@@ -217,34 +218,32 @@ export class Circuit {
         });
         return graph;
     }
+    enqueue(gate) {
+        const k = (this.tick + gate.get('propagation')) | 0;
+        const sq = (() => {
+            const q = this.queue.get(k);
+            if (q !== undefined) return q;
+            const q1 = new Map();
+            this.queue.set(k, q1);
+            return q1;
+        })();
+        sq.set(gate, gate.get('inputSignals'));
+    }
     updateGates() {
-        const q = this.queue;
-        this.queue = new Set();
-        const changes = [];
-        for (const gate of q) {
+        const k = this.tick;
+        const q = this.queue.get(k) || new Map();
+        while (q.size) {
+            const [gate, args] = q.entries().next().value;
+            q.delete(gate);
             if (gate instanceof joint.shapes.digital.Subcircuit) continue;
             if (gate instanceof joint.shapes.digital.Input) continue;
             if (gate instanceof joint.shapes.digital.Output) continue;
             const graph = gate.graph;
             if (!graph) continue;
-/*
-            const args = _.chain(graph.getConnectedLinks(gate, {inbound: true}))
-                .groupBy((wire) => wire.get('target').port)
-                .mapValues((wires) => wires[0].get('signal'))
-                .value();
-*/
-            const args = gate.get('inputSignals');
-            for (const pname in gate.ports) {
-                if (gate.ports[pname].dir !== 'in') continue;
-                if (!(pname in args)) args[pname] = 0;
-            }
-            const sigs = gate.operation(args);
-            changes.push([gate, sigs]);
+            gate.set('outputSignals', gate.operation(args));
         }
-        console.assert(this.queue.size == 0);
-        for (const [gate, sigs] of changes) {
-            gate.set('outputSignals', sigs);
-        }
+        this.queue.delete(k);
+        this.tick = (this.tick + 1) | 0;
     }
 };
 

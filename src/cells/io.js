@@ -39,6 +39,7 @@ joint.shapes.digital.NumBaseView = joint.shapes.digital.GateView.extend({
 // Numeric display -- displays a number
 joint.shapes.digital.NumBase.define('digital.NumDisplay', {
     bits: 1,
+    propagation: 0,
     attrs: {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
         'text.value': { 
@@ -81,6 +82,7 @@ joint.shapes.digital.NumDisplayView = joint.shapes.digital.NumBaseView;
 // Numeric entry -- parses a number from a text box
 joint.shapes.digital.NumBase.define('digital.NumEntry', {
     bits: 1,
+    propagation: 0,
     buttonState: [0],
     attrs: {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
@@ -145,6 +147,7 @@ joint.shapes.digital.NumEntryView = joint.shapes.digital.NumBaseView.extend({
 joint.shapes.digital.Gate.define('digital.Button', {
     size: { width: 30, height: 30 },
     buttonState: false,
+    propagation: 0,
     attrs: {
         'rect.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 50, height: 50 },
         '.btnface': { 
@@ -193,6 +196,7 @@ joint.shapes.digital.ButtonView = joint.shapes.digital.GateView.extend({
 joint.shapes.digital.Gate.define('digital.IO', {
     size: { width: 60, height: 30 },
     bits: 1,
+    propagation: 0,
     attrs: {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
         text: {
@@ -237,6 +241,7 @@ joint.shapes.digital.OutputView = joint.shapes.digital.GateView;
 
 // Constant
 joint.shapes.digital.NumBase.define('digital.Constant', {
+    propagation: 0,
     attrs: {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
         'text.value': { 

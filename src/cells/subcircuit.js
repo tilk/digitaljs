@@ -6,6 +6,7 @@ import * as help from '@app/help.js';
 
 // Subcircuit model -- embeds a circuit graph in an element
 joint.shapes.digital.Gate.define('digital.Subcircuit', {
+    propagation: 0,
     attrs: {
         'text.iolabel': { fill: 'black', 'y-alignment': 'middle', ref: '.body' },
         'path.wire' : { ref: '.body', 'ref-y': .5, stroke: 'black' },
