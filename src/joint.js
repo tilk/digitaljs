@@ -2,6 +2,7 @@
 
 import joint from 'jointjs';
 import bigInt from 'big-integer';
+import * as help from './help.js';
 
 // Common base class for gate models
 joint.shapes.basic.Generic.define('digital.Gate', {
@@ -44,7 +45,7 @@ joint.shapes.basic.Generic.define('digital.Gate', {
             const port = this.ports[portname];
             if (port.dir !== dir) continue;
             let classes = [port.dir, 'port_' + port.id];
-            classes.push(sigClass(signal[port.id]));
+            classes.push(help.sigClass(signal[port.id]));
             this.attr("[port='" + port.id + "']/class", classes.join(' '));
         }
     },
@@ -126,8 +127,8 @@ joint.shapes.digital.LampView = joint.shapes.digital.GateView.extend({
     initialize: function() {
         joint.shapes.digital.GateView.prototype.initialize.apply(this, arguments);
         this.listenTo(this.model, 'change:inputSignals', function(wire, signal) {
-            this.$(".led").toggleClass('live', isLive(signal.in));
-            this.$(".led").toggleClass('low', isLow(signal.in));
+            this.$(".led").toggleClass('live', help.isLive(signal.in));
+            this.$(".led").toggleClass('low', help.isLow(signal.in));
         });
     }
 });
@@ -196,7 +197,7 @@ joint.shapes.digital.NumBase.define('digital.NumDisplay', {
     initialize: function(args) {
         joint.shapes.digital.NumBase.prototype.initialize.apply(this, arguments);
         const settext = () => {
-            this.attr('text.value/text', sig2base(this.get('inputSignals').in, this.get('numbase')));
+            this.attr('text.value/text', help.sig2base(this.get('inputSignals').in, this.get('numbase')));
         }
         settext();
         this.listenTo(this, 'change:inputSignals', settext);
@@ -250,7 +251,7 @@ joint.shapes.digital.NumEntryView = joint.shapes.digital.NumBaseView.extend({
     initialize: function(args) {
         joint.shapes.digital.NumBaseView.prototype.initialize.apply(this, arguments);
         const settext = () => {
-            this.$('input').val(sig2base(this.model.get('buttonState'), this.model.get('numbase')));
+            this.$('input').val(help.sig2base(this.model.get('buttonState'), this.model.get('numbase')));
             this.$('input').removeClass('invalid');
         };
         settext();
@@ -259,8 +260,8 @@ joint.shapes.digital.NumEntryView = joint.shapes.digital.NumBaseView.extend({
     },
     change: function(evt) {
         const numbase = this.model.get('numbase');
-        if (validNumber(evt.target.value, numbase)) {
-            const val = base2sig(evt.target.value, this.model.get('bits'), numbase);
+        if (help.validNumber(evt.target.value, numbase)) {
+            const val = help.base2sig(evt.target.value, this.model.get('bits'), numbase);
             this.model.set('buttonState', val);
         } else {
             this.$('input').addClass('invalid');
@@ -455,7 +456,7 @@ joint.shapes.digital.NumBase.define('digital.Constant', {
     initialize: function(args) {
         joint.shapes.digital.NumBase.prototype.initialize.apply(this, arguments);
         const settext = () => {
-            this.attr('text.value/text', sig2base(this.get('constant'), this.get('numbase')));
+            this.attr('text.value/text', help.sig2base(this.get('constant'), this.get('numbase')));
         }
         settext();
         this.listenTo(this, 'change:numbase', settext);
@@ -845,7 +846,7 @@ joint.shapes.digital.Gate.define('digital.Arith11', {
         if (data.in.some(x => x == 0))
             return { out: Array(bits.out).fill(0) };
         return {
-            out: bigint2sig(this.arithop(sig2bigint(data.in, this.get('signed'))), bits.out)
+            out: help.bigint2sig(this.arithop(help.sig2bigint(data.in, this.get('signed'))), bits.out)
         };
     }
 });
@@ -886,9 +887,9 @@ joint.shapes.digital.Gate.define('digital.Arith21', {
         if (data.in1.some(x => x == 0) || data.in2.some(x => x == 0))
             return { out: Array(bits.out).fill(0) };
         return {
-            out: bigint2sig(this.arithop(
-                    sig2bigint(data.in1, sgn.in1),
-                    sig2bigint(data.in2, sgn.in2)), bits.out)
+            out: help.bigint2sig(this.arithop(
+                    help.sig2bigint(data.in1, sgn.in1),
+                    help.sig2bigint(data.in2, sgn.in2)), bits.out)
         };
     }
 });
@@ -930,7 +931,7 @@ joint.shapes.digital.Gate.define('digital.Shift', {
         const fillx = this.get('fillx');
         if (data.in2.some(x => x == 0))
             return { out: Array(bits.out).fill(0) };
-        const am = sig2bigint(data.in2, sgn.in2) * this.shiftdir;
+        const am = help.sig2bigint(data.in2, sgn.in2) * this.shiftdir;
         const signbit = data.in1.slice(-1)[0];
         const ext = Array(Math.max(0, bits.out - bits.in1))
             .fill(fillx ? 0 : sgn.in1 ? data.in1.slice(-1)[0] : -1);
@@ -979,8 +980,8 @@ joint.shapes.digital.Gate.define('digital.Compare', {
             return { out: [0] };
         return {
             out: [this.arithcomp(
-                    sig2bigint(data.in1, sgn.in1),
-                    sig2bigint(data.in2, sgn.in2)) ? 1 : -1]
+                    help.sig2bigint(data.in1, sgn.in1),
+                    help.sig2bigint(data.in2, sgn.in2)) ? 1 : -1]
         };
     }
 });
@@ -1094,7 +1095,7 @@ joint.shapes.digital.Gate.define('digital.GenMux', {
 joint.shapes.digital.GenMux.define('digital.Mux', {
 }, {
     muxNumInputs: n => 1 << n,
-    muxInput: i => i.some(x => x == 0) ? undefined : sig2bigint(i).toString()
+    muxInput: i => i.some(x => x == 0) ? undefined : help.sig2bigint(i).toString()
 });
 
 // Multiplexer with one-hot selection
@@ -1209,7 +1210,7 @@ joint.shapes.digital.Gate.define('digital.Dff', {
         if ('enable' in polarity && data.en[0] != pol('enable'))
             return this.get('outputSignals');
         if ('arst' in polarity && data.arst[0] == pol('arst'))
-            return { out: bigint2sig(bigInt(this.get('arst_value')), this.get('bits')) };
+            return { out: help.bigint2sig(bigInt(this.get('arst_value')), this.get('bits')) };
         if ('clock' in polarity) {
             const last_clk = this.last_clk;
             this.last_clk = data.clk[0];
@@ -1283,13 +1284,13 @@ joint.dia.Link.define('digital.Wire', {
 joint.shapes.digital.WireView = joint.dia.LinkView.extend({
     initialize: function() {
         joint.dia.LinkView.prototype.initialize.apply(this, arguments);
-        const cl = sigClass(this.model.get('signal'));
+        const cl = help.sigClass(this.model.get('signal'));
         this.$el.toggleClass('live', cl == 'live');
         this.$el.toggleClass('low', cl == 'low');
         this.$el.toggleClass('defined', cl == 'defined');
         this.$el.toggleClass('bus', this.model.get('bits') > 1);
         this.listenTo(this.model, 'change:signal', function(wire, signal) {
-            const cl = sigClass(this.model.get('signal'));
+            const cl = help.sigClass(this.model.get('signal'));
             this.$el.toggleClass('live', cl == 'live');
             this.$el.toggleClass('low', cl == 'low');
             this.$el.toggleClass('defined', cl == 'defined');
@@ -1315,98 +1316,4 @@ joint.shapes.digital.WireView = joint.dia.LinkView.extend({
         this.prevModels[endType] = endModel;
     }
 });
-
-function validNumber(str, base) {
-    const binary_re = /^[01x]+$/;
-    const oct_re = /^[0-7x]+$/;
-    const hex_re = /^[0-9a-fx]+$/;
-    const re =
-        base == 'bin' ? binary_re :
-        base == 'oct' ? oct_re :
-        base == 'hex' ? hex_re : /^$/;
-    return re.test(str);
-}
-
-function mk_num2sig(bw) {
-    const num2sig_map = {x: Array(bw).fill(0)};
-    for (const x of Array(1 << bw).keys()) {
-        num2sig_map[x.toString(36)] = bigint2sig(bigInt(x), bw);
-    }
-    Object.freeze(num2sig_map);
-
-    return (str, bits) => [].concat(...str.split('').reverse().map(x => num2sig_map[x]))
-        .concat(Array(Math.max(0, bits - str.length * bw)).fill(str[0] == 'x' ? 0 : -1))
-        .slice(0, bits);
-}
-
-const binary2sig = mk_num2sig(1);
-const oct2sig = mk_num2sig(3);
-const hex2sig = mk_num2sig(4);
-
-function base2sig(str, bits, base) {
-    switch(base) {
-        case 'bin': return binary2sig(str, bits);
-        case 'oct': return oct2sig(str, bits);
-        case 'hex': return hex2sig(str, bits);
-    }
-}
-
-function isLive(sig) {
-    return sig.every(x => x > 0);
-}
-
-function isLow(sig) {
-    return sig.every(x => x < 0);
-}
-
-function isDefined(sig) {
-    return sig.some(x => x != 0);
-}
-
-function sigClass(sig) {
-    if (isLive(sig)) return 'live';
-    else if (isLow(sig)) return 'low';
-    else if (isDefined(sig)) return 'defined';
-    else return '';
-}
-
-function mk_sig2num(bw) {
-    return sig => {
-        const csig = sig.slice();
-        const sg = [];
-        while (csig.length > 0) sg.push(csig.splice(0, bw));
-        sg.reverse();
-        while (sg[0].length < bw) sg[0].push(-1);
-        return sg
-            .map(l => l.some(x => x == 0) ? 'x' : l.reduceRight((a, b) => (a << 1) + ((b + 1) >> 1), 0).toString(36))
-            .join('');
-    }
-}
-
-const sig2binary = mk_sig2num(1);
-const sig2oct = mk_sig2num(3);
-const sig2hex = mk_sig2num(4);
-
-function sig2base(sig, base) {
-    switch(base) {
-        case 'bin': return sig2binary(sig);
-        case 'oct': return sig2oct(sig);
-        case 'hex': return sig2hex(sig);
-    }
-}
-
-function bigint2sig(i, bits) {
-    const j = i.isNegative() ? bigInt.one.shiftLeft(bits).plus(i) : i;
-    return j.toArray(2).value
-        .reverse()
-        .map(x => (x<<1)-1)
-        .concat(Array(bits).fill(-1))
-        .slice(0, bits);
-}
-
-function sig2bigint(sig, signed) {
-    const sign = signed && sig.slice(-1)[0] == 1;
-    const j = bigInt.fromArray(sig.slice().reverse().map(x => (x+1)>>1), 2);
-    return sign ? j.minus(bigInt.one.shiftLeft(sig.length)) : j;
-}
 
