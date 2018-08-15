@@ -2,7 +2,7 @@
 
 import joint from 'jointjs';
 import bigInt from 'big-integer';
-import * as help from '../help.js';
+import * as help from '@app/help.js';
 
 // Common base class for gate models
 joint.shapes.basic.Generic.define('digital.Gate', {

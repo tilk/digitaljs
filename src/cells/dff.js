@@ -2,7 +2,7 @@
 
 import joint from 'jointjs';
 import bigInt from 'big-integer';
-import * as help from '../help.js';
+import * as help from '@app/help.js';
 
 // D flip-flops
 joint.shapes.digital.Gate.define('digital.Dff', {

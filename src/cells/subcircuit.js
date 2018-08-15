@@ -2,7 +2,7 @@
 
 import joint from 'jointjs';
 import bigInt from 'big-integer';
-import * as help from '../help.js';
+import * as help from '@app/help.js';
 
 // Subcircuit model -- embeds a circuit graph in an element
 joint.shapes.digital.Gate.define('digital.Subcircuit', {

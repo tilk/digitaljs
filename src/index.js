@@ -5,8 +5,8 @@ import _ from 'lodash';
 import Backbone from 'backbone';
 import 'jquery-ui/ui/widgets/dialog';
 import 'jquery-ui/themes/base/all.css';
-import './cells.js';
-import './style.css';
+import '@app/cells.js';
+import '@app/style.css';
     
 function getCellType(tp) {
     const types = {

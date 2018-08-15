@@ -7,7 +7,10 @@ module.exports = {
     },
     devtool: "source-map",
     resolve: {
-        extensions: ['.js', '.jsx', '.json', '.css']
+        extensions: ['.js', '.jsx', '.json', '.css'],
+        alias: {
+            '@app': path.resolve(__dirname, 'src/')
+        }
     },
     module: {
         rules: [
