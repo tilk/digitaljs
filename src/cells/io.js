@@ -15,7 +15,8 @@ joint.shapes.digital.Gate.define('digital.NumBase', {
     }
 }, {
     numbaseMarkup: [
-        '<foreignObject requiredExtensions="http://www.w3.org/1999/xhtml" class="tooltip">',
+        // requiredExtensions="http://www.w3.org/1999/xhtml" not supported by Chrome
+        '<foreignObject class="tooltip">',
         '<body xmlns="http://www.w3.org/1999/xhtml">',
         '<select class="numbase">',
         '<option value="bin">bin</option>',
@@ -100,7 +101,7 @@ joint.shapes.digital.NumBase.define('digital.NumEntry', {
             '</g>',
             this.numbaseMarkup,
             '<text class="label"/>',
-            '<foreignObject class="valinput" requiredExtensions="http://www.w3.org/1999/xhtml">',
+            '<foreignObject class="valinput">',
             '<body xmlns="http://www.w3.org/1999/xhtml">',
             '<input type="text" />',
             '</body></foreignObject>',
