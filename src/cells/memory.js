@@ -37,6 +37,8 @@ joint.shapes.digital.Gate.define('digital.Memory', {
             if ('clock_polarity' in port) {
                 markup.push(this.addWire(args, 'left', num_y(num++), { id: portname + 'clk', dir: 'in', bits: 1 }));
                 this.last_clk[portname + 'clk'] = 0;
+            } else {
+                port.transparent = true;
             }
             portsplits.push(num);
         }
@@ -70,28 +72,35 @@ joint.shapes.digital.Gate.define('digital.Memory', {
         const out = {};
         const check_enabled = (portname, port) => {
             const pol = what => port[what + '_polarity'] ? 1 : -1;
-            if ('enable_polarity' in port && data[portname + 'en'][0] != pol(enable))
+            if ('enable_polarity' in port && data[portname + 'en'][0] != pol('enable'))
                 return false;
             if ('clock_polarity' in port) {
                 const clkname = portname + 'clk';
                 const last_clk = this.last_clk[clkname];
-                this.last_clk[clkname] = data[clkname];
-                return (data[clkname] == pol('clock') && last_clk[clkname] == -pol('clock'));
+                this.last_clk[clkname] = data[clkname][0];
+                return (data[clkname][0] == pol('clock') && last_clk == -pol('clock'));
             }
             return true;
         };
         const do_read = (portname, port) => {
-            if (!check_enabled(portname, port)) return;
+            if (!check_enabled(portname, port)) {
+                if ('clock_polarity' in port)
+                    out[portname + 'data'] = this.get('outputSignals')[portname + 'data'];
+                else
+                    out[portname + 'data'] = Array(this.get('bits')).fill(0);
+                return;
+            }
             if (data[portname + 'addr'].some(x => x == 0))
                 out[portname + 'data'] = Array(this.get('bits')).fill(0);
             else {
-                const addr = sig2bigint(data[portname + 'addr'], false);
+                const addr = help.sig2bigint(data[portname + 'addr'], false);
                 out[portname + 'data'] = this.get('memdata')[addr];
             }
         };
         const do_write = (portname, port) => {
             if (!check_enabled(portname, port)) return;
             if (data[portname + 'addr'].some(x => x == 0)) return;
+            const addr = help.sig2bigint(data[portname + 'addr'], false);
             this.get('memdata')[addr] = data[portname + 'data'];
         };
         for (const [num, port] of this.get('rdports').entries())
