@@ -8,4 +8,5 @@ import "./cells/bus.js";
 import "./cells/subcircuit.js";
 import "./cells/mux.js";
 import "./cells/dff.js";
+import "./cells/memory.js";
 

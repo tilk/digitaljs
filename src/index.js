@@ -45,6 +45,7 @@ function getCellType(tp) {
         '$mux': joint.shapes.digital.Mux,
         '$pmux': joint.shapes.digital.Mux1Hot,
         '$dff': joint.shapes.digital.Dff,
+        '$mem': joint.shapes.digital.Memory,
         '$button': joint.shapes.digital.Button,
         '$lamp': joint.shapes.digital.Lamp,
         '$numdisplay': joint.shapes.digital.NumDisplay,
