@@ -143,6 +143,41 @@ joint.shapes.digital.NumEntryView = joint.shapes.digital.NumBaseView.extend({
     }
 });
 
+// Lamp model -- displays a single-bit input
+joint.shapes.digital.Gate.define('digital.Lamp', {
+    size: { width: 30, height: 30 },
+    attrs: {
+        'rect.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 50, height: 50 },
+        '.led': {
+            ref: '.body', 'ref-x': .5, 'ref-y': .5,
+            'x-alignment': 'middle', 'y-alignment': 'middle', r: 15
+        }
+    }
+}, {
+    constructor: function(args) {
+        this.markup = [
+            '<g class="rotatable">',
+            this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: 1 }),
+            '<g class="scalable">',
+            '<rect class="body"/>',
+            '<circle class="led"/>',
+            '</g>',
+            '<text class="label"/>',
+            '</g>'
+        ].join('')
+        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+    }
+});
+joint.shapes.digital.LampView = joint.shapes.digital.GateView.extend({
+    initialize: function() {
+        joint.shapes.digital.GateView.prototype.initialize.apply(this, arguments);
+        this.listenTo(this.model, 'change:inputSignals', function(wire, signal) {
+            this.$(".led").toggleClass('live', help.isLive(signal.in));
+            this.$(".led").toggleClass('low', help.isLow(signal.in));
+        });
+    }
+});
+
 // Button model -- single-bit clickable input
 joint.shapes.digital.Gate.define('digital.Button', {
     size: { width: 30, height: 30 },
