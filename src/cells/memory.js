@@ -17,11 +17,13 @@ joint.shapes.digital.Gate.define('digital.Memory', {
         if (!args.abits) args.abits = 1;
         if (!args.rdports) args.rdports = [];
         if (!args.wrports) args.wrports = [];
+        if (!args.words) args.words = 1 << args.abits;
+        if (!args.offset) args.offset = 0;
         if (args.memdata)
             args.memdata = args.memdata.slice();
         else
-            args.memdata = Array(1 << args.abits).fill(Array(args.bits).fill(0));
-        console.assert(args.memdata.length == 1 << args.abits);
+            args.memdata = Array(args.words).fill(Array(args.bits).fill(0));
+        console.assert(args.memdata.length == args.words);
         this.last_clk = {};
         const markup = [];
         markup.push('<g class="rotatable">');
@@ -47,7 +49,7 @@ joint.shapes.digital.Gate.define('digital.Memory', {
             markup.push(this.addWire(args, 'left', num_y(num++), { id: portname + 'data', dir: 'in', bits: args.bits }));
             markup.push(this.addWire(args, 'left', num_y(num++), { id: portname + 'addr', dir: 'in', bits: args.abits }));
             if ('enable_polarity' in port)
-                markup.push(this.addWire(args, 'left', num_y(num++), { id: portname + 'en', dir: 'in', bits: 1 }));
+                markup.push(this.addWire(args, 'left', num_y(num++), { id: portname + 'en', dir: 'in', bits: args.bits }));
             if ('clock_polarity' in port) {
                 markup.push(this.addWire(args, 'left', num_y(num++), { id: portname + 'clk', dir: 'in', bits: 1 }));
                 this.last_clk[portname + 'clk'] = 0;
@@ -72,7 +74,7 @@ joint.shapes.digital.Gate.define('digital.Memory', {
         const out = {};
         const check_enabled = (portname, port) => {
             const pol = what => port[what + '_polarity'] ? 1 : -1;
-            if ('enable_polarity' in port && data[portname + 'en'][0] != pol('enable'))
+            if ('enable_polarity' in port && !data[portname + 'en'].some(x => x == pol('enable')))
                 return false;
             if ('clock_polarity' in port) {
                 const clkname = portname + 'clk';
@@ -82,6 +84,8 @@ joint.shapes.digital.Gate.define('digital.Memory', {
             }
             return true;
         };
+        const calc_addr = sig => help.sig2bigint(sig, false) - this.get('offset');
+        const valid_addr = n => n >= 0 && n < this.get('words');
         const do_read = (portname, port) => {
             if (!check_enabled(portname, port)) {
                 if ('clock_polarity' in port)
@@ -93,15 +97,19 @@ joint.shapes.digital.Gate.define('digital.Memory', {
             if (data[portname + 'addr'].some(x => x == 0))
                 out[portname + 'data'] = Array(this.get('bits')).fill(0);
             else {
-                const addr = help.sig2bigint(data[portname + 'addr'], false);
-                out[portname + 'data'] = this.get('memdata')[addr];
+                const addr = calc_addr(data[portname + 'addr']);
+                if (valid_addr(addr))
+                    out[portname + 'data'] = this.get('memdata')[addr];
+                else
+                    out[portname + 'data'] = Array(this.get('bits')).fill(0);
             }
         };
         const do_write = (portname, port) => {
             if (!check_enabled(portname, port)) return;
             if (data[portname + 'addr'].some(x => x == 0)) return;
-            const addr = help.sig2bigint(data[portname + 'addr'], false);
-            this.get('memdata')[addr] = data[portname + 'data'];
+            const addr = calc_addr(data[portname + 'addr']);
+            if (valid_addr(addr))
+                this.get('memdata')[addr] = data[portname + 'data'];
         };
         for (const [num, port] of this.get('rdports').entries())
             if (!port.transparent) do_read('rd' + num, port);
