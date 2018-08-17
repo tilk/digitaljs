@@ -318,3 +318,31 @@ joint.shapes.digital.NumBase.define('digital.Constant', {
 });
 joint.shapes.digital.ConstantView = joint.shapes.digital.NumBaseView;
 
+// Clock
+joint.shapes.digital.Gate.define('digital.Clock', {
+    size: { width: 30, height: 30 },
+    attrs: {
+        'rect.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 60, height: 60 },
+        'path.decor': { stroke: 'black' }
+    }
+}, {
+    constructor: function(args) {
+        args.outputSignals = { out: [-1] };
+        this.markup = [
+            '<g class="rotatable">',
+            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: 1 }),
+            '<g class="scalable">',
+            '<rect class="body"/>',
+            '<path class="decor" d="M15 15 L15 45 L30 45 L30 15 L45 15 L45 45" />',
+            '</g>',
+            '<text class="label" />',
+            '</g>'
+        ].join('');
+        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+    },
+    operation: function() {
+        this.trigger("change:inputSignals", this, {});
+        return { out: [-this.get('outputSignals').out[0]] };
+    }
+});
+
