@@ -51,20 +51,23 @@ joint.shapes.basic.Generic.define('digital.Gate', {
         }
     },
     addWire: function(args, side, loc, port) {
+        const vert = side == 'top';
         const wire_args = {
             ref: 'circle.port_' + port.id, 'ref-y': .5, 'ref-x': .5,
-            d: 'M 0 0 L ' + (side == 'left' ? '40 0' : '-40 0')
+            d: 'M 0 0 L ' + (vert ? '0 40' : side == 'left' ? '40 0' : '-40 0')
         };
         const circle_args = {
             ref: '.body',
             magnet: port.dir == 'out' ? true : 'passive',
             port: port
         };
-        circle_args['ref-y'] = loc;
+        circle_args[vert ? 'ref-x' : 'ref-y'] = loc;
         if (side == 'left') {
             circle_args['ref-x'] = -20;
         } else if (side == 'right') {
             circle_args['ref-dx'] = 20;
+        } else if (side == 'top') {
+            circle_args['ref-y'] = -20;
         } else console.assert(false);
         _.set(args, ['attrs', 'path.wire.port_' + port.id], wire_args);
         _.set(args, ['attrs', 'circle.port_' + port.id], circle_args);
@@ -73,14 +76,20 @@ joint.shapes.basic.Generic.define('digital.Gate', {
             markup += '<text class="bits port_' + port.id + '"/>';
             const bits_args = {
                 text: port.bits,
-                ref: 'circle.port_' + port.id,
-                'ref-y': -3,
-                'text-anchor': 'middle'
+                ref: 'circle.port_' + port.id
             };
+            if (vert) {
+                // TODO
+            } else {
+                bits_args['ref-y'] = -3;
+                bits_args['text-anchor'] = 'middle';
+            }
             if (side == 'left') {
                 bits_args['ref-dx'] = 6;
             } else if (side == 'right') {
                 bits_args['ref-x'] = -6;
+            } else if (side == 'top') {
+                bits_args['ref-y'] = 6;
             } else console.assert(false);
             _.set(args, ['attrs', 'text.bits.port_' + port.id], bits_args);
         }
