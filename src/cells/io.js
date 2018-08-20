@@ -6,7 +6,7 @@ import * as help from '@app/help.js';
 
 // Things with numbers
 joint.shapes.digital.Gate.define('digital.NumBase', {
-    numbase: 'bin',
+    numbase: 'hex',
     attrs: {
         '.tooltip': {
             ref: '.body', 'ref-x': 0, 'ref-y': 0, 'y-alignment': 'bottom',
@@ -19,9 +19,9 @@ joint.shapes.digital.Gate.define('digital.NumBase', {
         '<foreignObject class="tooltip">',
         '<body xmlns="http://www.w3.org/1999/xhtml">',
         '<select class="numbase">',
-        '<option value="bin">bin</option>',
-        '<option value="oct">oct</option>',
         '<option value="hex">hex</option>',
+        '<option value="oct">oct</option>',
+        '<option value="bin">bin</option>',
         '</select>',
         '</body></foreignObject>'].join('')
 });
