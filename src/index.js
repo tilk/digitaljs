@@ -111,8 +111,11 @@ export class Circuit {
             const pdiv = $('<div>');
             div.append(pdiv);
             $('body').append(div);
-            const paper = this.makePaper(pdiv, view.model.get('graph'));
-            div.dialog({ minHeight: 'auto', minWidth: 'auto', width: 'auto' });
+            const graph = view.model.get('graph');
+            const paper = this.makePaper(pdiv, graph);
+            const maxWidth = $(window).width() * 0.9;
+            const maxHeight = $(window).height() * 0.9;
+            div.dialog({ width: Math.min(maxWidth, pdiv.outerWidth() + 60), height: Math.min(maxHeight, pdiv.outerHeight() + 60) });
             div.on('dialogclose', function(evt) {
                 paper.remove();
             });

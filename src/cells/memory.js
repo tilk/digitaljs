@@ -20,10 +20,11 @@ joint.shapes.digital.Gate.define('digital.Memory', {
         if (!args.words) args.words = 1 << args.abits;
         if (!args.offset) args.offset = 0;
         if (args.memdata)
-            args.memdata = args.memdata.slice();
+            this.memdata = args.memdata.slice();
         else
-            args.memdata = Array(args.words).fill(Array(args.bits).fill(0));
-        console.assert(args.memdata.length == args.words);
+            this.memdata = Array(args.words).fill(Array(args.bits).fill(0));
+        delete args.memdata; // performance hack
+        console.assert(this.memdata.length == args.words);
         this.last_clk = {};
         const markup = [];
         markup.push('<g class="rotatable">');
@@ -99,7 +100,7 @@ joint.shapes.digital.Gate.define('digital.Memory', {
             else {
                 const addr = calc_addr(data[portname + 'addr']);
                 if (valid_addr(addr))
-                    out[portname + 'data'] = this.get('memdata')[addr];
+                    out[portname + 'data'] = this.memdata[addr];
                 else
                     out[portname + 'data'] = Array(this.get('bits')).fill(0);
             }
@@ -109,7 +110,7 @@ joint.shapes.digital.Gate.define('digital.Memory', {
             if (data[portname + 'addr'].some(x => x == 0)) return;
             const addr = calc_addr(data[portname + 'addr']);
             if (valid_addr(addr))
-                this.get('memdata')[addr] = data[portname + 'data'];
+                this.memdata[addr] = data[portname + 'data'];
         };
         for (const [num, port] of this.get('rdports').entries())
             if (!port.transparent) do_read('rd' + num, port);
