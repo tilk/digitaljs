@@ -5,10 +5,9 @@ import bigInt from 'big-integer';
 import * as help from '@app/help.js';
 
 // Subcircuit model -- embeds a circuit graph in an element
-joint.shapes.digital.Gate.define('digital.Subcircuit', {
+joint.shapes.digital.Box.define('digital.Subcircuit', {
     propagation: 0,
     attrs: {
-        'text.iolabel': { fill: 'black', 'y-alignment': 'middle', ref: '.body' },
         'path.wire' : { ref: '.body', 'ref-y': .5, stroke: 'black' },
         'text.type': {
             text: '', ref: '.body', 'ref-x': 0.5, 'ref-y': -2, 'x-alignment': 'middle',
@@ -34,28 +33,21 @@ joint.shapes.digital.Gate.define('digital.Subcircuit', {
         const vcount = Math.max(inputs.length, outputs.length);
         const size = { width: 80, height: vcount*16+8 };
         const markup = [];
+        const lblmarkup = [];
         markup.push('<g class="rotatable">');
         const iomap = {};
         _.set(args, ['attrs', '.body'], size);
         _.set(args, ['attrs', 'text.type', 'text'], args.celltype);
         for (const [num, io] of inputs.entries()) {
-            const y = num*16+12;
-            markup.push(this.addWire(args, 'left', y, { id: io.get('net'), dir: 'in', bits: io.get('bits') }));
-            args.attrs['text.iolabel.port_' + io.get('net')] = {
-                'ref-y': y, 'ref-x': 5, 'x-alignment': 'left', text: io.get('net')
-            }
+            markup.push(this.addLabelledWire(args, lblmarkup, 'left', num*16+12, { id: io.get('net'), dir: 'in', bits: io.get('bits') }));
         }
         for (const [num, io] of outputs.entries()) {
-            const y = num*16+12;
-            markup.push(this.addWire(args, 'right', y, { id: io.get('net'), dir: 'out', bits: io.get('bits') }));
-            args.attrs['text.iolabel.port_' + io.get('net')] = {
-                'ref-y': y, 'ref-dx': -5, 'x-alignment': 'right', text: io.get('net')
-            }
+            markup.push(this.addLabelledWire(args, lblmarkup, 'right', num*16+12, { id: io.get('net'), dir: 'out', bits: io.get('bits') }));
         }
         markup.push('<g class="scalable"><rect class="body"/></g><text class="label"/><text class="type"/>');
+        markup.push(lblmarkup.join(''));
         for (const io of IOs) {
             iomap[io.get('net')] = io.get('id');
-            markup.push('<text class="iolabel port_' + io.get('net') + '"/>');
         }
         markup.push('</g>');
         this.markup = markup.join('');
@@ -64,5 +56,5 @@ joint.shapes.digital.Gate.define('digital.Subcircuit', {
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     }
 });
-joint.shapes.digital.SubcircuitView = joint.shapes.digital.GateView;
+joint.shapes.digital.SubcircuitView = joint.shapes.digital.BoxView;
 

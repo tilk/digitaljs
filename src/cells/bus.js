@@ -94,11 +94,12 @@ joint.shapes.digital.Gate.define('digital.BusSlice', {
 });
 
 // Bus grouping
-joint.shapes.digital.Gate.define('digital.BusRegroup', {
+joint.shapes.digital.Box.define('digital.BusRegroup', {
     propagation: 0,
 }, {
     constructor: function(args) {
         const markup = [];
+        const lblmarkup = [];
         args.bits = 0;
         markup.push('<g class="rotatable">');
         const size = { width: 40, height: args.groups.length*16+8 };
@@ -106,14 +107,16 @@ joint.shapes.digital.Gate.define('digital.BusRegroup', {
         args.size = size;
         for (const [num, gbits] of args.groups.entries()) {
             const y = num*16+12;
+            const lbl = args.bits + (gbits > 1 ? '-' + (args.bits + gbits - 1) : '');
             args.bits += gbits;
-            markup.push(this.addWire(args, this.group_dir == 'out' ? 'right' : 'left', y,
-                { id: this.group_dir + num, dir: this.group_dir, bits: gbits }));
+            markup.push(this.addLabelledWire(args, lblmarkup, this.group_dir == 'out' ? 'right' : 'left', y,
+                { id: this.group_dir + num, dir: this.group_dir, bits: gbits, label: lbl }));
         }
         const contra = this.group_dir == 'out' ? 'in' : 'out';
         markup.push(this.addWire(args, this.group_dir == 'out' ? 'left' : 'right', 0.5,
             { id: contra, dir: contra, bits: args.bits }));
         markup.push('<g class="scalable"><rect class="body"/></g><text class="label"/>');
+        markup.push(lblmarkup.join(''));
         markup.push('</g>');
         this.markup = markup.join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
@@ -131,7 +134,7 @@ joint.shapes.digital.BusRegroup.define('digital.BusGroup', {
         return { out : _.flatten(outdata) };
     }
 });
-joint.shapes.digital.BusGroupView = joint.shapes.digital.GateView;
+joint.shapes.digital.BusGroupView = joint.shapes.digital.BoxView;
 
 joint.shapes.digital.BusRegroup.define('digital.BusUngroup', {
 }, {
@@ -146,5 +149,5 @@ joint.shapes.digital.BusRegroup.define('digital.BusUngroup', {
         return outdata;
     }
 });
-joint.shapes.digital.BusUngroupView = joint.shapes.digital.GateView;
+joint.shapes.digital.BusUngroupView = joint.shapes.digital.BoxView;
 

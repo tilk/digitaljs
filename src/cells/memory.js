@@ -5,7 +5,7 @@ import bigInt from 'big-integer';
 import * as help from '@app/help.js';
 
 // Memory cell
-joint.shapes.digital.Gate.define('digital.Memory', {
+joint.shapes.digital.Box.define('digital.Memory', {
     attrs: {
         'line.portsplit': {
             stroke: 'black'
@@ -27,18 +27,19 @@ joint.shapes.digital.Gate.define('digital.Memory', {
         console.assert(this.memdata.length == args.words);
         this.last_clk = {};
         const markup = [];
+        const lblmarkup = [];
         markup.push('<g class="rotatable">');
         let num = 0;
         const portsplits = [];
         function num_y(num) { return num * 16 + 12; }
         for (const [pnum, port] of args.rdports.entries()) {
             const portname = "rd" + pnum;
-            markup.push(this.addWire(args, 'right', num_y(num), { id: portname + 'data', dir: 'out', bits: args.bits }));
-            markup.push(this.addWire(args, 'left', num_y(num++), { id: portname + 'addr', dir: 'in', bits: args.abits }));
+            markup.push(this.addLabelledWire(args, lblmarkup, 'right', num_y(num), { id: portname + 'data', dir: 'out', bits: args.bits, label: 'data' }));
+            markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'addr', dir: 'in', bits: args.abits, label: 'addr' }));
             if ('enable_polarity' in port)
-                markup.push(this.addWire(args, 'left', num_y(num++), { id: portname + 'en', dir: 'in', bits: 1 }));
+                markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'en', dir: 'in', bits: 1, label: 'en' }));
             if ('clock_polarity' in port) {
-                markup.push(this.addWire(args, 'left', num_y(num++), { id: portname + 'clk', dir: 'in', bits: 1 }));
+                markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'clk', dir: 'in', bits: 1, label: 'clk' }));
                 this.last_clk[portname + 'clk'] = 0;
             } else {
                 port.transparent = true;
@@ -47,12 +48,12 @@ joint.shapes.digital.Gate.define('digital.Memory', {
         }
         for (const [pnum, port] of args.wrports.entries()) {
             const portname = "wr" + pnum;
-            markup.push(this.addWire(args, 'left', num_y(num++), { id: portname + 'data', dir: 'in', bits: args.bits }));
-            markup.push(this.addWire(args, 'left', num_y(num++), { id: portname + 'addr', dir: 'in', bits: args.abits }));
+            markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'data', dir: 'in', bits: args.bits, label: 'data' }));
+            markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'addr', dir: 'in', bits: args.abits, label: 'addr' }));
             if ('enable_polarity' in port)
-                markup.push(this.addWire(args, 'left', num_y(num++), { id: portname + 'en', dir: 'in', bits: args.bits }));
+                markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'en', dir: 'in', bits: args.bits, label: 'en' }));
             if ('clock_polarity' in port) {
-                markup.push(this.addWire(args, 'left', num_y(num++), { id: portname + 'clk', dir: 'in', bits: 1 }));
+                markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'clk', dir: 'in', bits: 1, label: 'clk' }));
                 this.last_clk[portname + 'clk'] = 0;
             }
             portsplits.push(num);
@@ -63,10 +64,11 @@ joint.shapes.digital.Gate.define('digital.Memory', {
         portsplits.pop();
         markup.push('<g class="scalable"><rect class="body"/>');
         for (const num of portsplits) {
-            const yline = num_y(num) + 8;
+            const yline = num_y(num) - 8;
             markup.push('<line class="portsplit" x1="0" x2="' + size.width +  '" y1="' + yline + '" y2="' + yline + '" />');
         }
         markup.push('</g><text class="label"/>');
+        markup.push(lblmarkup.join(''));
         markup.push('</g>');
         this.markup = markup.join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
@@ -121,4 +123,5 @@ joint.shapes.digital.Gate.define('digital.Memory', {
         return out;
     }
 });
+joint.shapes.digital.MemoryView = joint.shapes.digital.BoxView;
 

@@ -5,24 +5,26 @@ import bigInt from 'big-integer';
 import * as help from '@app/help.js';
 
 // D flip-flops
-joint.shapes.digital.Gate.define('digital.Dff', {
+joint.shapes.digital.Box.define('digital.Dff', {
 }, {
     constructor: function(args) {
         _.defaults(args, { bits: 1, polarity: {} });
         if ('arst' in args.polarity && !args.arst_value)
             args.arst_value = 0;
         const markup = [];
+        const lblmarkup = [];
         markup.push('<g class="rotatable">');
-        markup.push(this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits }));
+        markup.push(this.addLabelledWire(args, lblmarkup, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits, label: 'Q' }));
         let num = 0;
-        markup.push(this.addWire(args, 'left', (num++*16)+12, { id: 'in', dir: 'in', bits: args.bits }));
+        markup.push(this.addLabelledWire(args, lblmarkup, 'left', (num++*16)+12, { id: 'in', dir: 'in', bits: args.bits, label: 'D' }));
         if ('clock' in args.polarity)
-            markup.push(this.addWire(args, 'left', (num++*16)+12, { id: 'clk', dir: 'in', bits: 1 }));
+            markup.push(this.addLabelledWire(args, lblmarkup, 'left', (num++*16)+12, { id: 'clk', dir: 'in', bits: 1 }));
         if ('arst' in args.polarity)
-            markup.push(this.addWire(args, 'left', (num++*16)+12, { id: 'arst', dir: 'in', bits: 1 }));
+            markup.push(this.addLabelledWire(args, lblmarkup, 'left', (num++*16)+12, { id: 'arst', dir: 'in', bits: 1 }));
         if ('enable' in args.polarity)
-            markup.push(this.addWire(args, 'left', (num++*16)+12, { id: 'en', dir: 'in', bits: 1 }));
+            markup.push(this.addLabelledWire(args, lblmarkup, 'left', (num++*16)+12, { id: 'en', dir: 'in', bits: 1 }));
         markup.push('<g class="scalable"><rect class="body"/></g><text class="label"/>');
+        markup.push(lblmarkup.join(''));
         markup.push('</g>');
         this.markup = markup.join('');
         const size = { width: 80, height: num*16+8 };
@@ -48,4 +50,5 @@ joint.shapes.digital.Gate.define('digital.Dff', {
         } else return { out: data.in };
     }
 });
+joint.shapes.digital.DffView = joint.shapes.digital.BoxView;
 

@@ -203,3 +203,26 @@ joint.shapes.digital.WireView = joint.dia.LinkView.extend({
     }
 });
 
+joint.shapes.digital.Gate.define('digital.Box', {
+    attrs: {
+        'text.iolabel': { fill: 'black', 'y-alignment': 'middle', ref: '.body' },
+    }
+}, {
+    addLabelledWire: function(args, lblmarkup, side, loc, port) {
+        console.assert(side == 'left' || side == 'right');
+        const ret = this.addWire(args, side, loc, port);
+        lblmarkup.push('<text class="iolabel port_' + port.id + '"/>');
+        const textattrs = {
+            'ref-y': loc, 'x-alignment': side, text: 'label' in port ? port.label : port.id
+        };
+        if (side == 'left') textattrs['ref-x'] = 5;
+        else if (side == 'right') textattrs['ref-dx'] = -5;
+        _.set(args, ['attrs', 'text.iolabel.port_' + port.id], textattrs);
+        return ret;
+    }
+});
+
+joint.shapes.digital.BoxView = joint.shapes.digital.GateView.extend({
+});
+
+
