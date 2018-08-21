@@ -37,9 +37,9 @@ joint.shapes.digital.Box.define('digital.Memory', {
             markup.push(this.addLabelledWire(args, lblmarkup, 'right', num_y(num), { id: portname + 'data', dir: 'out', bits: args.bits, label: 'data' }));
             markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'addr', dir: 'in', bits: args.abits, label: 'addr' }));
             if ('enable_polarity' in port)
-                markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'en', dir: 'in', bits: 1, label: 'en' }));
+                markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'en', dir: 'in', bits: 1, label: 'en', polarity: port.enable_polarity }));
             if ('clock_polarity' in port) {
-                markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'clk', dir: 'in', bits: 1, label: 'clk' }));
+                markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'clk', dir: 'in', bits: 1, label: 'clk', polarity: port.clock_polarity, clock: true }));
                 this.last_clk[portname + 'clk'] = 0;
             } else {
                 port.transparent = true;
@@ -51,9 +51,9 @@ joint.shapes.digital.Box.define('digital.Memory', {
             markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'data', dir: 'in', bits: args.bits, label: 'data' }));
             markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'addr', dir: 'in', bits: args.abits, label: 'addr' }));
             if ('enable_polarity' in port)
-                markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'en', dir: 'in', bits: args.bits, label: 'en' }));
+                markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'en', dir: 'in', bits: args.bits, label: 'en', polarity: port.enable_polarity }));
             if ('clock_polarity' in port) {
-                markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'clk', dir: 'in', bits: 1, label: 'clk' }));
+                markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'clk', dir: 'in', bits: 1, label: 'clk', polarity: port.clock_polarity, clock: true }));
                 this.last_clk[portname + 'clk'] = 0;
             }
             portsplits.push(num);

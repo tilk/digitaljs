@@ -18,11 +18,11 @@ joint.shapes.digital.Box.define('digital.Dff', {
         let num = 0;
         markup.push(this.addLabelledWire(args, lblmarkup, 'left', (num++*16)+12, { id: 'in', dir: 'in', bits: args.bits, label: 'D' }));
         if ('clock' in args.polarity)
-            markup.push(this.addLabelledWire(args, lblmarkup, 'left', (num++*16)+12, { id: 'clk', dir: 'in', bits: 1 }));
+            markup.push(this.addLabelledWire(args, lblmarkup, 'left', (num++*16)+12, { id: 'clk', dir: 'in', bits: 1, polarity: args.polarity.clock, clock: true }));
         if ('arst' in args.polarity)
-            markup.push(this.addLabelledWire(args, lblmarkup, 'left', (num++*16)+12, { id: 'arst', dir: 'in', bits: 1 }));
+            markup.push(this.addLabelledWire(args, lblmarkup, 'left', (num++*16)+12, { id: 'arst', dir: 'in', bits: 1, polarity: args.polarity.arst }));
         if ('enable' in args.polarity)
-            markup.push(this.addLabelledWire(args, lblmarkup, 'left', (num++*16)+12, { id: 'en', dir: 'in', bits: 1 }));
+            markup.push(this.addLabelledWire(args, lblmarkup, 'left', (num++*16)+12, { id: 'en', dir: 'in', bits: 1, polarity: args.polarity.enable }));
         markup.push('<g class="scalable"><rect class="body"/></g><text class="label"/>');
         markup.push(lblmarkup.join(''));
         markup.push('</g>');

@@ -206,6 +206,7 @@ joint.shapes.digital.WireView = joint.dia.LinkView.extend({
 joint.shapes.digital.Gate.define('digital.Box', {
     attrs: {
         'text.iolabel': { fill: 'black', 'y-alignment': 'middle', ref: '.body' },
+        'path.decor': { stroke: 'black', fill: 'transparent' }
     }
 }, {
     addLabelledWire: function(args, lblmarkup, side, loc, port) {
@@ -215,8 +216,23 @@ joint.shapes.digital.Gate.define('digital.Box', {
         const textattrs = {
             'ref-y': loc, 'x-alignment': side, text: 'label' in port ? port.label : port.id
         };
-        if (side == 'left') textattrs['ref-x'] = 5;
-        else if (side == 'right') textattrs['ref-dx'] = -5;
+        const dist = port.clock ? 10 : 5;
+        if (side == 'left') textattrs['ref-x'] = dist;
+        else if (side == 'right') textattrs['ref-dx'] = -dist;
+        if (port.polarity === false) textattrs['text-decoration'] = 'overline';
+        if (port.clock) {
+            console.assert(side == 'left');
+            let vpath = [
+                [0, -6],
+                [6, 0],
+                [0, 6]
+            ];
+            const path = 'M' + vpath.map(l => l.join(' ')).join(' L');
+            lblmarkup.push('<path class="decor port_' + port.id + '" d="' + path + '" />');
+            _.set(args, ['attrs', 'path.decor.port_' + port.id], {
+                ref: '.body', 'ref-x': 0, 'ref-y': loc
+            });
+        }
         _.set(args, ['attrs', 'text.iolabel.port_' + port.id], textattrs);
         return ret;
     }
