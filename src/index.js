@@ -70,6 +70,10 @@ export class Circuit {
         this.graph = this.makeGraph(data, data.subcircuits);
         this.interval = setInterval(() => this.updateGates(), 10);
     }
+    shutdown() {
+        clearInterval(this.interval);
+        this.stopListening();
+    }
     displayOn(elem) {
         return this.makePaper(elem, this.graph);
     }
