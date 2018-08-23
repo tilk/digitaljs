@@ -1,10 +1,19 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const CleanWebpackPlugin = require("clean-webpack-plugin");
+
+const outputDirectory = 'dist';
 
 module.exports = {
     output: {
-        library: 'digitaljs'
+        path: path.resolve(__dirname, outputDirectory),
+        filename: 'main.js',
+        library: 'digitaljs',
+        libraryTarget: 'umd',
+        umdNamedDefine: true,
+        globalObject: 'this'
     },
+    entry: "./src/index.js",
     devtool: "source-map",
     resolve: {
         extensions: ['.js', '.jsx', '.json', '.css'],
@@ -38,7 +47,7 @@ module.exports = {
                 loader: 'babel-loader',
                 exclude: /node_modules/,
                 query: {
-                    presets: ['env']
+                    presets: ['env'],
                 }
             }, {
                 test: require.resolve('jquery'),
@@ -50,6 +59,7 @@ module.exports = {
         ]
     },
     plugins: [
+        new CleanWebpackPlugin([outputDirectory]),
         new HtmlWebpackPlugin({
             title: 'Full Adder',
             template: 'src/test/template.html',

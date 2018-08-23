@@ -1,8 +1,8 @@
 {
   "name": "digitaljs",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Digital logic simulator",
-  "main": "index.js",
+  "main": "dist/main.js",
   "scripts": {
     "dev": "webpack --mode development",
     "prod": "webpack --mode production",
@@ -16,6 +16,7 @@
     "babel-loader": "^7.1.5",
     "babel-preset-env": "^1.7.0",
     "base64-inline-loader": "^1.1.1",
+    "clean-webpack-plugin": "^0.1.19",
     "css-loader": "^1.0.0",
     "expose-loader": "^0.7.5",
     "file-loader": "^1.1.11",
