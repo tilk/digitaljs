@@ -10,7 +10,7 @@ joint.shapes.digital.Box.define('digital.Dff', {
     constructor: function(args) {
         _.defaults(args, { bits: 1, polarity: {} });
         if ('arst' in args.polarity && !args.arst_value)
-            args.arst_value = 0;
+            args.arst_value = Array(args.bits).fill('0').join('');
         const markup = [];
         const lblmarkup = [];
         markup.push('<g class="rotatable">');
@@ -39,7 +39,7 @@ joint.shapes.digital.Box.define('digital.Dff', {
         if ('enable' in polarity && data.en[0] != pol('enable'))
             return this.get('outputSignals');
         if ('arst' in polarity && data.arst[0] == pol('arst'))
-            return { out: help.bigint2sig(bigInt(this.get('arst_value')), this.get('bits')) };
+            return { out: help.binary2sig(this.get('arst_value'), this.get('bits')) };
         if ('clock' in polarity) {
             const last_clk = this.last_clk;
             this.last_clk = data.clk[0];

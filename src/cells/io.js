@@ -290,6 +290,7 @@ joint.shapes.digital.NumBase.define('digital.Constant', {
     }
 }, {
     constructor: function(args) {
+        args.constant = help.binary2sig(args.constant, args.constant.length);
         args.outputSignals = { out: args.constant };
         this.markup = [
             '<g class="rotatable">',
