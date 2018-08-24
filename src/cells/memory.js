@@ -20,7 +20,7 @@ joint.shapes.digital.Box.define('digital.Memory', {
         if (!args.words) args.words = 1 << args.abits;
         if (!args.offset) args.offset = 0;
         if (args.memdata)
-            this.memdata = args.memdata.slice();
+            this.memdata = args.memdata.map(x => help.binary2sig(x, args.bits));
         else
             this.memdata = Array(args.words).fill(Array(args.bits).fill(0));
         delete args.memdata; // performance hack
