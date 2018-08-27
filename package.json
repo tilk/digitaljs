@@ -4,6 +4,7 @@
   "description": "Digital logic simulator",
   "main": "dist/main.js",
   "scripts": {
+    "prepare": "npm run prod",
     "dev": "webpack --mode development",
     "prod": "webpack --mode production",
     "watch": "webpack --mode development --watch",
