@@ -8,6 +8,7 @@
     "dev": "webpack --mode development",
     "prod": "webpack --mode production",
     "watch": "webpack --mode development --watch",
+    "test": "true",
     "gh-pages": "webpack --mode production && gh-pages -a -d dist"
   },
   "author": "Marek Materzok",
