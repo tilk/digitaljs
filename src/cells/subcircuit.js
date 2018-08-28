@@ -13,6 +13,10 @@ joint.shapes.digital.Box.define('digital.Subcircuit', {
             text: '', ref: '.body', 'ref-x': 0.5, 'ref-y': -2, 'x-alignment': 'middle',
             'y-alignment': 'bottom', fill: 'black'
         },
+        '.tooltip': {
+            ref: '.body', 'ref-x': 0, 'ref-y': 0, 'y-alignment': 'bottom',
+            width: 80, height: 30
+        },
     }
 }, {
     constructor: function(args) {
@@ -49,6 +53,10 @@ joint.shapes.digital.Box.define('digital.Subcircuit', {
         for (const io of IOs) {
             iomap[io.get('net')] = io.get('id');
         }
+        markup.push('<foreignObject class="tooltip">');
+        markup.push('<body xmlns="http://www.w3.org/1999/xhtml">');
+        markup.push('<a class="zoom" href="">🔍</a>')
+        markup.push('</body></foreignObject>');
         markup.push('</g>');
         this.markup = markup.join('');
         args.size = size;
@@ -56,5 +64,18 @@ joint.shapes.digital.Box.define('digital.Subcircuit', {
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     }
 });
-joint.shapes.digital.SubcircuitView = joint.shapes.digital.BoxView;
+
+joint.shapes.digital.SubcircuitView = joint.shapes.digital.BoxView.extend({
+    events: {
+        "click foreignObject.tooltip": "stopprop",
+        "mousedown foreignObject.tooltip": "stopprop",
+        "click a.zoom": "zoomInCircuit"
+    },
+    zoomInCircuit: function(evt) {
+        evt.stopPropagation();
+        // TODO separate event type?
+        this.paper.trigger('cell:pointerdblclick', this, evt);
+        return false;
+    }
+});
 
