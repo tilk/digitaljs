@@ -589,3 +589,12 @@ g:hover > foreignObject.tooltip {
     padding: 5px;
 }
 
+div.wire_hover {
+    position: fixed;
+    pointer-events: none;
+    background: white;
+    border: 1px solid black;
+    padding: 5px;
+    font-size: 8pt;
+}
+

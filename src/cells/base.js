@@ -169,6 +169,12 @@ joint.dia.Link.define('digital.Wire', {
 });
 
 joint.shapes.digital.WireView = joint.dia.LinkView.extend({
+    events: {
+        'mouseenter': 'hover_mouseover',
+        'mouseleave': 'hover_mouseout',
+        'mousedown': 'hover_mouseout',
+    },
+
     initialize: function() {
         joint.dia.LinkView.prototype.initialize.apply(this, arguments);
         const cl = help.sigClass(this.model.get('signal'));
@@ -186,6 +192,35 @@ joint.shapes.digital.WireView = joint.dia.LinkView.extend({
             this.$el.toggleClass('bus', bits > 1);
         });
         this.prevModels = { source: null, target: null };
+    },
+
+    hover_mouseover: function(evt) {
+        if (this.model.get('bits') == 1) return;
+        if (this.wire_hover) this.hover_mouseout();
+        this.wire_hover = $('<div class="wire_hover">')
+            .css('left', evt.clientX + 5)
+            .css('top', evt.clientY + 5)
+            .appendTo($(document.body));
+        this.hover_gentext();
+        this.listenTo(this.model, 'change:signal', this.hover_gentext);
+    },
+
+    hover_mouseout: function() {
+        if (this.wire_hover) {
+            this.wire_hover.remove();
+            this.wire_hover = null;
+            this.stopListening(this.model, 'change:signal', this.hover_gentext);
+        }
+    },
+
+    hover_gentext: function() {
+        if (!this.wire_hover) return;
+        const hovertext = [
+            'Hex: ' + help.sig2hex(this.model.get('signal')) + '<br>',
+            'Oct: ' + help.sig2oct(this.model.get('signal')) + '<br>',
+            'Bin: ' + help.sig2binary(this.model.get('signal'))
+        ].join('');
+        this.wire_hover.html(hovertext);
     },
 
     // custom options:
