@@ -105,8 +105,20 @@ export class Circuit {
                 }
             }
         });
+        // required for the paper to visualize the graph (jointjs bug?)
         graph.resetCells(graph.getCells());
+        // lazy graph layout
+        if (!graph.get('laid_out')) {
+            joint.layout.DirectedGraph.layout(graph, {
+                nodeSep: 20,
+                edgeSep: 0,
+                rankSep: 110,
+                rankDir: "LR"
+            });
+            graph.set('laid_out', true);
+        }
         paper.fitToContent({ padding: 30, allowNewOrigin: 'any' });
+        // subcircuit display
         this.listenTo(paper, 'cell:pointerdblclick', function(view, evt) {
             if (!(view.model instanceof joint.shapes.digital.Subcircuit)) return;
             const div = $('<div>', { 
@@ -122,6 +134,7 @@ export class Circuit {
             div.dialog({ width: Math.min(maxWidth, pdiv.outerWidth() + 60), height: Math.min(maxHeight, pdiv.outerHeight() + 60) });
             div.on('dialogclose', function(evt) {
                 paper.remove();
+                div.remove();
             });
         });
         return paper;
@@ -219,12 +232,6 @@ export class Circuit {
                 netname: conn.name
             }));
         }
-        joint.layout.DirectedGraph.layout(graph, {
-            nodeSep: 20,
-            edgeSep: 0,
-            rankSep: 110,
-            rankDir: "LR"
-        });
         return graph;
     }
     enqueue(gate) {
