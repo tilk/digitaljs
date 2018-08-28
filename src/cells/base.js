@@ -40,6 +40,7 @@ joint.shapes.basic.Generic.define('digital.Gate', {
         this.listenTo(this, 'change:outputSignals', function(wire, signal) {
             this.updatePortSignals('out', signal);
         });
+        this.listenTo(this, 'change:size', (model, size) => this.attr('rect.body', size));
     },
     updatePortSignals: function(dir, signal) {
         for (const portname in this.ports) {
@@ -212,7 +213,7 @@ joint.shapes.digital.Gate.define('digital.Box', {
     addLabelledWire: function(args, lblmarkup, side, loc, port) {
         console.assert(side == 'left' || side == 'right');
         const ret = this.addWire(args, side, loc, port);
-        lblmarkup.push('<text class="iolabel port_' + port.id + '"/>');
+        lblmarkup.push('<text class="iolabel iolabel_' + side + ' port_' + port.id + '"/>');
         const textattrs = {
             'ref-y': loc, 'x-alignment': side, text: 'label' in port ? port.label : port.id
         };
@@ -239,6 +240,19 @@ joint.shapes.digital.Gate.define('digital.Box', {
 });
 
 joint.shapes.digital.BoxView = joint.shapes.digital.GateView.extend({
+    render: function() {
+        joint.shapes.digital.GateView.prototype.render.apply(this, arguments);
+        if (this.model.get('box_resized')) return;
+        this.model.set('box_resized', true);
+        const labels = Array.from(this.el.querySelectorAll('text.iolabel'));
+        const leftlabels  = labels.filter(x => x.classList.contains('iolabel_left'));
+        const rightlabels = labels.filter(x => x.classList.contains('iolabel_right'));
+        const leftwidth = Math.max(...leftlabels.map(x => x.getBBox().width));
+        const rightwidth = Math.max(...rightlabels.map(x => x.getBBox().width));
+        const fixup = x => x == -Infinity ? -5 : x;
+        const width = fixup(leftwidth) + fixup(rightwidth) + 25;
+        this.model.set('size', _.set(_.clone(this.model.get('size')), 'width', width));
+    }
 });
 
 

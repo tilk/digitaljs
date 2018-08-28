@@ -103,7 +103,6 @@ joint.shapes.digital.Box.define('digital.BusRegroup', {
         args.bits = 0;
         markup.push('<g class="rotatable">');
         const size = { width: 40, height: args.groups.length*16+8 };
-        _.set(args, ['attrs', '.body'], size);
         args.size = size;
         for (const [num, gbits] of args.groups.entries()) {
             const y = num*16+12;

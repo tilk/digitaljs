@@ -29,7 +29,6 @@ joint.shapes.digital.Box.define('digital.Dff', {
         this.markup = markup.join('');
         const size = { width: 80, height: num*16+8 };
         args.size = size;
-        _.set(args, ['attrs', '.body'], size);
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
         this.last_clk = 0;
     },

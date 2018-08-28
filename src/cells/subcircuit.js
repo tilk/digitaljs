@@ -19,6 +19,10 @@ joint.shapes.digital.Box.define('digital.Subcircuit', {
         },
     }
 }, {
+    initialize: function() {
+        this.listenTo(this, 'change:size', (model, size) => this.attr('.tooltip/width', size.width));
+        joint.shapes.digital.Box.prototype.initialize.apply(this, arguments);
+    },
     constructor: function(args) {
         console.assert(args.graph instanceof joint.dia.Graph);
         const graph = args.graph;
@@ -40,7 +44,6 @@ joint.shapes.digital.Box.define('digital.Subcircuit', {
         const lblmarkup = [];
         markup.push('<g class="rotatable">');
         const iomap = {};
-        _.set(args, ['attrs', '.body'], size);
         _.set(args, ['attrs', 'text.type', 'text'], args.celltype);
         for (const [num, io] of inputs.entries()) {
             markup.push(this.addLabelledWire(args, lblmarkup, 'left', num*16+12, { id: io.get('net'), dir: 'in', bits: io.get('bits') }));

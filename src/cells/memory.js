@@ -8,10 +8,14 @@ import * as help from '@app/help.js';
 joint.shapes.digital.Box.define('digital.Memory', {
     attrs: {
         'line.portsplit': {
-            stroke: 'black'
+            stroke: 'black', x1: 0, x2: 40
         }
     }
 }, {
+    initialize: function() {
+        this.listenTo(this, 'change:size', (model, size) => this.attr('line.portsplit/x2', size.width));
+        joint.shapes.digital.Box.prototype.initialize.apply(this, arguments);
+    },
     constructor: function(args) {
         if (!args.bits) args.bits = 1;
         if (!args.abits) args.abits = 1;
@@ -60,12 +64,11 @@ joint.shapes.digital.Box.define('digital.Memory', {
         }
         const size = { width: 80, height: num*16+8 };
         args.size = size;
-        _.set(args, ['attrs', '.body'], size);
         portsplits.pop();
         markup.push('<g class="scalable"><rect class="body"/>');
         for (const num of portsplits) {
             const yline = num_y(num) - 8;
-            markup.push('<line class="portsplit" x1="0" x2="' + size.width +  '" y1="' + yline + '" y2="' + yline + '" />');
+            markup.push('<line class="portsplit" y1="' + yline + '" y2="' + yline + '" />');
         }
         markup.push('</g><text class="label"/>');
         markup.push(lblmarkup.join(''));
