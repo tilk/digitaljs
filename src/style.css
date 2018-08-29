@@ -598,3 +598,13 @@ div.wire_hover {
     font-size: 8pt;
 }
 
+.joint-element .numvalue {
+    font-family: monospace;
+    font-size: 14px;
+}
+
+.joint-element text.numvalue {
+    fill: black;
+    text-anchor: middle;
+}
+

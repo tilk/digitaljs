@@ -14,6 +14,12 @@ joint.shapes.digital.Gate.define('digital.NumBase', {
         },
     }
 }, {
+    initialize: function(args) {
+        this.listenTo(this, 'change:size', (x, size) => {
+            this.attr('.tooltip/width', Math.max(size.width, 50))
+        });
+        joint.shapes.digital.Gate.prototype.initialize.apply(this, arguments);
+    },
     numbaseMarkup: [
         // requiredExtensions="http://www.w3.org/1999/xhtml" not supported by Chrome
         '<foreignObject class="tooltip">',
@@ -33,6 +39,17 @@ joint.shapes.digital.NumBaseView = joint.shapes.digital.GateView.extend({
     },
     changeNumbase: function(evt) {
         this.model.set('numbase', evt.target.value || 'bin');
+    },
+    render: function() {
+        joint.shapes.digital.GateView.prototype.render.apply(this, arguments);
+        if (this.model.get('box_resized')) return;
+        const testtext = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        $(testtext).text(Array(this.model.get('bits')).fill('0').join(''))
+            .attr('class', 'numvalue')
+            .appendTo(this.$el);
+        const width = testtext.getBBox().width + 20;
+        testtext.remove();
+        this.model.set('size', _.set(_.clone(this.model.get('size')), 'width', width));
     }
 });
 
@@ -44,11 +61,7 @@ joint.shapes.digital.NumBase.define('digital.NumDisplay', {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
         'text.value': { 
             text: '',
-            fill: 'black',
             ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
-            'text-anchor': 'middle',
-            'font-size': '14px',
-            'font-family': 'monospace'
         },
     }
 }, {
@@ -61,7 +74,7 @@ joint.shapes.digital.NumBase.define('digital.NumDisplay', {
             '<rect class="body"/>',
             '</g>',
             this.numbaseMarkup,
-            '<text class="value"/>',
+            '<text class="value numvalue"/>',
             '<text class="label"/>',
             '</g>'
         ].join('');
@@ -93,6 +106,12 @@ joint.shapes.digital.NumBase.define('digital.NumEntry', {
         }
     }
 }, {
+    initialize: function(args) {
+        this.listenTo(this, 'change:size', (x, size) => {
+            this.attr('foreignObject.valinput/width', size.width - 10)
+        });
+        joint.shapes.digital.NumBase.prototype.initialize.apply(this, arguments);
+    },
     constructor: function(args) {
         if (!args.bits) args.bits = 1;
         this.markup = [
@@ -105,7 +124,7 @@ joint.shapes.digital.NumBase.define('digital.NumEntry', {
             '<text class="label"/>',
             '<foreignObject class="valinput">',
             '<body xmlns="http://www.w3.org/1999/xhtml">',
-            '<input type="text" />',
+            '<input type="text" class="numvalue" />',
             '</body></foreignObject>',
             '</g>'
         ].join('');
@@ -281,11 +300,7 @@ joint.shapes.digital.NumBase.define('digital.Constant', {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
         'text.value': { 
             text: '',
-            fill: 'black',
             ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
-            'text-anchor': 'middle',
-            'font-size': '14px',
-            'font-family': 'monospace'
         }
     }
 }, {
@@ -300,7 +315,7 @@ joint.shapes.digital.NumBase.define('digital.Constant', {
             '</g>',
             this.numbaseMarkup,
             '<text class="label" />',
-            '<text class="value" />',
+            '<text class="value numvalue" />',
             '</g>'
         ].join('');
         joint.shapes.digital.NumBase.prototype.constructor.apply(this, arguments);
