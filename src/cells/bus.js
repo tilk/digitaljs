@@ -58,11 +58,6 @@ joint.shapes.digital.BitExtend.define('digital.SignExtend', {
 joint.shapes.digital.Box.define('digital.BusSlice', {
     propagation: 0,
     size: { width: 40, height: 24 },
-    attrs: {
-        ".body": {
-            size: { width: 40, height: 24 }
-        },
-    }
 }, {
     constructor: function(args) {
         const lblmarkup = [];
