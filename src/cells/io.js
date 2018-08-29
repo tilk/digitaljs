@@ -9,7 +9,7 @@ joint.shapes.digital.Gate.define('digital.NumBase', {
     numbase: 'hex',
     attrs: {
         '.tooltip': {
-            ref: '.body', 'ref-x': 0, 'ref-y': 0, 'y-alignment': 'bottom',
+            'ref-x': 0, 'ref-y': 0, 'y-alignment': 'bottom',
             width: 80, height: 30
         },
     }
@@ -43,6 +43,7 @@ joint.shapes.digital.NumBaseView = joint.shapes.digital.GateView.extend({
     render: function() {
         joint.shapes.digital.GateView.prototype.render.apply(this, arguments);
         if (this.model.get('box_resized')) return;
+        this.model.set('box_resized', true);
         const testtext = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         $(testtext).text(Array(this.model.get('bits')).fill('0').join(''))
             .attr('class', 'numvalue')
@@ -61,22 +62,19 @@ joint.shapes.digital.NumBase.define('digital.NumDisplay', {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
         'text.value': { 
             text: '',
-            ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
+            'ref-x': .5, 'ref-y': .5,
+            'dominant-baseline': 'ideographic',
         },
     }
 }, {
     constructor: function(args) {
         if (!args.bits) args.bits = 1;
         this.markup = [
-            '<g class="rotatable">',
             this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: args.bits }),
-            '<g class="scalable">',
             '<rect class="body"/>',
-            '</g>',
             this.numbaseMarkup,
             '<text class="value numvalue"/>',
             '<text class="label"/>',
-            '</g>'
         ].join('');
         joint.shapes.digital.NumBase.prototype.constructor.apply(this, arguments);
     },
@@ -100,7 +98,7 @@ joint.shapes.digital.NumBase.define('digital.NumEntry', {
     attrs: {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
         'foreignObject.valinput': {
-            ref: '.body', 'ref-x': 0.5, 'ref-y': 0.5,
+            'ref-x': 0.5, 'ref-y': 0.5,
             width: 60, height: 30,
             'x-alignment': 'middle', 'y-alignment': 'middle'
         }
@@ -115,18 +113,14 @@ joint.shapes.digital.NumBase.define('digital.NumEntry', {
     constructor: function(args) {
         if (!args.bits) args.bits = 1;
         this.markup = [
-            '<g class="rotatable">',
             this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits }),
-            '<g class="scalable">',
             '<rect class="body"/>',
-            '</g>',
             this.numbaseMarkup,
             '<text class="label"/>',
             '<foreignObject class="valinput">',
             '<body xmlns="http://www.w3.org/1999/xhtml">',
             '<input type="text" class="numvalue" />',
             '</body></foreignObject>',
-            '</g>'
         ].join('');
         args.buttonState = args.outputSignals.out;
         joint.shapes.digital.NumBase.prototype.constructor.apply(this, arguments);
@@ -166,23 +160,19 @@ joint.shapes.digital.NumEntryView = joint.shapes.digital.NumBaseView.extend({
 joint.shapes.digital.Gate.define('digital.Lamp', {
     size: { width: 30, height: 30 },
     attrs: {
-        'rect.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 50, height: 50 },
+        'rect.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 30, height: 30 },
         '.led': {
-            ref: '.body', 'ref-x': .5, 'ref-y': .5,
-            'x-alignment': 'middle', 'y-alignment': 'middle', r: 15
+            'ref-x': .5, 'ref-y': .5,
+            r: 10
         }
     }
 }, {
     constructor: function(args) {
         this.markup = [
-            '<g class="rotatable">',
             this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: 1 }),
-            '<g class="scalable">',
             '<rect class="body"/>',
             '<circle class="led"/>',
-            '</g>',
             '<text class="label"/>',
-            '</g>'
         ].join('')
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     }
@@ -203,25 +193,20 @@ joint.shapes.digital.Gate.define('digital.Button', {
     buttonState: false,
     propagation: 0,
     attrs: {
-        'rect.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 50, height: 50 },
+        'rect.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 30, height: 30 },
         '.btnface': { 
             stroke: 'black', 'stroke-width': 2,
-            'ref': '.body', 'ref-height': .8, 'ref-width': .8, 'ref-x': .5, 'ref-y': .5,
-            'x-alignment': 'middle', 'y-alignment': 'middle',
+            'ref-height': .6, 'ref-width': .6, 'ref-x': .2, 'ref-y': .2,
             cursor: 'pointer'
         }
     }
 }, {
     constructor: function(args) {
         this.markup = [
-            '<g class="rotatable">',
             this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: 1 }),
-            '<g class="scalable">',
             '<rect class="body"/>',
             '<rect class="btnface"/>',
-            '</g>',
             '<text class="label"/>',
-            '</g>'
         ].join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     },
@@ -248,14 +233,13 @@ joint.shapes.digital.ButtonView = joint.shapes.digital.GateView.extend({
 
 // Input/output model
 joint.shapes.digital.Gate.define('digital.IO', {
-    size: { width: 60, height: 30 },
     bits: 1,
     propagation: 0,
     attrs: {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
         text: {
             fill: 'black',
-            ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
+            'ref-x': .5, 'ref-y': .5, 'dominant-baseline': 'ideographic',
             'text-anchor': 'middle',
             'font-weight': 'bold',
             'font-size': '14px'
@@ -265,13 +249,9 @@ joint.shapes.digital.Gate.define('digital.IO', {
     constructor: function(args) {
         if (!args.bits) args.bits = 1;
         this.markup = [
-            '<g class="rotatable">',
             this.addWire(args, this.io_dir == 'out' ? 'right' : 'left', 0.5, { id: this.io_dir, dir: this.io_dir, bits: args.bits }),
-            '<g class="scalable">',
             '<rect class="body"/>',
-            '</g>',
             '<text/>',
-            '</g>'
         ].join('');
         if ('bits' in args) _.set(args, ['attrs', 'circle', 'port', 'bits'], args.bits);
         _.set(args, ['attrs', 'text', 'text'], args.net);
@@ -300,7 +280,8 @@ joint.shapes.digital.NumBase.define('digital.Constant', {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
         'text.value': { 
             text: '',
-            ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
+            'ref-x': .5, 'ref-y': .5,
+            'dominant-baseline': 'ideographic',
         }
     }
 }, {
@@ -308,15 +289,11 @@ joint.shapes.digital.NumBase.define('digital.Constant', {
         args.constant = help.binary2sig(args.constant, args.constant.length);
         args.outputSignals = { out: args.constant };
         this.markup = [
-            '<g class="rotatable">',
             this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.constant.length }),
-            '<g class="scalable">',
             '<rect class="body"/>',
-            '</g>',
             this.numbaseMarkup,
             '<text class="label" />',
             '<text class="value numvalue" />',
-            '</g>'
         ].join('');
         joint.shapes.digital.NumBase.prototype.constructor.apply(this, arguments);
     },
@@ -338,21 +315,17 @@ joint.shapes.digital.ConstantView = joint.shapes.digital.NumBaseView;
 joint.shapes.digital.Gate.define('digital.Clock', {
     size: { width: 30, height: 30 },
     attrs: {
-        'rect.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 60, height: 60 },
+        'rect.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 30, height: 30 },
         'path.decor': { stroke: 'black' }
     }
 }, {
     constructor: function(args) {
         args.outputSignals = { out: [-1] };
         this.markup = [
-            '<g class="rotatable">',
             this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: 1 }),
-            '<g class="scalable">',
             '<rect class="body"/>',
-            '<path class="decor" d="M15 15 L15 45 L30 45 L30 15 L45 15 L45 45" />',
-            '</g>',
+            '<path class="decor" d="M7.5 7.5 L7.5 22.5 L15 22.5 L15 7.5 L22.5 7.5 L22.5 22.5" />',
             '<text class="label" />',
-            '</g>'
         ].join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     },

@@ -15,7 +15,7 @@ joint.shapes.basic.Generic.define('digital.Gate', {
         'rect.body': { width: 80, height: 30 },
         'circle[port]': { r: 7, stroke: 'black', fill: 'transparent', 'stroke-width': 2 },
         'text.label': {
-            text: '', ref: '.body', 'ref-x': 0.5, 'ref-dy': 2, 'x-alignment': 'middle', 
+            text: '', 'ref-x': 0.5, 'ref-dy': 2, 'text-anchor': 'middle', 
             fill: 'black'
         },
         'text.bits': {
@@ -54,25 +54,26 @@ joint.shapes.basic.Generic.define('digital.Gate', {
     addWire: function(args, side, loc, port) {
         const vert = side == 'top';
         const wire_args = {
-            ref: 'circle.port_' + port.id, 'ref-y': .5, 'ref-x': .5,
             d: 'M 0 0 L ' + (vert ? '0 40' : side == 'left' ? '40 0' : '-40 0')
         };
         const circle_args = {
-            ref: '.body',
             magnet: port.dir == 'out' ? true : 'passive',
             port: port
         };
-        circle_args[vert ? 'ref-x' : 'ref-y'] = loc;
+        const ref_args = {};
+        ref_args[vert ? 'ref-x' : 'ref-y'] = loc;
         if (side == 'left') {
-            circle_args['ref-x'] = -20;
+            ref_args['ref-x'] = -20;
         } else if (side == 'right') {
-            circle_args['ref-dx'] = 20;
+            ref_args['ref-dx'] = 20;
         } else if (side == 'top') {
-            circle_args['ref-y'] = -20;
+            ref_args['ref-y'] = -20;
         } else console.assert(false);
+        _.assign(wire_args, ref_args);
+        _.assign(circle_args, ref_args);
         _.set(args, ['attrs', 'path.wire.port_' + port.id], wire_args);
         _.set(args, ['attrs', 'circle.port_' + port.id], circle_args);
-        let markup = '<path class="wire port_' + port.id + '"/><circle class="port_' + port.id + '"/>';
+        let markup = '<path class="wire port_' + port.id + '"/><circle class="' + port.dir + ' port_' + port.id + '"/>';
         if (port.bits > 1) {
             markup += '<text class="bits port_' + port.id + '"/>';
             const bits_args = {
@@ -121,6 +122,17 @@ joint.dia.Link.define('digital.Wire', {
     router: { name: 'orthogonal' },
     connector: { name: 'rounded', args: { radius: 10 }}
 }, {
+    markup: [
+        '<path class="connection" stroke="black" d="M 0 0 0 0"/>',
+//        '<path class="marker-source" fill="black" stroke="black" d="M 0 0 0 0"/>',
+//        '<path class="marker-target" fill="black" stroke="black" d="M 0 0 0 0"/>',
+        '<path class="connection-wrap" d="M 0 0 0 0"/>',
+        '<g class="labels"/>',
+        '<g class="marker-vertices"/>',
+        '<g class="marker-arrowheads"/>',
+        '<g class="link-tools"/>'
+    ].join(''),
+
     arrowheadMarkup: [
         '<g class="marker-arrowhead-group marker-arrowhead-group-<%= end %>">',
         '<circle class="marker-arrowhead" end="<%= end %>" r="7"/>',
@@ -144,7 +156,7 @@ joint.dia.Link.define('digital.Wire', {
         this.router('metro', {
             startDirections: ['right'],
             endDirections: ['left'],
-            maximumLoops: 4000
+            maximumLoops: 2000
         });
         if (this.has('netname')) {
             this.label(0, {
@@ -173,6 +185,15 @@ joint.shapes.digital.WireView = joint.dia.LinkView.extend({
         'mouseenter': 'hover_mouseover',
         'mouseleave': 'hover_mouseout',
         'mousedown': 'hover_mouseout',
+    },
+
+	_translateAndAutoOrientArrows: function(sourceArrow, targetArrow) {
+        if (sourceArrow) {
+            sourceArrow.translate(this.sourcePoint.x, this.sourcePoint.y, {absolute: true});
+        }
+        if (targetArrow) {
+            targetArrow.translate(this.targetPoint.x, this.targetPoint.y, {absolute: true});
+        }
     },
 
     initialize: function() {
@@ -241,7 +262,7 @@ joint.shapes.digital.WireView = joint.dia.LinkView.extend({
 
 joint.shapes.digital.Gate.define('digital.Box', {
     attrs: {
-        'text.iolabel': { fill: 'black', 'y-alignment': 'middle', ref: '.body' },
+        'text.iolabel': { fill: 'black', 'dominant-baseline': 'ideographic' },
         'path.decor': { stroke: 'black', fill: 'transparent' }
     }
 }, {
@@ -250,7 +271,8 @@ joint.shapes.digital.Gate.define('digital.Box', {
         const ret = this.addWire(args, side, loc, port);
         lblmarkup.push('<text class="iolabel iolabel_' + side + ' port_' + port.id + '"/>');
         const textattrs = {
-            'ref-y': loc, 'x-alignment': side, text: 'label' in port ? port.label : port.id
+            'ref-y': loc, 'text-anchor': side == 'left' ? 'start' : 'end',
+            text: 'label' in port ? port.label : port.id
         };
         const dist = port.clock ? 10 : 5;
         if (side == 'left') textattrs['ref-x'] = dist;
@@ -266,7 +288,7 @@ joint.shapes.digital.Gate.define('digital.Box', {
             const path = 'M' + vpath.map(l => l.join(' ')).join(' L');
             lblmarkup.push('<path class="decor port_' + port.id + '" d="' + path + '" />');
             _.set(args, ['attrs', 'path.decor.port_' + port.id], {
-                ref: '.body', 'ref-x': 0, 'ref-y': loc
+                'ref-x': 0, 'ref-y': loc
             });
         }
         _.set(args, ['attrs', 'text.iolabel.port_' + port.id], textattrs);

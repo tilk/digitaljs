@@ -8,20 +8,16 @@ import * as help from '@app/help.js';
 joint.shapes.digital.Gate.define('digital.Gate11', {
     size: { width: 60, height: 40 },
     attrs: {
-        '.body': { width: 75, height: 50 }
+        '.body': { width: 60, height: 40 }
     }
 }, {
     constructor: function(args) {
         if (!args.bits) args.bits = 1;
         this.markup = [
-            '<g class="rotatable">',
             this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits }),
             this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: args.bits }),
-            '<g class="scalable">',
             '<image class="body"/>',
-            '</g>',
             '<text class="label"/>',
-            '</g>'
         ].join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     },
@@ -31,21 +27,17 @@ joint.shapes.digital.Gate.define('digital.Gate11', {
 joint.shapes.digital.Gate.define('digital.Gate21', {
     size: { width: 60, height: 40 },
     attrs: {
-        '.body': { width: 75, height: 50 }
+        '.body': { width: 60, height: 40 }
     }
 }, {
     constructor: function(args) {
         if (!args.bits) args.bits = 1;
         this.markup = [
-            '<g class="rotatable">',
             this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits }),
             this.addWire(args, 'left', 0.3, { id: 'in1', dir: 'in', bits: args.bits }),
             this.addWire(args, 'left', 0.7, { id: 'in2', dir: 'in', bits: args.bits }),
-            '<g class="scalable">',
             '<image class="body"/>',
-            '</g>',
             '<text class="label"/>',
-            '</g>'
         ].join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     },
@@ -55,20 +47,16 @@ joint.shapes.digital.Gate.define('digital.Gate21', {
 joint.shapes.digital.Gate.define('digital.GateReduce', {
     size: { width: 60, height: 40 },
     attrs: {
-        '.body': { width: 75, height: 50 }
+        '.body': { width: 60, height: 40 }
     }
 }, {
     constructor: function(args) {
         if (!args.bits) args.bits = 1;
         this.markup = [
-            '<g class="rotatable">',
             this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: 1 }),
             this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: args.bits }),
-            '<g class="scalable">',
             '<image class="body"/>',
-            '</g>',
             '<text class="label"/>',
-            '</g>'
         ].join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     },

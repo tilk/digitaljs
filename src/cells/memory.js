@@ -32,7 +32,6 @@ joint.shapes.digital.Box.define('digital.Memory', {
         this.last_clk = {};
         const markup = [];
         const lblmarkup = [];
-        markup.push('<g class="rotatable">');
         let num = 0;
         const portsplits = [];
         function num_y(num) { return num * 16 + 12; }
@@ -65,14 +64,13 @@ joint.shapes.digital.Box.define('digital.Memory', {
         const size = { width: 80, height: num*16+8 };
         args.size = size;
         portsplits.pop();
-        markup.push('<g class="scalable"><rect class="body"/>');
+        markup.push('<rect class="body"/>');
         for (const num of portsplits) {
             const yline = num_y(num) - 8;
             markup.push('<line class="portsplit" y1="' + yline + '" y2="' + yline + '" />');
         }
-        markup.push('</g><text class="label"/>');
+        markup.push('<text class="label"/>');
         markup.push(lblmarkup.join(''));
-        markup.push('</g>');
         this.markup = markup.join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     },

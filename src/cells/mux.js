@@ -25,7 +25,6 @@ joint.shapes.digital.Gate.define('digital.GenMux', {
                 .map(x => x.join(',')).join(' '));
         args.size = size;
         const markup = [];
-        markup.push('<g class="rotatable">');
         for (const num of Array(n_ins).keys()) {
             const y = num*16+12;
             markup.push(this.addWire(args, 'left', y, { id: 'in' + num, dir: 'in', bits: args.bits.in }));
@@ -33,17 +32,15 @@ joint.shapes.digital.Gate.define('digital.GenMux', {
         markup.push(this.addWire(args, 'top', 0.5, { id: 'sel', dir: 'in', bits: args.bits.sel }));
         markup.push(this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits.in }));
         _.set(args, ['attrs', 'circle.port_sel', 'ref-y'], -10);  // hack
-        markup.push('<g class="scalable"><polygon class="body"/><rect class="wtf"/></g><text class="label"/>');
+        markup.push('<polygon class="body"/><rect class="wtf"/><text class="label"/>');
         for (const num of Array(n_ins).keys()) {
             const y = num*16+12;
             markup.push('<text class="arrow arrow_in' + num + '" />');
             args.attrs['text.arrow_in' + num] = {
                 'ref-x': 2,
                 'ref-y': y,
-                'ref': '.body'
             };
         }
-        markup.push('</g>');
         this.markup = markup.join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
         this.listenTo(this, 'change:inputSignals', (_, data) => {

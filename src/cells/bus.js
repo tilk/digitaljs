@@ -10,7 +10,7 @@ joint.shapes.digital.Gate.define('digital.BitExtend', {
     attrs: {
         "text.value": {
             fill: 'black',
-            ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
+            'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
             'text-anchor': 'middle',
             'font-size': '14px'
         }
@@ -19,12 +19,10 @@ joint.shapes.digital.Gate.define('digital.BitExtend', {
     constructor: function(args) {
         console.assert(args.extend.input <= args.extend.output);
         this.markup = [
-            '<g class="rotatable">',
             this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: args.extend.input}),
             this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.extend.output}),
-            '<g class="scalable"><rect class="body"/></g><text class="label"/>',
+            '<rect class="body"/><text class="label"/>',
             '<text class="value"/>',
-            '</g>'
         ].join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     },
@@ -66,12 +64,10 @@ joint.shapes.digital.Box.define('digital.BusSlice', {
         const val = args.slice.count == 1 ? args.slice.first : 
             args.slice.first + "-" + (args.slice.first + args.slice.count - 1);
         this.markup = [
-            '<g class="rotatable">',
             this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: args.slice.total}),
             this.addLabelledWire(args, lblmarkup, 'right', 0.5, { id: 'out', dir: 'out', bits: args.slice.count, label: val}),
-            '<g class="scalable"><rect class="body"/></g><text class="label"/>',
+            '<rect class="body"/><text class="label"/>',
             lblmarkup.join(''),
-            '</g>'
         ].join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     },
@@ -90,7 +86,6 @@ joint.shapes.digital.Box.define('digital.BusRegroup', {
         const markup = [];
         const lblmarkup = [];
         args.bits = 0;
-        markup.push('<g class="rotatable">');
         const size = { width: 40, height: args.groups.length*16+8 };
         args.size = size;
         for (const [num, gbits] of args.groups.entries()) {
@@ -103,9 +98,8 @@ joint.shapes.digital.Box.define('digital.BusRegroup', {
         const contra = this.group_dir == 'out' ? 'in' : 'out';
         markup.push(this.addWire(args, this.group_dir == 'out' ? 'left' : 'right', 0.5,
             { id: contra, dir: contra, bits: args.bits }));
-        markup.push('<g class="scalable"><rect class="body"/></g><text class="label"/>');
+        markup.push('<rect class="body"/><text class="label"/>');
         markup.push(lblmarkup.join(''));
-        markup.push('</g>');
         this.markup = markup.join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     }

@@ -11,7 +11,7 @@ joint.shapes.digital.Gate.define('digital.Arith11', {
         'circle.body': { r: 20, cx: 20, cy: 20 },
         'text.oper': {
             fill: 'black',
-            ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
+            'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
             'text-anchor': 'middle',
             'font-size': '14px'
         }
@@ -21,15 +21,11 @@ joint.shapes.digital.Gate.define('digital.Arith11', {
         if (!args.bits) args.bits = { in: 1, out: 1 };
         if (!args.signed) args.signed = false;
         this.markup = [
-            '<g class="rotatable">',
             this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits.out }),
             this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: args.bits.in }),
-            '<g class="scalable">',
             '<circle class="body"/>',
-            '</g>',
             '<text class="label"/>',
             '<text class="oper"/>',
-            '</g>'
         ].join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     },
@@ -50,7 +46,7 @@ joint.shapes.digital.Gate.define('digital.Arith21', {
         'circle.body': { r: 20, cx: 20, cy: 20 },
         'text.oper': {
             fill: 'black',
-            ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
+            'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
             'text-anchor': 'middle',
             'font-size': '14px'
         }
@@ -60,16 +56,12 @@ joint.shapes.digital.Gate.define('digital.Arith21', {
         if (!args.bits) args.bits = { in1: 1, in2: 1, out: 1 };
         if (!args.signed) args.signed = { in1: false, in2: false };
         this.markup = [
-            '<g class="rotatable">',
             this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits.out }),
             this.addWire(args, 'left', 0.3, { id: 'in1', dir: 'in', bits: args.bits.in1 }),
             this.addWire(args, 'left', 0.7, { id: 'in2', dir: 'in', bits: args.bits.in2 }),
-            '<g class="scalable">',
             '<circle class="body"/>',
-            '</g>',
             '<text class="label"/>',
             '<text class="oper"/>',
-            '</g>'
         ].join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     },
@@ -93,7 +85,7 @@ joint.shapes.digital.Gate.define('digital.Shift', {
         'circle.body': { r: 20, cx: 20, cy: 20 },
         'text.oper': {
             fill: 'black',
-            ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
+            'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
             'text-anchor': 'middle',
             'font-size': '14px'
         }
@@ -104,16 +96,12 @@ joint.shapes.digital.Gate.define('digital.Shift', {
         if (!args.signed) args.signed = { in1: false, in2: false };
         if (!args.fillx) args.fillx = false;
         this.markup = [
-            '<g class="rotatable">',
             this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits.out }),
             this.addWire(args, 'left', 0.3, { id: 'in1', dir: 'in', bits: args.bits.in1 }),
             this.addWire(args, 'left', 0.7, { id: 'in2', dir: 'in', bits: args.bits.in2 }),
-            '<g class="scalable">',
             '<circle class="body"/>',
-            '</g>',
             '<text class="label"/>',
             '<text class="oper"/>',
-            '</g>'
         ].join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     },
@@ -142,7 +130,7 @@ joint.shapes.digital.Gate.define('digital.Compare', {
         'circle.body': { r: 20, cx: 20, cy: 20 },
         'text.oper': {
             fill: 'black',
-            ref: '.body', 'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
+            'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
             'text-anchor': 'middle',
             'font-size': '14px'
         }
@@ -152,16 +140,12 @@ joint.shapes.digital.Gate.define('digital.Compare', {
         if (!args.bits) args.bits = { in1: 1, in2: 1 };
         if (!args.signed) args.signed = { in1: false, in2: false };
         this.markup = [
-            '<g class="rotatable">',
             this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: 1 }),
             this.addWire(args, 'left', 0.3, { id: 'in1', dir: 'in', bits: args.bits.in1 }),
             this.addWire(args, 'left', 0.7, { id: 'in2', dir: 'in', bits: args.bits.in2 }),
-            '<g class="scalable">',
             '<circle class="body"/>',
-            '</g>',
             '<text class="label"/>',
             '<text class="oper"/>',
-            '</g>'
         ].join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     },

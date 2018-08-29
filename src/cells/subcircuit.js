@@ -8,13 +8,15 @@ import * as help from '@app/help.js';
 joint.shapes.digital.Box.define('digital.Subcircuit', {
     propagation: 0,
     attrs: {
-        'path.wire' : { ref: '.body', 'ref-y': .5, stroke: 'black' },
+        'path.wire' : { 'ref-y': .5, stroke: 'black' },
         'text.type': {
-            text: '', ref: '.body', 'ref-x': 0.5, 'ref-y': -2, 'x-alignment': 'middle',
-            'y-alignment': 'bottom', fill: 'black'
+            text: '', 'ref-x': 0.5, 'ref-y': -10,
+            'dominant-baseline': 'ideographic',
+            'text-anchor': 'middle',
+            fill: 'black'
         },
         '.tooltip': {
-            ref: '.body', 'ref-x': 0, 'ref-y': 0, 'y-alignment': 'bottom',
+            'ref-x': 0, 'ref-y': -30,
             width: 80, height: 30
         },
     }
@@ -42,7 +44,6 @@ joint.shapes.digital.Box.define('digital.Subcircuit', {
         const size = { width: 80, height: vcount*16+8 };
         const markup = [];
         const lblmarkup = [];
-        markup.push('<g class="rotatable">');
         const iomap = {};
         _.set(args, ['attrs', 'text.type', 'text'], args.celltype);
         for (const [num, io] of inputs.entries()) {
@@ -51,7 +52,7 @@ joint.shapes.digital.Box.define('digital.Subcircuit', {
         for (const [num, io] of outputs.entries()) {
             markup.push(this.addLabelledWire(args, lblmarkup, 'right', num*16+12, { id: io.get('net'), dir: 'out', bits: io.get('bits') }));
         }
-        markup.push('<g class="scalable"><rect class="body"/></g><text class="label"/><text class="type"/>');
+        markup.push('<rect class="body"/><text class="label"/><text class="type"/>');
         markup.push(lblmarkup.join(''));
         for (const io of IOs) {
             iomap[io.get('net')] = io.get('id');
@@ -60,9 +61,9 @@ joint.shapes.digital.Box.define('digital.Subcircuit', {
         markup.push('<body xmlns="http://www.w3.org/1999/xhtml">');
         markup.push('<a class="zoom" href="">🔍</a>')
         markup.push('</body></foreignObject>');
-        markup.push('</g>');
         this.markup = markup.join('');
         args.size = size;
+        args.attrs['rect.body'] = size;
         args.circuitIOmap = iomap;
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     }
