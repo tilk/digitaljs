@@ -213,7 +213,7 @@ joint.shapes.digital.Arith21.define('digital.Division', {
         'text.oper': { text: '÷' }
     }
 }, {
-    arithop: (i, j) => i.divide(j)
+    arithop: (i, j) => j.isZero() ? bigInt.zero : i.divide(j)
 });
 
 // Modulo
@@ -222,7 +222,7 @@ joint.shapes.digital.Arith21.define('digital.Modulo', {
         'text.oper': { text: '%' }
     }
 }, {
-    arithop: (i, j) => i.mod(j)
+    arithop: (i, j) => j.isZero() ? bigInt.zero : i.mod(j)
 });
 
 // Power
