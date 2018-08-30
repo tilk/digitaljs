@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+    <title>Accumulating Adder</title>
+  <script type="text/javascript" src="../main.js"></script></head>
+  <body>
+    <div id="paper">
+    </div>
+    <script>
+      const circuit = new digitaljs.Circuit({"devices":{"dev0":{"celltype":"$clock","label":"clk","net":"clk","order":0,"bits":1,"propagation":100},"dev1":{"celltype":"$button","label":"rst","net":"rst","order":1,"bits":1},"dev2":{"celltype":"$button","label":"en","net":"en","order":2,"bits":1},"dev3":{"celltype":"$numentry","label":"A","net":"A","order":3,"bits":4},"dev4":{"celltype":"$numdisplay","label":"O","net":"O","order":4,"bits":4},"dev5":{"label":"$add$tests/cycleadder.sv:13$2","celltype":"$add","bits":{"in1":4,"in2":4,"out":4},"signed":{"in1":false,"in2":false}},"dev6":{"label":"$procdff$9","celltype":"$dff","bits":4,"polarity":{"clock":true}},"dev7":{"label":"$procmux$4","celltype":"$mux","bits":{"in":4,"sel":1}},"dev8":{"label":"$procmux$7","celltype":"$mux","bits":{"in":4,"sel":1}},"dev9":{"celltype":"$constant","constant":"0000"}},"connectors":[{"to":{"id":"dev6","port":"clk"},"from":{"id":"dev0","port":"out"},"name":"clk"},{"to":{"id":"dev8","port":"sel"},"from":{"id":"dev1","port":"out"},"name":"rst"},{"to":{"id":"dev7","port":"sel"},"from":{"id":"dev2","port":"out"},"name":"en"},{"to":{"id":"dev5","port":"in2"},"from":{"id":"dev3","port":"out"},"name":"A"},{"to":{"id":"dev4","port":"in"},"from":{"id":"dev6","port":"out"},"name":"O"},{"to":{"id":"dev5","port":"in1"},"from":{"id":"dev6","port":"out"},"name":"O"},{"to":{"id":"dev7","port":"in0"},"from":{"id":"dev6","port":"out"},"name":"O"},{"to":{"id":"dev7","port":"in1"},"from":{"id":"dev5","port":"out"}},{"to":{"id":"dev6","port":"in"},"from":{"id":"dev8","port":"out"}},{"to":{"id":"dev8","port":"in0"},"from":{"id":"dev7","port":"out"}},{"to":{"id":"dev8","port":"in1"},"from":{"id":"dev9","port":"out"}}],"subcircuits":{}});
+      const paper = circuit.displayOn($('#paper'));
+    </script>
+  </body>
+</html>
