@@ -596,6 +596,7 @@ div.wire_hover {
     border: 1px solid black;
     padding: 5px;
     font-size: 8pt;
+    z-index: 200;
 }
 
 .joint-element .numvalue {
