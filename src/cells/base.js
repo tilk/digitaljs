@@ -50,7 +50,7 @@ joint.shapes.basic.Generic.define('digital.Gate', {
         } else if (side == 'right') {
             ref_args['ref-dx'] = 20;
         } else if (side == 'top') {
-            ref_args['ref-y'] = -20;
+            ref_args['ref-y'] = -10; // currently mux only
         } else console.assert(false);
         _.assign(wire_args, ref_args);
         _.assign(circle_args, ref_args);
