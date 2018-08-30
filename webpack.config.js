@@ -4,6 +4,14 @@ const CleanWebpackPlugin = require("clean-webpack-plugin");
 
 const outputDirectory = 'dist';
 
+const tests = [
+    {name: 'fulladder', title: 'Full Adder'},
+    {name: 'serialadder', title: 'Serial Adder'},
+    {name: 'cycleadder', title: 'Accumulating Adder'},
+    {name: 'lfsr', title: 'Linear Feedback Shift Register'},
+    {name: 'sextium', title: 'Sextium III Processor'},
+];
+
 module.exports = {
     output: {
         path: path.resolve(__dirname, outputDirectory),
@@ -60,13 +68,12 @@ module.exports = {
     },
     plugins: [
         new CleanWebpackPlugin([outputDirectory]),
-        new HtmlWebpackPlugin({
-            title: 'Full Adder',
+    ].concat(tests.map(t => new HtmlWebpackPlugin({
+            title: t.title,
             template: 'src/test/template.html',
-            test: JSON.stringify(require('./src/test/fulladder.json')),
-            filename: 'test/fulladder.html',
+            test: JSON.stringify(require('./src/test/' + t.name + '.json')),
+            filename: 'test/' + t.name + '.html',
             inject: 'head'
-        })
-    ]
+    })))
 }
 
