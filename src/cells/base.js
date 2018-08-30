@@ -13,7 +13,7 @@ joint.shapes.basic.Generic.define('digital.Gate', {
     attrs: {
         '.': { magnet: false },
         'rect.body': { width: 80, height: 30 },
-        'circle[port]': { r: 7, stroke: 'black', fill: 'transparent', 'stroke-width': 2 },
+        'circle.port': { r: 7, stroke: 'black', fill: 'transparent', 'stroke-width': 2 },
         'text.label': {
             text: '', 'ref-x': 0.5, 'ref-dy': 2, 'text-anchor': 'middle', 
             fill: 'black'
@@ -32,24 +32,7 @@ joint.shapes.basic.Generic.define('digital.Gate', {
     },
     initialize: function() {
         joint.shapes.basic.Generic.prototype.initialize.apply(this, arguments);
-        this.updatePortSignals('in', this.get('inputSignals'));
-        this.updatePortSignals('out', this.get('outputSignals'));
-        this.listenTo(this, 'change:inputSignals', function(wire, signal) {
-            this.updatePortSignals('in', signal);
-        });
-        this.listenTo(this, 'change:outputSignals', function(wire, signal) {
-            this.updatePortSignals('out', signal);
-        });
         this.listenTo(this, 'change:size', (model, size) => this.attr('rect.body', size));
-    },
-    updatePortSignals: function(dir, signal) {
-        for (const portname in this.ports) {
-            const port = this.ports[portname];
-            if (port.dir !== dir) continue;
-            let classes = [port.dir, 'port_' + port.id];
-            classes.push(help.sigClass(signal[port.id]));
-            this.attr("[port='" + port.id + "']/class", classes.join(' '));
-        }
     },
     addWire: function(args, side, loc, port) {
         const vert = side == 'top';
@@ -73,7 +56,7 @@ joint.shapes.basic.Generic.define('digital.Gate', {
         _.assign(circle_args, ref_args);
         _.set(args, ['attrs', 'path.wire.port_' + port.id], wire_args);
         _.set(args, ['attrs', 'circle.port_' + port.id], circle_args);
-        let markup = '<path class="wire port_' + port.id + '"/><circle class="' + port.dir + ' port_' + port.id + '"/>';
+        let markup = '<path class="wire port_' + port.id + '"/><circle class="port ' + port.dir + ' port_' + port.id + '"/>';
         if (port.bits > 1) {
             markup += '<text class="bits port_' + port.id + '"/>';
             const bits_args = {
@@ -107,6 +90,23 @@ joint.shapes.basic.Generic.define('digital.Gate', {
 joint.shapes.digital.GateView = joint.dia.ElementView.extend({
     stopprop: function(evt) {
         evt.stopPropagation();
+    },
+    initialize: function() {
+        this.listenTo(this.model, 'change:inputSignals', function(wire, signal) {
+            this.updatePortSignals('in', signal);
+        });
+        this.listenTo(this.model, 'change:outputSignals', function(wire, signal) {
+            this.updatePortSignals('out', signal);
+        });
+        joint.dia.ElementView.prototype.initialize.apply(this, arguments);
+    },
+    updatePortSignals: function(dir, signal) {
+        for (const port of Object.values(this.model.ports)) {
+            if (port.dir !== dir) continue;
+            let classes = ['port', port.dir, 'port_' + port.id];
+            classes.push(help.sigClass(signal[port.id]));
+            this.$('circle.port_' + port.id).attr('class', classes.join(' '));
+        }
     },
 });
 
@@ -156,7 +156,7 @@ joint.dia.Link.define('digital.Wire', {
         this.router('metro', {
             startDirections: ['right'],
             endDirections: ['left'],
-            maximumLoops: 2000
+            maximumLoops: 200
         });
         if (this.has('netname')) {
             this.label(0, {

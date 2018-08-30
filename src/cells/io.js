@@ -9,7 +9,7 @@ joint.shapes.digital.Gate.define('digital.NumBase', {
     numbase: 'hex',
     attrs: {
         '.tooltip': {
-            'ref-x': 0, 'ref-y': 0, 'y-alignment': 'bottom',
+            'ref-x': 0, 'ref-y': -30,
             width: 80, height: 30
         },
     }
@@ -98,9 +98,8 @@ joint.shapes.digital.NumBase.define('digital.NumEntry', {
     attrs: {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
         'foreignObject.valinput': {
-            'ref-x': 0.5, 'ref-y': 0.5,
-            width: 60, height: 30,
-            'x-alignment': 'middle', 'y-alignment': 'middle'
+            'ref-x': 5, 'ref-y': 0,
+            width: 60, height: 30
         }
     }
 }, {
