@@ -250,11 +250,20 @@ joint.shapes.digital.Gate.define('digital.IO', {
         this.markup = [
             this.addWire(args, this.io_dir == 'out' ? 'right' : 'left', 0.5, { id: this.io_dir, dir: this.io_dir, bits: args.bits }),
             '<rect class="body"/>',
-            '<text/>',
+            '<text class="ioname"/>',
         ].join('');
         if ('bits' in args) _.set(args, ['attrs', 'circle', 'port', 'bits'], args.bits);
         _.set(args, ['attrs', 'text', 'text'], args.net);
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+    }
+});
+joint.shapes.digital.IOView = joint.shapes.digital.GateView.extend({
+    render: function() {
+        joint.shapes.digital.GateView.prototype.render.apply(this, arguments);
+        if (this.model.get('box_resized')) return;
+        this.model.set('box_resized', true);
+        const width = this.el.querySelector('text.ioname').getBBox().width + 10;
+        this.model.set('size', _.set(_.clone(this.model.get('size')), 'width', width));
     }
 });
 
@@ -263,14 +272,14 @@ joint.shapes.digital.IO.define('digital.Input', {
 }, {
     io_dir: 'out'
 });
-joint.shapes.digital.InputView = joint.shapes.digital.GateView;
+joint.shapes.digital.InputView = joint.shapes.digital.IOView;
 
 // Output model
 joint.shapes.digital.IO.define('digital.Output', {
 }, {
     io_dir: 'in'
 });
-joint.shapes.digital.OutputView = joint.shapes.digital.GateView;
+joint.shapes.digital.OutputView = joint.shapes.digital.IOView;
 
 // Constant
 joint.shapes.digital.NumBase.define('digital.Constant', {
@@ -286,6 +295,7 @@ joint.shapes.digital.NumBase.define('digital.Constant', {
 }, {
     constructor: function(args) {
         args.constant = help.binary2sig(args.constant, args.constant.length);
+        args.bits = args.constant.length;
         args.outputSignals = { out: args.constant };
         this.markup = [
             this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.constant.length }),
