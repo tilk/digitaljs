@@ -3,6 +3,7 @@
 import joint from 'jointjs';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
+import { Vector3vl } from '3vl';
 
 // D flip-flops
 joint.shapes.digital.Box.define('digital.Dff', {
@@ -33,14 +34,14 @@ joint.shapes.digital.Box.define('digital.Dff', {
     operation: function(data) {
         const polarity = this.get('polarity');
         const pol = what => polarity[what] ? 1 : -1
-        if ('enable' in polarity && data.en[0] != pol('enable'))
+        if ('enable' in polarity && data.en.get(0) != pol('enable'))
             return this.get('outputSignals');
-        if ('arst' in polarity && data.arst[0] == pol('arst'))
-            return { out: help.binary2sig(this.get('arst_value'), this.get('bits')) };
+        if ('arst' in polarity && data.arst.get(0) == pol('arst'))
+            return { out: Vector3vl.fromBin(this.get('arst_value'), this.get('bits')) };
         if ('clock' in polarity) {
             const last_clk = this.last_clk;
-            this.last_clk = data.clk[0];
-            if (data.clk[0] == pol('clock') && last_clk == -pol('clock'))
+            this.last_clk = data.clk.get(0);
+            if (data.clk.get(0) == pol('clock') && last_clk == -pol('clock'))
                 return { out: data.in };
             else
                 return this.get('outputSignals');

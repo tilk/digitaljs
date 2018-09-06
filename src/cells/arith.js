@@ -3,6 +3,7 @@
 import joint from 'jointjs';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
+import { Vector3vl } from '3vl';
 
 // Unary arithmetic operations
 joint.shapes.digital.Gate.define('digital.Arith11', {
@@ -31,8 +32,8 @@ joint.shapes.digital.Gate.define('digital.Arith11', {
     },
     operation: function(data) {
         const bits = this.get('bits');
-        if (data.in.some(x => x == 0))
-            return { out: Array(bits.out).fill(0) };
+        if (!data.in.isFullyDefined)
+            return { out: Vector3vl.xes(bits.out) };
         return {
             out: help.bigint2sig(this.arithop(help.sig2bigint(data.in, this.get('signed'))), bits.out)
         };
@@ -68,8 +69,8 @@ joint.shapes.digital.Gate.define('digital.Arith21', {
     operation: function(data) {
         const bits = this.get('bits');
         const sgn = this.get('signed');
-        if (data.in1.some(x => x == 0) || data.in2.some(x => x == 0))
-            return { out: Array(bits.out).fill(0) };
+        if (!data.in1.isFullyDefined || !data.in2.isFullyDefined)
+            return { out: Vector3vl.xes(bits.out) };
         return {
             out: help.bigint2sig(this.arithop(
                     help.sig2bigint(data.in1, sgn.in1),
@@ -109,16 +110,16 @@ joint.shapes.digital.Gate.define('digital.Shift', {
         const bits = this.get('bits');
         const sgn = this.get('signed');
         const fillx = this.get('fillx');
-        if (data.in2.some(x => x == 0))
-            return { out: Array(bits.out).fill(0) };
+        if (!data.in2.isFullyDefined)
+            return { out: Vector3vl.xes(bits.out) };
         const am = help.sig2bigint(data.in2, sgn.in2) * this.shiftdir;
-        const signbit = data.in1.slice(-1)[0];
-        const ext = Array(Math.max(0, bits.out - bits.in1))
-            .fill(fillx ? 0 : sgn.in1 ? data.in1.slice(-1)[0] : -1);
+        const signbit = data.in1.get(data.in1.length-1);
+        const ext = Vector3vl.make(Math.max(0, bits.out - bits.in1),
+            fillx ? 0 : sgn.in1 ? signbit : -1);
         const my_in = data.in1.concat(ext);
         const out = am < 0
-            ? Array(-am).fill(fillx ? 0 : -1).concat(my_in)
-            : my_in.slice(am).concat(Array(am).fill(fillx ? 0 : sgn.out ? my_in.slice(-1)[0] : -1));
+            ? Vector3vl.make(-am, fillx ? 0 : -1).concat(my_in)
+            : my_in.slice(am).concat(Vector3vl.make(am, fillx ? 0 : sgn.out ? my_in.get(my_in.length-1) : -1));
         return { out: out.slice(0, bits.out) };
     }
 });
@@ -152,12 +153,12 @@ joint.shapes.digital.Gate.define('digital.Compare', {
     operation: function(data) {
         const bits = this.get('bits');
         const sgn = this.get('signed');
-        if (data.in1.some(x => x == 0) || data.in2.some(x => x == 0))
-            return { out: [0] };
+        if (!data.in1.isFullyDefined || !data.in2.isFullyDefined)
+            return { out: Vector3vl.xes(1) };
         return {
-            out: [this.arithcomp(
+            out: Vector3vl.fromBool(this.arithcomp(
                     help.sig2bigint(data.in1, sgn.in1),
-                    help.sig2bigint(data.in2, sgn.in2)) ? 1 : -1]
+                    help.sig2bigint(data.in2, sgn.in2)))
         };
     }
 });

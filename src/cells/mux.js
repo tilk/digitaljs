@@ -3,6 +3,7 @@
 import joint from 'jointjs';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
+import { Vector3vl } from '3vl';
 
 // Multiplexers
 joint.shapes.digital.Gate.define('digital.GenMux', {
@@ -45,8 +46,8 @@ joint.shapes.digital.Gate.define('digital.GenMux', {
     },
     operation: function(data) {
         const i = this.muxInput(data.sel);
-        if (i === undefined) return { out: Array(this.get('bits').in).fill(0) };
-        return { out: data['in' + this.muxInput(data.sel)] };
+        if (i === undefined) return { out: Vector3vl.xes(this.get('bits').in) };
+        return { out: data['in' + i] };
     }
 });
 joint.shapes.digital.GenMuxView = joint.shapes.digital.GateView.extend({
@@ -71,7 +72,7 @@ joint.shapes.digital.GenMuxView = joint.shapes.digital.GateView.extend({
 joint.shapes.digital.GenMux.define('digital.Mux', {
 }, {
     muxNumInputs: n => 1 << n,
-    muxInput: i => i.some(x => x == 0) ? undefined : help.sig2bigint(i).toString()
+    muxInput: i => i.isFullyDefined ? help.sig2bigint(i).toString() : undefined
 });
 joint.shapes.digital.MuxView = joint.shapes.digital.GenMuxView;
 
@@ -79,8 +80,11 @@ joint.shapes.digital.MuxView = joint.shapes.digital.GenMuxView;
 joint.shapes.digital.GenMux.define('digital.Mux1Hot', {
 }, {
     muxNumInputs: n => n + 1,
-    muxInput: i => i.some(x => x == 0) || i.filter(x => x == 1).length > 1
-        ? undefined : String(i.indexOf(1)+1)
+    muxInput: s => {
+        const i = s.toArray();
+        return s.isFullyDefined && i.filter(x => x == 1).length <= 1
+            ? String(i.indexOf(1)+1) : undefined
+    }
 });
 joint.shapes.digital.Mux1HotView = joint.shapes.digital.GenMuxView;
 

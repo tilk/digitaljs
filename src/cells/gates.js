@@ -3,6 +3,7 @@
 import joint from 'jointjs';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
+import { Vector3vl } from '3vl';
 
 // Single-input gate model
 joint.shapes.digital.Gate.define('digital.Gate11', {
@@ -76,7 +77,7 @@ joint.shapes.digital.Gate11.define('digital.Not', {
     attrs: { image: { 'xlink:href': require('./gate-not.svg') }}
 }, {
     operation: function(data) {
-        return { out: data.in.map((x) => -x) };
+        return { out: data.in.not() };
     }
 });
 joint.shapes.digital.NotView = joint.shapes.digital.GateView;
@@ -86,7 +87,7 @@ joint.shapes.digital.Gate21.define('digital.Or', {
     attrs: { image: { 'xlink:href': require('./gate-or.svg') }}
 }, {
     operation: function(data) {
-        return { out: _.zipWith(data.in1, data.in2, (x, y) => Math.max(x, y)) };
+        return { out: data.in1.or(data.in2) };
     }
 });
 joint.shapes.digital.OrView = joint.shapes.digital.GateView;
@@ -97,7 +98,7 @@ joint.shapes.digital.Gate21.define('digital.And', {
 
 }, {
     operation: function(data) {
-        return { out: _.zipWith(data.in1, data.in2, (x, y) => Math.min(x, y)) };
+        return { out: data.in1.and(data.in2) };
     }
 });
 joint.shapes.digital.AndView = joint.shapes.digital.GateView;
@@ -107,7 +108,7 @@ joint.shapes.digital.Gate21.define('digital.Nor', {
     attrs: { image: { 'xlink:href': require('./gate-nor.svg') }}
 }, {
     operation: function(data) {
-        return { out: _.zipWith(data.in1, data.in2, (x, y) => -Math.max(x, y)) };
+        return { out: data.in1.or(data.in2) };
     }
 });
 joint.shapes.digital.NorView = joint.shapes.digital.GateView;
@@ -117,7 +118,7 @@ joint.shapes.digital.Gate21.define('digital.Nand', {
     attrs: { image: { 'xlink:href': require('./gate-nand.svg') }}
 }, {
     operation: function(data) {
-        return { out: _.zipWith(data.in1, data.in2, (x, y) => -Math.min(data.in1, data.in2)) };
+        return { out: data.in1.nand(data.in2) };
     }
 });
 joint.shapes.digital.NandView = joint.shapes.digital.GateView;
@@ -127,7 +128,7 @@ joint.shapes.digital.Gate21.define('digital.Xor', {
     attrs: { image: { 'xlink:href': require('./gate-xor.svg') }}
 }, {
     operation: function(data) {
-        return { out: _.zipWith(data.in1, data.in2, (x, y) => -x * y) };
+        return { out: data.in1.xor(data.in2) };
     }
 });
 joint.shapes.digital.XorView = joint.shapes.digital.GateView;
@@ -137,7 +138,7 @@ joint.shapes.digital.Gate21.define('digital.Xnor', {
     attrs: { image: { 'xlink:href': require('./gate-xnor.svg') }}
 }, {
     operation: function(data) {
-        return { out: _.zipWith(data.in1, data.in2, (x, y) => x * y) };
+        return { out: data.in1.xnor(data.in2) };
     }
 });
 joint.shapes.digital.XnorView = joint.shapes.digital.GateView;
@@ -147,7 +148,7 @@ joint.shapes.digital.GateReduce.define('digital.OrReduce', {
     attrs: { image: { 'xlink:href': require('./gate-or.svg') }}
 }, {
     operation: function(data) {
-        return { out: [Math.max(...data.in)] };
+        return { out: data.in.reduceOr() };
     }
 });
 
@@ -156,7 +157,7 @@ joint.shapes.digital.GateReduce.define('digital.NorReduce', {
     attrs: { image: { 'xlink:href': require('./gate-nor.svg') }}
 }, {
     operation: function(data) {
-        return { out: [-Math.max(...data.in)] };
+        return { out: data.in.reduceNor() };
     }
 });
 
@@ -165,7 +166,7 @@ joint.shapes.digital.GateReduce.define('digital.AndReduce', {
     attrs: { image: { 'xlink:href': require('./gate-and.svg') }}
 }, {
     operation: function(data) {
-        return { out: [Math.min(...data.in)] };
+        return { out: data.in.reduceAnd() };
     }
 });
 
@@ -174,7 +175,7 @@ joint.shapes.digital.GateReduce.define('digital.NandReduce', {
     attrs: { image: { 'xlink:href': require('./gate-nand.svg') }}
 }, {
     operation: function(data) {
-        return { out: [-Math.min(...data.in)] };
+        return { out: data.in.reduceNand() };
     }
 });
 
@@ -183,16 +184,16 @@ joint.shapes.digital.GateReduce.define('digital.XorReduce', {
     attrs: { image: { 'xlink:href': require('./gate-xor.svg') }}
 }, {
     operation: function(data) {
-        return { out: [data.in.reduce((a, b) => -a * b)] };
+        return { out: data.in.reduceXor() };
     }
 });
 
-// Reducing Xor gate model
+// Reducing Xnor gate model
 joint.shapes.digital.GateReduce.define('digital.XnorReduce', {
     attrs: { image: { 'xlink:href': require('./gate-xor.svg') }}
 }, {
     operation: function(data) {
-        return { out: [data.in.reduce((a, b) => a * b)] };
+        return { out: data.in.reduceXnor() };
     }
 });
 

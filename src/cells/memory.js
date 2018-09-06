@@ -3,6 +3,7 @@
 import joint from 'jointjs';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
+import { Vector3vl } from '3vl';
 
 // Memory cell
 joint.shapes.digital.Box.define('digital.Memory', {
@@ -24,9 +25,9 @@ joint.shapes.digital.Box.define('digital.Memory', {
         if (!args.words) args.words = 1 << args.abits;
         if (!args.offset) args.offset = 0;
         if (args.memdata)
-            this.memdata = args.memdata.map(x => help.binary2sig(x, args.bits));
+            this.memdata = args.memdata.map(x => Vector3vl.fromBin(x, args.bits));
         else
-            this.memdata = Array(args.words).fill(Array(args.bits).fill(0));
+            this.memdata = Array(args.words).fill(Vector3vl.xes(args.bits));
         delete args.memdata; // performance hack
         console.assert(this.memdata.length == args.words);
         this.last_clk = {};
@@ -78,13 +79,13 @@ joint.shapes.digital.Box.define('digital.Memory', {
         const out = {};
         const check_enabled = (portname, port) => {
             const pol = what => port[what + '_polarity'] ? 1 : -1;
-            if ('enable_polarity' in port && !data[portname + 'en'].some(x => x == pol('enable')))
+            if ('enable_polarity' in port && !data[portname + 'en'].toArray().some(x => x == pol('enable')))
                 return false;
             if ('clock_polarity' in port) {
                 const clkname = portname + 'clk';
                 const last_clk = this.last_clk[clkname];
-                this.last_clk[clkname] = data[clkname][0];
-                return (data[clkname][0] == pol('clock') && last_clk == -pol('clock'));
+                this.last_clk[clkname] = data[clkname].get(0);
+                return (data[clkname].get(0) == pol('clock') && last_clk == -pol('clock'));
             }
             return true;
         };
@@ -95,22 +96,22 @@ joint.shapes.digital.Box.define('digital.Memory', {
                 if ('clock_polarity' in port)
                     out[portname + 'data'] = this.get('outputSignals')[portname + 'data'];
                 else
-                    out[portname + 'data'] = Array(this.get('bits')).fill(0);
+                    out[portname + 'data'] = Vector3vl.xes(this.get('bits'));
                 return;
             }
-            if (data[portname + 'addr'].some(x => x == 0))
-                out[portname + 'data'] = Array(this.get('bits')).fill(0);
+            if (!data[portname + 'addr'].isFullyDefined)
+                out[portname + 'data'] = Vector3vl.xes(this.get('bits'));
             else {
                 const addr = calc_addr(data[portname + 'addr']);
                 if (valid_addr(addr))
                     out[portname + 'data'] = this.memdata[addr];
                 else
-                    out[portname + 'data'] = Array(this.get('bits')).fill(0);
+                    out[portname + 'data'] = Vector3vl.xes(this.get('bits'));
             }
         };
         const do_write = (portname, port) => {
             if (!check_enabled(portname, port)) return;
-            if (data[portname + 'addr'].some(x => x == 0)) return;
+            if (!data[portname + 'addr'].isFullyDefined) return;
             const addr = calc_addr(data[portname + 'addr']);
             if (valid_addr(addr))
                 this.memdata[addr] = data[portname + 'data'];

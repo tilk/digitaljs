@@ -3,6 +3,7 @@
 import joint from 'jointjs';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
+import { Vector3vl } from '3vl';
 
 // Common base class for gate models
 joint.shapes.basic.Generic.define('digital.Gate', {
@@ -80,8 +81,7 @@ joint.shapes.basic.Generic.define('digital.Gate', {
         }
         const signame = port.dir == 'in' ? 'inputSignals' : 'outputSignals';
         if (_.get(args, [signame, port.id]) === undefined) {
-            _.set(args, [signame, port.id],
-                _.times(port.bits, _.constant(0)));
+            _.set(args, [signame, port.id], Vector3vl.xes(port.bits));
         }
         return '<g>' + markup + '</g>';
     }
@@ -104,10 +104,17 @@ joint.shapes.digital.GateView = joint.dia.ElementView.extend({
         for (const port of Object.values(this.model.ports)) {
             if (port.dir !== dir) continue;
             let classes = ['port', port.dir, 'port_' + port.id];
-            classes.push(help.sigClass(signal[port.id]));
+            if (signal[port.id].isHigh) classes.push('live');
+            else if (signal[port.id].isLow) classes.push('low');
+            else if (signal[port.id].isDefined) classes.push('defined');
             this.$('circle.port_' + port.id).attr('class', classes.join(' '));
         }
     },
+    render: function() {
+        joint.dia.ElementView.prototype.render.apply(this, arguments);
+        this.updatePortSignals('in', this.model.get('inputSignals'));
+        this.updatePortSignals('out', this.model.get('outputSignals'));
+    }
 });
 
 // Connecting wire model
@@ -116,7 +123,7 @@ joint.dia.Link.define('digital.Wire', {
         '.connection': { 'stroke-width': 2 },
         '.marker-vertex': { r: 7 }
     },
-    signal: [0],
+    signal: Vector3vl.xes(1),
     bits: 1,
 
     router: { name: 'orthogonal' },
@@ -198,21 +205,22 @@ joint.shapes.digital.WireView = joint.dia.LinkView.extend({
 
     initialize: function() {
         joint.dia.LinkView.prototype.initialize.apply(this, arguments);
-        const cl = help.sigClass(this.model.get('signal'));
-        this.$el.toggleClass('live', cl == 'live');
-        this.$el.toggleClass('low', cl == 'low');
-        this.$el.toggleClass('defined', cl == 'defined');
+        this.updateColor(this.model.get('signal'));
         this.$el.toggleClass('bus', this.model.get('bits') > 1);
-        this.listenTo(this.model, 'change:signal', function(wire, signal) {
-            const cl = help.sigClass(this.model.get('signal'));
-            this.$el.toggleClass('live', cl == 'live');
-            this.$el.toggleClass('low', cl == 'low');
-            this.$el.toggleClass('defined', cl == 'defined');
+        this.listenTo(this.model, 'change:signal', (wire, signal) => {
+            this.updateColor(this.model.get('signal'));
         });
         this.listenTo(this.model, 'change:bits', function(wire, bits) {
             this.$el.toggleClass('bus', bits > 1);
         });
         this.prevModels = { source: null, target: null };
+    },
+
+    updateColor: function(sig) {
+        const h = sig.isHigh, l = sig.isLow;
+        this.$el.toggleClass('live', h);
+        this.$el.toggleClass('low', l);
+        this.$el.toggleClass('defined', !h && !l && sig.isDefined);
     },
 
     hover_mouseover: function(evt) {
@@ -237,9 +245,9 @@ joint.shapes.digital.WireView = joint.dia.LinkView.extend({
     hover_gentext: function() {
         if (!this.wire_hover) return;
         const hovertext = [
-            'Hex: ' + help.sig2hex(this.model.get('signal')) + '<br>',
-            'Oct: ' + help.sig2oct(this.model.get('signal')) + '<br>',
-            'Bin: ' + help.sig2binary(this.model.get('signal'))
+            'Hex: ' + this.model.get('signal').toHex() + '<br>',
+            'Oct: ' + this.model.get('signal').toOct() + '<br>',
+            'Bin: ' + this.model.get('signal').toBin()
         ].join('');
         this.wire_hover.html(hovertext);
     },

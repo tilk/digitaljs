@@ -3,6 +3,7 @@
 import joint from 'jointjs';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
+import { Vector3vl } from '3vl';
 
 // Bit extending
 joint.shapes.digital.Gate.define('digital.BitExtend', {
@@ -28,7 +29,7 @@ joint.shapes.digital.Gate.define('digital.BitExtend', {
     },
     operation: function(data) {
         const ex = this.get('extend');
-        return { out: data.in.concat(Array(ex.output - ex.input).fill(this.extbit(data.in))) };
+        return { out: data.in.concat(Vector3vl.make(this.extbit(data.in))) };
     }
 });
 
@@ -48,7 +49,7 @@ joint.shapes.digital.BitExtend.define('digital.SignExtend', {
     }
 }, {
     extbit: function(i) {
-        return i.slice(-1)[0];
+        return i.get(i.bits - 1);
     }
 });
 
@@ -113,7 +114,7 @@ joint.shapes.digital.BusRegroup.define('digital.BusGroup', {
         for (const num of this.get('groups').keys()) {
             outdata.push(data['in' + num]);
         }
-        return { out : _.flatten(outdata) };
+        return { out : Vector3vl.concat(...outdata) };
     }
 });
 joint.shapes.digital.BusGroupView = joint.shapes.digital.BoxView;

@@ -1,8 +1,10 @@
 "use strict";
 
+import 'babel-polyfill';
 import joint from 'jointjs';
 import _ from 'lodash';
 import Backbone from 'backbone';
+import { Vector3vl } from '3vl';
 import 'jquery-ui/ui/widgets/dialog';
 import 'jquery-ui/themes/base/all.css';
 import '@app/cells.js';
@@ -170,7 +172,7 @@ export class Circuit {
             if (gate && 'port' in end) {
                 wire.set('signal', gate.get('outputSignals')[end.port]);
             } else {
-                wire.set('signal', _.times(wire.get('bits'), _.constant(0)));
+                wire.set('signal', Vector3vl.xes(wire.get('bits')));
             }
         });
         function setInput(sig, end, gate) {
@@ -185,7 +187,7 @@ export class Circuit {
             }
         }
         function clearInput(end, gate) {
-            setInput(_.times(gate.ports[end.port].bits, _.constant(0)), end, gate);
+            setInput(Vector3vl.xes(gate.ports[end.port].bits), end, gate);
         }
         this.listenTo(graph, 'change:target', function(wire, end) {
             const gate = graph.getCell(end.id);

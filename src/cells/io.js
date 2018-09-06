@@ -3,6 +3,7 @@
 import joint from 'jointjs';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
+import { Vector3vl } from '3vl';
 
 // Things with numbers
 joint.shapes.digital.Gate.define('digital.NumBase', {
@@ -94,7 +95,7 @@ joint.shapes.digital.NumDisplayView = joint.shapes.digital.NumBaseView;
 joint.shapes.digital.NumBase.define('digital.NumEntry', {
     bits: 1,
     propagation: 0,
-    buttonState: [0],
+    buttonState: Vector3vl.xes(1),
     attrs: {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
         'foreignObject.valinput': {
@@ -179,10 +180,15 @@ joint.shapes.digital.Gate.define('digital.Lamp', {
 joint.shapes.digital.LampView = joint.shapes.digital.GateView.extend({
     initialize: function() {
         joint.shapes.digital.GateView.prototype.initialize.apply(this, arguments);
-        this.listenTo(this.model, 'change:inputSignals', function(wire, signal) {
-            this.$(".led").toggleClass('live', help.isLive(signal.in));
-            this.$(".led").toggleClass('low', help.isLow(signal.in));
-        });
+        this.listenTo(this.model, 'change:inputSignals', (wire, signal) => { this.updateLamp(signal) });
+    },
+    updateLamp: function(signal) {
+        this.$(".led").toggleClass('live', signal.in.isHigh);
+        this.$(".led").toggleClass('low', signal.in.isLow);
+    },
+    render: function() {
+        joint.shapes.digital.GateView.prototype.render.apply(this, arguments);
+        this.updateLamp(this.model.get('inputSignals'));
     }
 });
 
@@ -210,7 +216,7 @@ joint.shapes.digital.Gate.define('digital.Button', {
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     },
     operation: function() {
-        return { out: [this.get('buttonState') ? 1 : -1] };
+        return { out: this.get('buttonState') ? Vector3vl.ones(1) : Vector3vl.zeros(1) };
     }
 });
 joint.shapes.digital.ButtonView = joint.shapes.digital.GateView.extend({
@@ -294,8 +300,8 @@ joint.shapes.digital.NumBase.define('digital.Constant', {
     }
 }, {
     constructor: function(args) {
-        args.constant = help.binary2sig(args.constant, args.constant.length);
-        args.bits = args.constant.length;
+        args.constant = Vector3vl.fromBin(args.constant, args.constant.length);
+        args.bits = args.constant.bits;
         args.outputSignals = { out: args.constant };
         this.markup = [
             this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.constant.length }),
@@ -329,7 +335,7 @@ joint.shapes.digital.Gate.define('digital.Clock', {
     }
 }, {
     constructor: function(args) {
-        args.outputSignals = { out: [-1] };
+        args.outputSignals = { out: Vector3vl.zeros(1) };
         this.markup = [
             this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: 1 }),
             '<rect class="body"/>',
@@ -340,7 +346,7 @@ joint.shapes.digital.Gate.define('digital.Clock', {
     },
     operation: function() {
         this.trigger("change:inputSignals", this, {});
-        return { out: [-this.get('outputSignals').out[0]] };
+        return { out: this.get('outputSignals').out.not() };
     }
 });
 
