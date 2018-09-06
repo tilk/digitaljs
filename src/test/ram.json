@@ -1,0 +1,132 @@
+{
+  "devices": {
+    "dev0": {
+      "celltype": "$clock",
+      "label": "clk",
+      "net": "clk",
+      "order": 0,
+      "bits": 1,
+      "propagation": 100
+    },
+    "dev1": {
+      "celltype": "$numentry",
+      "label": "addr",
+      "net": "addr",
+      "order": 1,
+      "bits": 4
+    },
+    "dev2": {
+      "celltype": "$numdisplay",
+      "label": "data",
+      "net": "data",
+      "order": 2,
+      "bits": 4
+    },
+    "dev3": {
+      "celltype": "$numentry",
+      "label": "wraddr",
+      "net": "wraddr",
+      "order": 3,
+      "bits": 4
+    },
+    "dev4": {
+      "celltype": "$numentry",
+      "label": "wrdata",
+      "net": "wrdata",
+      "order": 4,
+      "bits": 4
+    },
+    "dev5": {
+      "label": "mem",
+      "celltype": "$mem",
+      "bits": 4,
+      "abits": 4,
+      "words": 16,
+      "offset": 0,
+      "rdports": [
+        {}
+      ],
+      "wrports": [
+        {
+          "clock_polarity": true
+        }
+      ],
+      "memdata": [
+        "0000",
+        "0001",
+        "0010",
+        "0011",
+        "0100",
+        "0101",
+        "0110",
+        "0111",
+        "1000",
+        "1001",
+        "1010",
+        "1011",
+        "1100",
+        "1101",
+        "1110",
+        "1111"
+      ]
+    }
+  },
+  "connectors": [
+    {
+      "to": {
+        "id": "dev5",
+        "port": "wr0clk"
+      },
+      "from": {
+        "id": "dev0",
+        "port": "out"
+      },
+      "name": "clk"
+    },
+    {
+      "to": {
+        "id": "dev5",
+        "port": "rd0addr"
+      },
+      "from": {
+        "id": "dev1",
+        "port": "out"
+      },
+      "name": "addr"
+    },
+    {
+      "to": {
+        "id": "dev2",
+        "port": "in"
+      },
+      "from": {
+        "id": "dev5",
+        "port": "rd0data"
+      },
+      "name": "data"
+    },
+    {
+      "to": {
+        "id": "dev5",
+        "port": "wr0addr"
+      },
+      "from": {
+        "id": "dev3",
+        "port": "out"
+      },
+      "name": "wraddr"
+    },
+    {
+      "to": {
+        "id": "dev5",
+        "port": "wr0data"
+      },
+      "from": {
+        "id": "dev4",
+        "port": "out"
+      },
+      "name": "wrdata"
+    }
+  ],
+  "subcircuits": {}
+}

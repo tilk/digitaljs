@@ -1,6 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CleanWebpackPlugin = require("clean-webpack-plugin");
+const babelenv = require('babel-preset-env');
 
 const outputDirectory = 'dist';
 
@@ -10,6 +11,8 @@ const tests = [
     {name: 'cycleadder', title: 'Accumulating Adder'},
     {name: 'lfsr', title: 'Linear Feedback Shift Register'},
     {name: 'sextium', title: 'Sextium III Processor'},
+    {name: 'rom', title: 'Async ROM'},
+    {name: 'ram', title: 'Simple RAM'}
 ];
 
 module.exports = {
@@ -55,7 +58,7 @@ module.exports = {
                 loader: 'babel-loader',
                 exclude: /node_modules/,
                 query: {
-                    presets: ['env'],
+                    presets: [babelenv],
                 }
             }, {
                 test: require.resolve('jquery'),
