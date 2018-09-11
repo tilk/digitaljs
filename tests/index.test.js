@@ -1,3 +1,4 @@
+"use strict";
 
 import { HeadlessCircuit, getCellType } from '../dist/main.js';
 import { Vector3vl } from '3vl';
@@ -53,7 +54,27 @@ class SingleCellTestFixture {
     test(testname, f) {
         test(testname, () => { f(this.circuit) });
     }
-    testFun(testname, fun) {
+    testFunRandomized(fun) {
+        const me = this;
+        function randtest() {
+            const ret = {};
+            for (const x of me.inlist) {
+                ret[x.name] = Vector3vl.fromArray(Array(x.bits).fill(0).map(x => Math.floor(3 * Math.random() - 1)));
+            }
+            return ret;
+        }
+        function* gen(tries) {
+            for (const k of Array(tries).keys()) {
+                yield randtest();
+            }
+        }
+        test("randomized logic table check", () => {
+            for (const ins of gen(100)) {
+                this.expectComb(ins, fun(ins));
+            }
+        });
+    }
+    testFun(fun) {
         const me = this;
         function bitgen(n) {
             const bits = [];
@@ -82,22 +103,26 @@ class SingleCellTestFixture {
             }
             return rec(0);
         }
-        test(testname, () => {
+        test("complete logic table check", () => {
             for (const ins of gen()) {
-                for (const [name, value] of Object.entries(ins)) {
-                    this.circuit.setInput(name, value);
-                }
-                this.circuit.updateGates(); // propagate input change
-                this.circuit.updateGates(); // propagate gate delay
-                const outs = fun(ins);
-                for (const k in this.outlist) {
-                    expect(this.circuit.getOutput(this.outlist[k].name).toArray())
-                        .toEqual(outs[this.outlist[k].name].toArray());
-                }
+                this.expectComb(ins, fun(ins));
             }
         });
     }
+    expectComb(ins, outs) {
+        for (const [name, value] of Object.entries(ins)) {
+            this.circuit.setInput(name, value);
+        }
+        this.circuit.updateGates(); // propagate input change
+        this.circuit.updateGates(); // propagate gate delay
+        for (const k in this.outlist) {
+            expect(this.circuit.getOutput(this.outlist[k].name).toArray())
+                .toEqual(outs[this.outlist[k].name].toArray());
+        }
+    }
 };
+
+const randBits = [16, 32, 48, 64];
 
 describe.each([
 ["$and",  s => ({ out: s.in1.and(s.in2) })],
@@ -108,7 +133,11 @@ describe.each([
 ["$xnor", s => ({ out: s.in1.xnor(s.in2) })]])('%s', (name, fun) => {
     describe.each([1, 2])('%i bits', (bits) => {
         new SingleCellTestFixture({celltype: name, bits: bits})
-            .testFun("logic table check", fun);
+            .testFun(fun);
+    });
+    describe.each(randBits)('%i bits randomized', (bits) => {
+        new SingleCellTestFixture({celltype: name, bits: bits})
+            .testFunRandomized(fun);
     });
 });
 
@@ -117,7 +146,11 @@ describe.each([
 ["$repeater", s => ({ out: s.in })]])('%s', (name, fun) => {
     describe.each([1, 4])('%i bits', (bits) => {
         new SingleCellTestFixture({celltype: name, bits: bits})
-            .testFun("logic table check", fun);
+            .testFun(fun);
+    });
+    describe.each(randBits)('%i bits randomized', (bits) => {
+        new SingleCellTestFixture({celltype: name, bits: bits})
+            .testFunRandomized(fun);
     });
 });
 
@@ -130,7 +163,11 @@ describe.each([
 ["$reduce_xnor", s => ({ out: s.in.reduceXnor() })]])('%s', (name, fun) => {
     describe.each([1, 4])('%i bits', (bits) => {
         new SingleCellTestFixture({celltype: name, bits: bits})
-            .testFun("logic table check", fun);
+            .testFun(fun);
+    });
+    describe.each(randBits)('%i bits randomized', (bits) => {
+        new SingleCellTestFixture({celltype: name, bits: bits})
+            .testFunRandomized(fun);
     });
 });
 
