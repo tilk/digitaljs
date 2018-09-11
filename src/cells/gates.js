@@ -108,7 +108,7 @@ joint.shapes.digital.Gate21.define('digital.Nor', {
     attrs: { image: { 'xlink:href': require('./gate-nor.svg') }}
 }, {
     operation: function(data) {
-        return { out: data.in1.or(data.in2) };
+        return { out: data.in1.nor(data.in2) };
     }
 });
 joint.shapes.digital.NorView = joint.shapes.digital.GateView;
