@@ -74,7 +74,7 @@ class SingleCellTestFixture {
             }
         });
     }
-    testFun(fun) {
+    testFunComplete(fun) {
         const me = this;
         function bitgen(n) {
             const bits = [];
@@ -109,6 +109,11 @@ class SingleCellTestFixture {
             }
         });
     }
+    testFun(fun) {
+        const totbits = this.inlist.reduce((a, b) => a + b.bits, 0);
+        if (totbits <= 4) this.testFunComplete(fun);
+        else this.testFunRandomized(fun);
+    }
     expectComb(ins, outs) {
         for (const [name, value] of Object.entries(ins)) {
             this.circuit.setInput(name, value);
@@ -122,7 +127,7 @@ class SingleCellTestFixture {
     }
 };
 
-const randBits = [16, 32, 48, 64];
+const testBits = [1, 2, 3, 4, 16, 32, 48, 64];
 
 describe.each([
 ["$and",  s => ({ out: s.in1.and(s.in2) })],
@@ -131,26 +136,18 @@ describe.each([
 ["$nand", s => ({ out: s.in1.nand(s.in2) })],
 ["$nor",  s => ({ out: s.in1.nor(s.in2) })],
 ["$xnor", s => ({ out: s.in1.xnor(s.in2) })]])('%s', (name, fun) => {
-    describe.each([1, 2])('%i bits', (bits) => {
+    describe.each(testBits)('%i bits', (bits) => {
         new SingleCellTestFixture({celltype: name, bits: bits})
             .testFun(fun);
-    });
-    describe.each(randBits)('%i bits randomized', (bits) => {
-        new SingleCellTestFixture({celltype: name, bits: bits})
-            .testFunRandomized(fun);
     });
 });
 
 describe.each([
 ["$not",      s => ({ out: s.in.not() })],
 ["$repeater", s => ({ out: s.in })]])('%s', (name, fun) => {
-    describe.each([1, 4])('%i bits', (bits) => {
+    describe.each(testBits)('%i bits', (bits) => {
         new SingleCellTestFixture({celltype: name, bits: bits})
             .testFun(fun);
-    });
-    describe.each(randBits)('%i bits randomized', (bits) => {
-        new SingleCellTestFixture({celltype: name, bits: bits})
-            .testFunRandomized(fun);
     });
 });
 
@@ -161,13 +158,9 @@ describe.each([
 ["$reduce_nand", s => ({ out: s.in.reduceNand() })],
 ["$reduce_nor",  s => ({ out: s.in.reduceNor() })],
 ["$reduce_xnor", s => ({ out: s.in.reduceXnor() })]])('%s', (name, fun) => {
-    describe.each([1, 4])('%i bits', (bits) => {
+    describe.each(testBits)('%i bits', (bits) => {
         new SingleCellTestFixture({celltype: name, bits: bits})
             .testFun(fun);
-    });
-    describe.each(randBits)('%i bits randomized', (bits) => {
-        new SingleCellTestFixture({celltype: name, bits: bits})
-            .testFunRandomized(fun);
     });
 });
 
@@ -177,13 +170,9 @@ describe.each([
 ["$busungroup", 1, s => ({ out0: s.in })],
 ["$busungroup", 2, s => ({ out0: s.in.slice(0, Math.ceil(s.in.bits / 2)), out1: s.in.slice(Math.ceil(s.in.bits / 2)) })],
 ])('%s %i-port', (name, ins, fun) => {
-    describe.each([1, 4])('%i bits', (bits) => {
+    describe.each(testBits)('%i bits', (bits) => {
         new SingleCellTestFixture({celltype: name, groups: Array(ins).fill(Math.ceil(bits / ins))})
             .testFun(fun);
-    });
-    describe.each(randBits)('%i bits randomized', (bits) => {
-        new SingleCellTestFixture({celltype: name, groups: Array(ins).fill(Math.ceil(bits / ins))})
-            .testFunRandomized(fun);
     });
 });
 
