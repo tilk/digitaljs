@@ -73,8 +73,8 @@ module.exports = {
         new CleanWebpackPlugin([outputDirectory]),
     ].concat(tests.map(t => new HtmlWebpackPlugin({
             title: t.title,
-            template: 'src/test/template.html',
-            test: JSON.stringify(require('./src/test/' + t.name + '.json')),
+            template: 'examples/template.html',
+            test: JSON.stringify(require('./examples/' + t.name + '.json')),
             filename: 'test/' + t.name + '.html',
             inject: 'head'
     })))

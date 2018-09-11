@@ -1,6 +1,7 @@
 "use strict";
 
 import joint from 'jointjs';
+import _ from 'lodash';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
 import { Vector3vl } from '3vl';
