@@ -191,3 +191,14 @@ describe.each([
     });
 });
 
+const comparefun = f => s => ({ out: s.in1.isFullyDefined && s.in2.isFullyDefined ? Vector3vl.fromBool(f(parseInt(s.in1.toBin(), 2), parseInt(s.in2.toBin(), 2))) : Vector3vl.x });
+
+describe.each([
+["$eq", comparefun((a, b) => a == b)],
+])('%s', (name, fun) => {
+    describe.each(testBits)('%i bits', (bits) => {
+        new SingleCellTestFixture({celltype: name, bits: { in1: bits, in2: bits }})
+            .testFun(fun);
+    });
+});
+
