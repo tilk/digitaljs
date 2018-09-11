@@ -111,7 +111,7 @@ class SingleCellTestFixture {
     }
     testFun(fun) {
         const totbits = this.inlist.reduce((a, b) => a + b.bits, 0);
-        if (totbits <= 4) this.testFunComplete(fun);
+        if (totbits <= 6) this.testFunComplete(fun);
         else this.testFunRandomized(fun);
     }
     expectComb(ins, outs) {
@@ -172,6 +172,21 @@ describe.each([
 ])('%s %i-port', (name, ins, fun) => {
     describe.each(testBits)('%i bits', (bits) => {
         new SingleCellTestFixture({celltype: name, groups: Array(ins).fill(Math.ceil(bits / ins))})
+            .testFun(fun);
+    });
+});
+
+const muxfun = ins => s => ({ out: s.sel.isFullyDefined ? ins(s)[parseInt(s.sel.toBin(), 2)] : Vector3vl.xes(s.in0.bits) });
+const pmuxfun = ins => s => ({ out: s.sel.isFullyDefined && s.sel.toBin().split('').filter(x => x == '1').length <= 1 ? ins(s)[s.sel.toBin().split('').reverse().join('').indexOf('1') + 1] : Vector3vl.xes(s.in0.bits)});
+
+describe.each([
+["$mux", 1, muxfun(s => [s.in0, s.in1])],
+["$mux", 2, muxfun(s => [s.in0, s.in1, s.in2, s.in3])],
+["$pmux", 1, pmuxfun(s => [s.in0, s.in1, s.in2])],
+["$pmux", 2, pmuxfun(s => [s.in0, s.in1, s.in2, s.in3, s.in4])],
+])('%s %i-select', (name, ins, fun) => {
+    describe.each(testBits)('%i bits', (bits) => {
+        new SingleCellTestFixture({celltype: name, bits: {in: bits, sel: ins}})
             .testFun(fun);
     });
 });
