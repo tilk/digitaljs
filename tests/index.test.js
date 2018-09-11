@@ -171,4 +171,19 @@ describe.each([
     });
 });
 
+describe.each([
+["$busgroup", 1, s => ({ out: s.in0 })],
+["$busgroup", 2, s => ({ out: Vector3vl.concat(s.in0, s.in1) })],
+["$busungroup", 1, s => ({ out0: s.in })],
+["$busungroup", 2, s => ({ out0: s.in.slice(0, Math.ceil(s.in.bits / 2)), out1: s.in.slice(Math.ceil(s.in.bits / 2)) })],
+])('%s %i-port', (name, ins, fun) => {
+    describe.each([1, 4])('%i bits', (bits) => {
+        new SingleCellTestFixture({celltype: name, groups: Array(ins).fill(Math.ceil(bits / ins))})
+            .testFun(fun);
+    });
+    describe.each(randBits)('%i bits randomized', (bits) => {
+        new SingleCellTestFixture({celltype: name, groups: Array(ins).fill(Math.ceil(bits / ins))})
+            .testFunRandomized(fun);
+    });
+});
 
