@@ -54,48 +54,58 @@ class SingleCellTestFixture {
         test(testname, () => { f(this.circuit) });
     }
     testFun(testname, fun) {
-        var ins = [];
-        var rec = () => {
-            if (ins.length == this.inlist.length) {
-                for (const k in this.inlist) {
-                    this.circuit.setInput(this.inlist[k].name, ins[k]);
+        const me = this;
+        function bitgen(n) {
+            const bits = [];
+            function* rec() {
+                if (bits.length == n) yield bits;
+                else {
+                    for (const bit of [-1, 0, 1]) {
+                        bits.push(bit);
+                        yield* rec();
+                        bits.pop();
+                    }
+                }
+            }
+            return rec();
+        }
+        function gen() {
+            const ins = {};
+            function* rec(level) {
+                if (level == me.inlist.length) yield ins;
+                else {
+                    for (const bits of bitgen(me.inlist[level].bits)) {
+                        ins[me.inlist[level].name] = Vector3vl.fromArray(bits);
+                        yield* rec(level+1);
+                    }
+                }
+            }
+            return rec(0);
+        }
+        test(testname, () => {
+            for (const ins of gen()) {
+                for (const [name, value] of Object.entries(ins)) {
+                    this.circuit.setInput(name, value);
                 }
                 this.circuit.updateGates(); // propagate input change
                 this.circuit.updateGates(); // propagate gate delay
-                const outs = fun(...ins);
+                const outs = fun(ins);
                 for (const k in this.outlist) {
                     expect(this.circuit.getOutput(this.outlist[k].name).toArray())
-                        .toEqual(outs[k].toArray());
+                        .toEqual(outs[this.outlist[k].name].toArray());
                 }
-            } else {
-                var bits = [];
-                var rec2 = () => {
-                    if (bits.length == this.inlist[ins.length].bits) {
-                        ins.push(Vector3vl.fromArray(bits));
-                        rec();
-                        ins.pop();
-                    } else {
-                        for (const bit of [-1, 0, 1]) {
-                            bits.push(bit);
-                            rec2();
-                            bits.pop();
-                        }
-                    }
-                }
-                rec2();
             }
-        };
-        test(testname, rec);
+        });
     }
 };
 
 describe.each([
-["$and",  (i1, i2) => [i1.and(i2)]],
-["$or",   (i1, i2) => [i1.or(i2)]],
-["$xor",  (i1, i2) => [i1.xor(i2)]],
-["$nand", (i1, i2) => [i1.nand(i2)]],
-["$nor",  (i1, i2) => [i1.nor(i2)]],
-["$xnor", (i1, i2) => [i1.xnor(i2)]]])('%s', (name, fun) => {
+["$and",  s => ({ out: s.in1.and(s.in2) })],
+["$or",   s => ({ out: s.in1.or(s.in2) })],
+["$xor",  s => ({ out: s.in1.xor(s.in2) })],
+["$nand", s => ({ out: s.in1.nand(s.in2) })],
+["$nor",  s => ({ out: s.in1.nor(s.in2) })],
+["$xnor", s => ({ out: s.in1.xnor(s.in2) })]])('%s', (name, fun) => {
     describe.each([1, 2])('%i bits', (bits) => {
         new SingleCellTestFixture({celltype: name, bits: bits})
             .testFun("logic table check", fun);
@@ -103,8 +113,8 @@ describe.each([
 });
 
 describe.each([
-["$not",  i => [i.not()]],
-["$repeater", i => [i]]])('%s', (name, fun) => {
+["$not",      s => ({ out: s.in.not() })],
+["$repeater", s => ({ out: s.in })]])('%s', (name, fun) => {
     describe.each([1, 4])('%i bits', (bits) => {
         new SingleCellTestFixture({celltype: name, bits: bits})
             .testFun("logic table check", fun);
@@ -112,12 +122,12 @@ describe.each([
 });
 
 describe.each([
-["$reduce_and",  i => [i.reduceAnd()]],
-["$reduce_or",  i => [i.reduceOr()]],
-["$reduce_xor",  i => [i.reduceXor()]],
-["$reduce_nand",  i => [i.reduceNand()]],
-["$reduce_nor",  i => [i.reduceNor()]],
-["$reduce_xnor",  i => [i.reduceXnor()]]])('%s', (name, fun) => {
+["$reduce_and",  s => ({ out: s.in.reduceAnd() })],
+["$reduce_or",   s => ({ out: s.in.reduceOr() })],
+["$reduce_xor",  s => ({ out: s.in.reduceXor() })],
+["$reduce_nand", s => ({ out: s.in.reduceNand() })],
+["$reduce_nor",  s => ({ out: s.in.reduceNor() })],
+["$reduce_xnor", s => ({ out: s.in.reduceXnor() })]])('%s', (name, fun) => {
     describe.each([1, 4])('%i bits', (bits) => {
         new SingleCellTestFixture({celltype: name, bits: bits})
             .testFun("logic table check", fun);
