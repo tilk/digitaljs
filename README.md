@@ -66,4 +66,5 @@ Some ideas for further developing the simulator.
  * Zooming in/out on schematics.
  * SVG export.
  * Verilog export.
+ * Smartphone and tablet compatible UI.
 
