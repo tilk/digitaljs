@@ -191,14 +191,19 @@ describe.each([
     });
 });
 
-const comparefun = f => s => ({ out: s.in1.isFullyDefined && s.in2.isFullyDefined ? Vector3vl.fromBool(f(parseInt(s.in1.toBin(), 2), parseInt(s.in2.toBin(), 2))) : Vector3vl.x });
+const parseIntSign = (x, sgn) => parseInt(x, 2) - (sgn && x[0] == '1' ? (2 ** x.length) : 0);
+
+const comparefun = f => (sgn1, sgn2) => s => ({ out: s.in1.isFullyDefined && s.in2.isFullyDefined ? Vector3vl.fromBool(f(parseIntSign(s.in1.toBin(), sgn1), parseIntSign(s.in2.toBin(), sgn2))) : Vector3vl.x });
 
 describe.each([
-["$eq", comparefun((a, b) => a == b)],
-])('%s', (name, fun) => {
+["$eq", false, false, comparefun((a, b) => a == b)],
+["$lt", true, true, comparefun((a, b) => a < b)],
+["$lt", true, false, comparefun((a, b) => a < b)],
+["$lt", false, false, comparefun((a, b) => a < b)],
+])('%s %s %s', (name, sgn1, sgn2, fun) => {
     describe.each(testBits)('%i bits', (bits) => {
-        new SingleCellTestFixture({celltype: name, bits: { in1: bits, in2: bits }})
-            .testFun(fun);
+        new SingleCellTestFixture({celltype: name, bits: { in1: bits, in2: bits }, signed: { in1: sgn1, in2: sgn2 }})
+            .testFun(fun(sgn1, sgn2));
     });
 });
 
