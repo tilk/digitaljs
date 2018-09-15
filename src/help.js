@@ -42,6 +42,6 @@ export function bigint2sig(i, bits) {
 export function sig2bigint(sig, signed) {
     const sign = signed && sig.get(sig.bits - 1) == 1;
     const j = bigInt.fromArray(sig.toArray().slice().reverse().map(x => (x+1)>>1), 2);
-    return sign ? j.minus(bigInt.one.shiftLeft(sig.length)) : j;
+    return sign ? j.minus(bigInt.one.shiftLeft(sig.bits)) : j;
 }
 
