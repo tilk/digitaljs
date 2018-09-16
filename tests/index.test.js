@@ -115,20 +115,25 @@ class SingleCellTestFixture {
         else this.testFunRandomized(fun);
     }
     expectComb(ins, outs) {
-        for (const [name, value] of Object.entries(ins)) {
-            this.circuit.setInput(name, value);
-        }
-        this.circuit.updateGates(); // propagate input change
-        this.circuit.updateGates(); // propagate gate delay
-        for (const k in this.outlist) {
-            expect(this.circuit.getOutput(this.outlist[k].name).toArray())
-                .toEqual(outs[this.outlist[k].name].toArray());
+        try {
+            for (const [name, value] of Object.entries(ins)) {
+                this.circuit.setInput(name, value);
+            }
+            this.circuit.updateGates(); // propagate input change
+            this.circuit.updateGates(); // propagate gate delay
+            for (const k in this.outlist) {
+                expect(this.circuit.getOutput(this.outlist[k].name).toArray())
+                    .toEqual(outs[this.outlist[k].name].toArray());
+            }
+        } catch (e) {
+            e.message = Object.entries(ins).map(([a, x]) => a + ':' + x.toBin()).join(' ') + ' ' + Object.entries(outs).map(([a, x]) => a + ':' + x.toBin()).join(' ') + '\n' + e.message;
+            throw e;
         }
     }
 };
 
 const testBits = [1, 2, 3, 4, 16, 32, 48, 64];
-const numTestBits = [1, 4, 8, 32, 48];
+const numTestBits = [1, 2, 8, 32, 48];
 
 describe.each([
 ["$and",  s => ({ out: s.in1.and(s.in2) })],
@@ -194,7 +199,13 @@ describe.each([
 
 const parseIntSign = (x, sgn) => parseInt(x, 2) - (sgn && x[0] == '1' ? (2 ** x.length) : 0);
 
+const intToStringSign = (x, bits) => x >= 0 ? (Array(bits).fill('0').join('') + x.toString(2)).slice(-bits) : (2 ** 50 + x).toString(2).slice(-bits);
+
 const comparefun = f => (sgn1, sgn2) => s => ({ out: s.in1.isFullyDefined && s.in2.isFullyDefined ? Vector3vl.fromBool(f(parseIntSign(s.in1.toBin(), sgn1), parseIntSign(s.in2.toBin(), sgn2))) : Vector3vl.x });
+
+const arithfun = f => (sgn, sgn2, bits) => s => ({ out: s.in1.isFullyDefined && s.in2.isFullyDefined ? Vector3vl.fromBin(intToStringSign(f(parseIntSign(s.in1.toBin()), parseIntSign(s.in2.toBin())), bits)) : Vector3vl.xes(bits) });
+
+const arithfun1 = f => (sgn, bits) => s => ({ out: s.in.isFullyDefined ? Vector3vl.fromBin(intToStringSign(f(parseIntSign(s.in.toBin())), bits)) : Vector3vl.xes(bits) });
 
 describe.each([
 ["$eq", comparefun((a, b) => a == b)],
@@ -213,6 +224,23 @@ describe.each([
         describe.each(numTestBits)('%i bits', (bits) => {
             new SingleCellTestFixture({celltype: name, bits: { in1: bits, in2: bits }, signed: { in1: sgn1, in2: sgn2 }})
                 .testFun(fun(sgn1, sgn2));
+        });
+    });
+});
+
+describe.each([
+["$add", arithfun((a, b) => a + b)],
+["$sub", arithfun((a, b) => a - b)],
+])('%s', (name, fun) => {
+    describe.each([
+    [false, false],
+    [true,  false],
+    [false, true],
+    [true,  true],
+    ])('%s %s', (sgn1, sgn2) => {
+        describe.each(numTestBits)('%i bits', (bits) => {
+            new SingleCellTestFixture({celltype: name, bits: { in1: bits, in2: bits, out: bits }, signed: { in1: sgn1, in2: sgn2 }})
+                .testFun(fun(sgn1, sgn2, bits));
         });
     });
 });
