@@ -31,7 +31,7 @@ export function sig2base(sig, base) {
 }
 
 export function bigint2sig(i, bits) {
-    const j = i.isNegative() ? bigInt.one.shiftLeft(i.bitLength().toJSNumber()+2).plus(i) : i;
+    const j = i.isNegative() ? bigInt.one.shiftLeft(Math.max(i.bitLength().toJSNumber()+2, bits)).plus(i) : i;
     return Vector3vl.fromArray(j.toArray(2).value
         .reverse()
         .map(x => (x<<1)-1)
