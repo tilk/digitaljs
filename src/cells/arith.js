@@ -113,13 +113,13 @@ joint.shapes.digital.Gate.define('digital.Shift', {
         if (!data.in2.isFullyDefined)
             return { out: Vector3vl.xes(bits.out) };
         const am = help.sig2bigint(data.in2, sgn.in2) * this.shiftdir;
-        const signbit = data.in1.get(data.in1.length-1);
+        const signbit = data.in1.get(data.in1.bits-1);
         const ext = Vector3vl.make(Math.max(0, bits.out - bits.in1),
             fillx ? 0 : sgn.in1 ? signbit : -1);
         const my_in = data.in1.concat(ext);
         const out = am < 0
             ? Vector3vl.make(-am, fillx ? 0 : -1).concat(my_in)
-            : my_in.slice(am).concat(Vector3vl.make(am, fillx ? 0 : sgn.out ? my_in.get(my_in.length-1) : -1));
+            : my_in.slice(am).concat(Vector3vl.make(am, fillx ? 0 : sgn.out ? my_in.get(my_in.bits-1) : -1));
         return { out: out.slice(0, bits.out) };
     }
 });
