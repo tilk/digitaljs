@@ -210,7 +210,7 @@ const arithfun = f => (sgn1, sgn2, bits) => s => ({ out: s.in1.isFullyDefined &&
 
 const arithfun1 = f => (sgn, bits) => s => ({ out: s.in.isFullyDefined ? Vector3vl.fromBin(intToStringSign(f(parseIntSign(s.in.toBin(), sgn)), bits)) : Vector3vl.xes(bits) });
 
-const shiftfun = f => (sgn1, sgn2, bits) => s => ({ out: s.in2.isFullyDefined ? Vector3vl.fromBin(f(s.in1.toBin(), parseIntSign(s.in2.toBin(), sgn2), bits)) : Vector3vl.xes(bits) });
+const shiftfun = f => (sgn1, sgn2, bits) => s => ({ out: s.in2.isFullyDefined ? Vector3vl.fromBin(f(s.in1.toBin(), parseIntSign(s.in2.toBin(), sgn2), sgn1, bits)) : Vector3vl.xes(bits) });
 
 describe.each([
 ["$eq", comparefun((a, b) => a == b)],
@@ -228,6 +228,10 @@ describe.each([
     ])('%s %s', (sgn1, sgn2) => {
         describe.each(numTestBits)('%i bits', (bits) => {
             new SingleCellTestFixture({celltype: name, bits: { in1: bits, in2: bits }, signed: { in1: sgn1, in2: sgn2 }})
+                .testFun(fun(sgn1, sgn2), { no_random_x : true });
+        });
+        describe.each([[3, 8], [8, 3]])('%i bits to %i bits', (bits1, bits2) => {
+            new SingleCellTestFixture({celltype: name, bits: { in1: bits1, in2: bits2 }, signed: { in1: sgn1, in2: sgn2 }})
                 .testFun(fun(sgn1, sgn2), { no_random_x : true });
         });
     });
@@ -255,6 +259,11 @@ describe.each([
             new SingleCellTestFixture({celltype: name, bits: { in1: bits, in2: bits, out: bits }, signed: { in1: sgn1, in2: sgn2 }})
                 .testFun(fun(sgn1, sgn2, bits), { no_random_x : true });
         });
+        describe.each([[3, 8], [8, 3]])('%i bits to %i bits', (bits1, bits2) => {
+            if (name == '$pow' && bits1 >= 4) return; // power grows crazy fast
+            new SingleCellTestFixture({celltype: name, bits: { in1: bits1, in2: bits1, out: bits2 }, signed: { in1: sgn1, in2: sgn2 }})
+                .testFun(fun(sgn1, sgn2, bits2), { no_random_x : true });
+        });
     });
 });
 
@@ -280,11 +289,11 @@ describe('$constant', () => {
     });
 });
 
-const standard_shift = (a, x, bits) => Array(Math.max(-x, 0)).fill('0').join('').concat(a.slice(0, x < 0 ? x : undefined)).concat(Array(Math.max(x, 0)).fill('0').join('')).slice(-bits);
+const standard_shift = (a, x, sgn, bits) => Array(Math.max(-x, 0, bits)).fill(sgn ? a[0] : '0').join('').concat(a.slice(0, x < 0 ? x : undefined)).concat(Array(Math.max(x, 0)).fill('0').join('')).slice(-bits);
 
 describe.each([
 ["$shl", shiftfun(standard_shift)],
-["$shr", shiftfun((a, x, bits) => standard_shift(a, -x, bits))],
+["$shr", shiftfun((a, x, sgn, bits) => standard_shift(a, -x, sgn, bits))],
 ])('%s', (name, fun) => {
     describe.each([
     [false, false],
@@ -293,8 +302,13 @@ describe.each([
     [true,  true],
     ])('%s %s', (sgn1, sgn2) => {
         describe.each(numTestBits)('%i bits', (bits) => {
-            new SingleCellTestFixture({celltype: name, bits: { in1: bits, in2: Math.ceil(Math.log2(bits)) + 1, out: bits }, signed: { in1: sgn1, in2: sgn2 }})
+            new SingleCellTestFixture({celltype: name, bits: { in1: bits, in2: Math.ceil(Math.log2(bits)) + 1, out: bits }, signed: { in1: sgn1, in2: sgn2, out: sgn1 }})
                 .testFun(fun(sgn1, sgn2, bits), { no_random_x : true });
+        });
+        describe.each([[3, 8], [8, 3]])('%i bits to %i bits', (bits1, bits2) => {
+            new SingleCellTestFixture({celltype: name, bits: { in1: bits1, in2: Math.ceil(Math.log2(Math.max(bits1, bits2))) + 1, out: bits2 }, signed: { in1: sgn1, in2: sgn2, out: sgn1 }})
+                .testFun(fun(sgn1, sgn2, bits2), { no_random_x : true });
         });
     });
 });
+
