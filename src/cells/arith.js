@@ -214,7 +214,7 @@ joint.shapes.digital.Arith21.define('digital.Division', {
         'text.oper': { text: '÷' }
     }
 }, {
-    arithop: (i, j) => j.isZero() ? bigInt.zero : i.divide(j)
+    arithop: (i, j) => j.isZero() ? i : i.divide(j) // as in IEEE Verilog
 });
 
 // Modulo
@@ -223,7 +223,7 @@ joint.shapes.digital.Arith21.define('digital.Modulo', {
         'text.oper': { text: '%' }
     }
 }, {
-    arithop: (i, j) => j.isZero() ? bigInt.zero : i.mod(j)
+    arithop: (i, j) => j.isZero() ? i : i.mod(j) // as in IEEE Verilog
 });
 
 // Power
