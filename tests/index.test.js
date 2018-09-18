@@ -202,7 +202,7 @@ describe.each([
 
 const parseIntSign = (x, sgn) => parseInt(x, 2) - (sgn && x[0] == '1' ? (2 ** x.length) : 0);
 
-const intToStringSign = (x, bits) => !isFinite(x) ? Array(bits).fill('1').join('x') : x >= 0 ? (Array(bits).fill('0').join('') + x.toString(2)).slice(-bits) : (2 ** 50 + x).toString(2).slice(-bits);
+const intToStringSign = (x, bits) => !isFinite(x) ? Array(bits).fill('x').join('') : x >= 0 ? (Array(bits).fill('0').join('') + x.toString(2)).slice(-bits) : (2 ** 50 + x).toString(2).slice(-bits);
 
 const comparefun = f => (sgn1, sgn2) => s => ({ out: s.in1.isFullyDefined && s.in2.isFullyDefined ? Vector3vl.fromBool(f(parseIntSign(s.in1.toBin(), sgn1), parseIntSign(s.in2.toBin(), sgn2))) : Vector3vl.x });
 
@@ -238,6 +238,8 @@ describe.each([
 ["$sub", arithfun((a, b) => a - b)],
 ["$mul", arithfun((a, b) => a * b)],
 ["$div", arithfun((a, b) => b == 0 ? a : truncate(a / b))],
+["$mod", arithfun((a, b) => b == 0 ? a : Math.sign(a) * (Math.abs(a) % Math.abs(b)))],
+["$pow", arithfun((a, b) => a == 1 ? 1 : a == -1 ? (b % 2 ? -1 : 1) : b < 0 ? 0 : a ** b)],
 ])('%s', (name, fun) => {
     describe.each([
     [false, false],
@@ -247,6 +249,7 @@ describe.each([
     ])('%s %s', (sgn1, sgn2) => {
         describe.each(numTestBits)('%i bits', (bits) => {
             if (name == '$mul' && bits >= 24) return; // tests use JS numbers
+            if (name == '$pow' && bits >= 4) return; // power grows crazy fast
             new SingleCellTestFixture({celltype: name, bits: { in1: bits, in2: bits, out: bits }, signed: { in1: sgn1, in2: sgn2 }})
                 .testFun(fun(sgn1, sgn2, bits), { no_random_x : true });
         });
