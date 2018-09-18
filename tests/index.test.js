@@ -268,3 +268,13 @@ describe.each([
     });
 });
 
+describe('$constant', () => {
+    describe.each([
+    '', '0', '1', 'x',
+    '00', '01', '0x', '10', '11', '1x', 'x0', 'x1', 'xx',
+    ])('%s', (cbits) => {
+        new SingleCellTestFixture({celltype: '$constant', constant: cbits })
+            .testFun(s => ({ out: Vector3vl.fromBin(cbits) }));
+    });
+});
+
