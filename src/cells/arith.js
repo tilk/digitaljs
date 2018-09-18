@@ -94,7 +94,7 @@ joint.shapes.digital.Gate.define('digital.Shift', {
 }, {
     constructor: function(args) {
         if (!args.bits) args.bits = { in1: 1, in2: 1, out: 1 };
-        if (!args.signed) args.signed = { in1: false, in2: false };
+        if (!args.signed) args.signed = { in1: false, in2: false, out: false };
         if (!args.fillx) args.fillx = false;
         this.markup = [
             this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits.out }),

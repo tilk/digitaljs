@@ -210,6 +210,8 @@ const arithfun = f => (sgn1, sgn2, bits) => s => ({ out: s.in1.isFullyDefined &&
 
 const arithfun1 = f => (sgn, bits) => s => ({ out: s.in.isFullyDefined ? Vector3vl.fromBin(intToStringSign(f(parseIntSign(s.in.toBin(), sgn)), bits)) : Vector3vl.xes(bits) });
 
+const shiftfun = f => (sgn1, sgn2, bits) => s => ({ out: s.in2.isFullyDefined ? Vector3vl.fromBin(f(s.in1.toBin(), parseIntSign(s.in2.toBin(), sgn2), bits)) : Vector3vl.xes(bits) });
+
 describe.each([
 ["$eq", comparefun((a, b) => a == b)],
 ["$ne", comparefun((a, b) => a != b)],
@@ -278,3 +280,21 @@ describe('$constant', () => {
     });
 });
 
+const standard_shift = (a, x, bits) => Array(Math.max(-x, 0)).fill('0').join('').concat(a.slice(0, x < 0 ? x : undefined)).concat(Array(Math.max(x, 0)).fill('0').join('')).slice(-bits);
+
+describe.each([
+["$shl", shiftfun(standard_shift)],
+["$shr", shiftfun((a, x, bits) => standard_shift(a, -x, bits))],
+])('%s', (name, fun) => {
+    describe.each([
+    [false, false],
+    [true,  false],
+    [false, true],
+    [true,  true],
+    ])('%s %s', (sgn1, sgn2) => {
+        describe.each(numTestBits)('%i bits', (bits) => {
+            new SingleCellTestFixture({celltype: name, bits: { in1: bits, in2: Math.ceil(Math.log2(bits)) + 1, out: bits }, signed: { in1: sgn1, in2: sgn2 }})
+                .testFun(fun(sgn1, sgn2, bits), { no_random_x : true });
+        });
+    });
+});
