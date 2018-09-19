@@ -29,7 +29,7 @@ joint.shapes.digital.Gate.define('digital.BitExtend', {
     },
     operation: function(data) {
         const ex = this.get('extend');
-        return { out: data.in.concat(Vector3vl.make(this.extbit(data.in))) };
+        return { out: data.in.concat(Vector3vl.make(ex.output - ex.input, this.extbit(data.in))) };
     }
 });
 
