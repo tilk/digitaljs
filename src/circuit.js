@@ -210,6 +210,28 @@ export class HeadlessCircuit {
         console.assert(cell.get('celltype') == '$output');
         return cell.get('inputSignals').in;
     }
+    toJSON() {
+        const subcircuits = {};
+        function fromGraph(graph) {
+            const ret = {
+                devices: {},
+                connectors: []
+            };
+            for (const elem of graph.getElements()) {
+                const args = ret.devices[elem.get('id')] = elem.getGateParams();
+                if (elem instanceof joint.shapes.digital.Subcircuit && !subcircuits[elem.get('celltype')]) {
+                    subcircuits[elem.get('celltype')] = fromGraph(elem.get('graph'));
+                }
+            }
+            for (const elem of graph.getLinks()) {
+                ret.connectors.push(elem.getWireParams());
+            }
+            return ret;
+        }
+        const ret = fromGraph(this.graph);
+        ret.subcircuits = subcircuits;
+        return ret;
+    }
 };
 
 _.extend(HeadlessCircuit.prototype, Backbone.Events);

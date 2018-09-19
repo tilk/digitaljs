@@ -123,7 +123,8 @@ joint.shapes.digital.Box.define('digital.Memory', {
         for (const [num, port] of this.get('rdports').entries())
             if (port.transparent) do_read('rd' + num, port);
         return out;
-    }
+    },
+    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits', 'abits', 'rdports', 'wrports', 'words', 'offset']) // TODO memdata
 });
 joint.shapes.digital.MemoryView = joint.shapes.digital.BoxView;
 

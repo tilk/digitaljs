@@ -22,6 +22,7 @@ joint.shapes.digital.Gate.define('digital.Gate11', {
         ].join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     },
+    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits'])
 });
 
 // Two-input gate model
@@ -42,6 +43,7 @@ joint.shapes.digital.Gate.define('digital.Gate21', {
         ].join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     },
+    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits'])
 });
 
 // Reducing gate model

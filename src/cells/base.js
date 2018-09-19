@@ -84,7 +84,11 @@ joint.shapes.basic.Generic.define('digital.Gate', {
             _.set(args, [signame, port.id], Vector3vl.xes(port.bits));
         }
         return '<g>' + markup + '</g>';
-    }
+    },
+    getGateParams: function() {
+        return _.cloneDeep(_.pick(this.attributes, this.gateParams))
+    },
+    gateParams: ['label', 'position', 'celltype', 'propagation']
 });
 
 joint.shapes.digital.GateView = joint.dia.ElementView.extend({
@@ -184,6 +188,21 @@ joint.dia.Link.define('digital.Wire', {
                 }
             });
         }
+    },
+    getWireParams: function() {
+        const connector = {
+            from: {
+                id: this.get('source').id,
+                port: this.get('source').port
+            },
+            to: {
+                id: this.get('target').id,
+                port: this.get('target').port
+            }
+        };
+        if (this.has('netname'))
+            connector.name = this.get('netname');
+        return connector;
     }
 });
 

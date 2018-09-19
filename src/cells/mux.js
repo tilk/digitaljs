@@ -48,7 +48,8 @@ joint.shapes.digital.Gate.define('digital.GenMux', {
         const i = this.muxInput(data.sel);
         if (i === undefined) return { out: Vector3vl.xes(this.get('bits').in) };
         return { out: data['in' + i] };
-    }
+    },
+    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits'])
 });
 joint.shapes.digital.GenMuxView = joint.shapes.digital.GateView.extend({
     initialize: function() {

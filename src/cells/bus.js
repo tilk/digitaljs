@@ -30,7 +30,8 @@ joint.shapes.digital.Gate.define('digital.BitExtend', {
     operation: function(data) {
         const ex = this.get('extend');
         return { out: data.in.concat(Vector3vl.make(ex.output - ex.input, this.extbit(data.in))) };
-    }
+    },
+    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['extend'])
 });
 
 joint.shapes.digital.BitExtend.define('digital.ZeroExtend', {
@@ -75,7 +76,8 @@ joint.shapes.digital.Box.define('digital.BusSlice', {
     operation: function(data) {
         const s = this.get('slice');
         return { out: data.in.slice(s.first, s.first + s.count) };
-    }
+    },
+    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['slice'])
 });
 joint.shapes.digital.BusSliceView = joint.shapes.digital.BoxView;
 
@@ -103,7 +105,8 @@ joint.shapes.digital.Box.define('digital.BusRegroup', {
         markup.push(lblmarkup.join(''));
         this.markup = markup.join('');
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
-    }
+    },
+    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['groups'])
 });
 
 joint.shapes.digital.BusRegroup.define('digital.BusGroup', {

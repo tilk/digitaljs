@@ -31,7 +31,8 @@ joint.shapes.digital.Gate.define('digital.NumBase', {
         '<option value="oct">oct</option>',
         '<option value="bin">bin</option>',
         '</select>',
-        '</body></foreignObject>'].join('')
+        '</body></foreignObject>'].join(''),
+    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['numbase'])
 });
 joint.shapes.digital.NumBaseView = joint.shapes.digital.GateView.extend({
     events: {
@@ -89,6 +90,7 @@ joint.shapes.digital.NumBase.define('digital.NumDisplay', {
         this.listenTo(this, 'change:inputSignals', settext);
         this.listenTo(this, 'change:numbase', settext);
     },
+    gateParams: joint.shapes.digital.NumBase.prototype.gateParams.concat(['bits'])
 });
 joint.shapes.digital.NumDisplayView = joint.shapes.digital.NumBaseView;
 
@@ -129,6 +131,7 @@ joint.shapes.digital.NumBase.define('digital.NumEntry', {
     operation: function() {
         return { out: this.get('buttonState') };
     },
+    gateParams: joint.shapes.digital.NumBase.prototype.gateParams.concat(['bits'])
 });
 joint.shapes.digital.NumEntryView = joint.shapes.digital.NumBaseView.extend({
     events: _.merge({
@@ -262,7 +265,8 @@ joint.shapes.digital.Gate.define('digital.IO', {
         if ('bits' in args) _.set(args, ['attrs', 'circle', 'port', 'bits'], args.bits);
         _.set(args, ['attrs', 'text', 'text'], args.net);
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
-    }
+    },
+    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits'])
 });
 joint.shapes.digital.IOView = joint.shapes.digital.GateView.extend({
     render: function() {
@@ -301,9 +305,9 @@ joint.shapes.digital.NumBase.define('digital.Constant', {
     }
 }, {
     constructor: function(args) {
-        args.constant = Vector3vl.fromBin(args.constant, args.constant.length);
+        args.constantCache = Vector3vl.fromBin(args.constant, args.constant.length);
         args.bits = args.constant.bits;
-        args.outputSignals = { out: args.constant };
+        args.outputSignals = { out: args.constantCache };
         this.markup = [
             this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.constant.length }),
             '<rect class="body"/>',
@@ -316,14 +320,15 @@ joint.shapes.digital.NumBase.define('digital.Constant', {
     initialize: function(args) {
         joint.shapes.digital.NumBase.prototype.initialize.apply(this, arguments);
         const settext = () => {
-            this.attr('text.value/text', help.sig2base(this.get('constant'), this.get('numbase')));
+            this.attr('text.value/text', help.sig2base(this.get('constantCache'), this.get('numbase')));
         }
         settext();
         this.listenTo(this, 'change:numbase', settext);
     },
     operation: function() {
-        return { out: this.get('constant') };
-    }
+        return { out: this.get('constantCache') };
+    },
+    gateParams: joint.shapes.digital.NumBase.prototype.gateParams.concat(['constant'])
 });
 joint.shapes.digital.ConstantView = joint.shapes.digital.NumBaseView;
 

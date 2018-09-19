@@ -37,7 +37,8 @@ joint.shapes.digital.Gate.define('digital.Arith11', {
         return {
             out: help.bigint2sig(this.arithop(help.sig2bigint(data.in, this.get('signed'))), bits.out)
         };
-    }
+    },
+    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits', 'signed'])
 });
 
 // Binary arithmetic operations
@@ -76,7 +77,8 @@ joint.shapes.digital.Gate.define('digital.Arith21', {
                     help.sig2bigint(data.in1, sgn.in1),
                     help.sig2bigint(data.in2, sgn.in2)), bits.out)
         };
-    }
+    },
+    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits', 'signed'])
 });
 
 // Bit shift operations
@@ -121,7 +123,8 @@ joint.shapes.digital.Gate.define('digital.Shift', {
             ? Vector3vl.make(-am, fillx ? 0 : -1).concat(my_in)
             : my_in.slice(am).concat(Vector3vl.make(am, fillx ? 0 : sgn.out ? my_in.get(my_in.bits-1) : -1));
         return { out: out.slice(0, bits.out) };
-    }
+    },
+    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits', 'signed', 'fillx'])
 });
 
 // Comparison operations
@@ -160,7 +163,8 @@ joint.shapes.digital.Gate.define('digital.Compare', {
                     help.sig2bigint(data.in1, sgn.in1),
                     help.sig2bigint(data.in2, sgn.in2)))
         };
-    }
+    },
+    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits', 'signed'])
 });
 
 // Negation

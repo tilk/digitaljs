@@ -46,7 +46,8 @@ joint.shapes.digital.Box.define('digital.Dff', {
             else
                 return this.get('outputSignals');
         } else return { out: data.in };
-    }
+    },
+    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['polarity', 'bits'])
 });
 joint.shapes.digital.DffView = joint.shapes.digital.BoxView;
 
