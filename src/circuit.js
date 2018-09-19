@@ -197,6 +197,9 @@ export class HeadlessCircuit {
         this.queue.delete(k);
         this.tick = (this.tick + 1) | 0;
     }
+    get hasPendingEvents() {
+        return this.queue.size > 0;
+    }
     setInput(name, sig) {
         const cell = this.graph.getCell(name);
         console.assert(cell.get('celltype') == '$input');
