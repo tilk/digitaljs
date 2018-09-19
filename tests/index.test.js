@@ -124,6 +124,7 @@ class SingleCellTestFixture {
             }
             this.circuit.updateGates(); // propagate input change
             this.circuit.updateGates(); // propagate gate delay
+            expect(this.circuit.hasPendingEvents).toBeFalsy();
             for (const k in this.outlist) {
                 expect(this.circuit.getOutput(this.outlist[k].name).toBin())
                     .toEqual(outs[this.outlist[k].name].toBin());
