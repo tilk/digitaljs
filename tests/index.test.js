@@ -312,3 +312,16 @@ describe.each([
     });
 });
 
+describe.each([
+["$zeroextend", pbits => s => ({ out: s.in.concat(Vector3vl.zeros(pbits)) })],
+["$signextend", pbits => s => ({ out: s.in.concat(Vector3vl.make(pbits, s.in.get(s.in.bits - 1))) })],
+])('%s', (name, fun) => {
+    describe.each(numTestBits)('%i bits', (bits) => {
+        describe.each([0,1,4])('plus %i bits', (pbits) => {
+            new SingleCellTestFixture({celltype: name, extend: { input: bits, output: bits + pbits }})
+                .testFun(fun(pbits));
+        });
+    });
+});
+
+
