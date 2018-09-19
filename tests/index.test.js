@@ -324,4 +324,16 @@ describe.each([
     });
 });
 
+describe('$busslice', () => {
+    describe.each(numTestBits)('%i bits', (bits) => {
+        describe.each([
+        [0, bits],
+        [0, Math.ceil(bits/2)],
+        [Math.floor(bits/2), bits],
+        ])('%i-%i', (b1, b2) => {
+            new SingleCellTestFixture({celltype: '$busslice', slice: { first: b1, count: b2 - b1 }})
+                .testFun(s => ({ out: s.in.slice(b1, b2) }));
+        });
+    });
+});
 
