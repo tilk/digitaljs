@@ -64,20 +64,21 @@ export function getCellType(tp) {
     
 export class HeadlessCircuit {
     constructor(data) {
-        this.queue = new Map();
-        this.tick = 0;
-        this.graph = this.makeGraph(data, data.subcircuits);
+        this._queue = new Map();
+        this._tick = 0;
+        this._graph = this.makeGraph(data, data.subcircuits);
     }
     shutdown() {
         this.stopListening();
     }
     displayOn(elem) {
-        return this.makePaper(elem, this.graph);
+        return this.makePaper(elem, this._graph);
     }
     makeGraph(data, subcircuits) {
         const graph = new joint.dia.Graph();
         this.listenTo(graph, 'change:buttonState', function(gate, sig) {
             this.enqueue(gate);
+            this.trigger('userChange');
         });
         this.listenTo(graph, 'change:signal', function(wire, signal) {
             const gate = graph.getCell(wire.get('target').id);
@@ -171,19 +172,21 @@ export class HeadlessCircuit {
         return graph;
     }
     enqueue(gate) {
-        const k = (this.tick + gate.get('propagation')) | 0;
+        const k = (this._tick + gate.get('propagation')) | 0;
         const sq = (() => {
-            const q = this.queue.get(k);
+            const q = this._queue.get(k);
             if (q !== undefined) return q;
             const q1 = new Map();
-            this.queue.set(k, q1);
+            this._queue.set(k, q1);
             return q1;
         })();
         sq.set(gate, gate.get('inputSignals'));
     }
     updateGates() {
-        const k = this.tick;
-        const q = this.queue.get(k) || new Map();
+        const k = this._tick;
+        const q = this._queue.get(k) || new Map();
+        let count = 0;
+        this.trigger('preUpdateGates', k);
         while (q.size) {
             const [gate, args] = q.entries().next().value;
             q.delete(gate);
@@ -193,20 +196,26 @@ export class HeadlessCircuit {
             const graph = gate.graph;
             if (!graph) continue;
             gate.set('outputSignals', gate.operation(args));
+            count++;
         }
-        this.queue.delete(k);
-        this.tick = (this.tick + 1) | 0;
+        this._queue.delete(k);
+        this._tick = (this._tick + 1) | 0;
+        this.trigger('postUpdateGates', k, count);
+        return count;
     }
     get hasPendingEvents() {
-        return this.queue.size > 0;
+        return this._queue.size > 0;
+    }
+    get tick() {
+        return this._tick;
     }
     setInput(name, sig) {
-        const cell = this.graph.getCell(name);
+        const cell = this._graph.getCell(name);
         console.assert(cell.get('celltype') == '$input');
         cell.set('outputSignals', { out: sig });
     }
     getOutput(name) {
-        const cell = this.graph.getCell(name);
+        const cell = this._graph.getCell(name);
         console.assert(cell.get('celltype') == '$output');
         return cell.get('inputSignals').in;
     }
@@ -228,7 +237,7 @@ export class HeadlessCircuit {
             }
             return ret;
         }
-        const ret = fromGraph(this.graph);
+        const ret = fromGraph(this._graph);
         ret.subcircuits = subcircuits;
         return ret;
     }

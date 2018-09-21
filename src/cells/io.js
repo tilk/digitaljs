@@ -266,7 +266,7 @@ joint.shapes.digital.Gate.define('digital.IO', {
         _.set(args, ['attrs', 'text', 'text'], args.net);
         joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
     },
-    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits'])
+    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits','net'])
 });
 joint.shapes.digital.IOView = joint.shapes.digital.GateView.extend({
     render: function() {

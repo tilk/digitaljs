@@ -16,11 +16,33 @@ export { HeadlessCircuit, getCellType };
 export class Circuit extends HeadlessCircuit {
     constructor(data) {
         super(data);
-        this.interval = setInterval(() => this.updateGates(), 10);
+        this._interval_ms = 10;
+        this._interval = null;
+    }
+    start() {
+        this._interval = setInterval(() => {
+            this.updateGates();
+        }, this._interval_ms);
+    }
+    stop() {
+        if (this._interval) {
+            clearInterval(this._interval);
+            this._interval = null;
+        }
+    }
+    get interval() {
+        return this._interval_ms;
+    }
+    set interval(ms) {
+        console.assert(ms > 0);
+        this._interval_ms = ms;
+    }
+    get running() {
+        return Boolean(this._interval);
     }
     shutdown() {
         super.shutdown();
-        clearInterval(this.interval);
+        this.stop();
     }
     makePaper(elem, graph) {
         const paper = new joint.dia.Paper({
