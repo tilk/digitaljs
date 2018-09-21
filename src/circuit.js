@@ -151,8 +151,10 @@ export class HeadlessCircuit {
                 cell.set('bits', sgate.ports[strt.port].bits);
             }
         });
+        let laid_out = false;
         for (const devid in data.devices) {
             const dev = data.devices[devid];
+            if (dev.position) laid_out = true;
             const cellType = getCellType(dev.celltype);
             const cellArgs = _.clone(dev);
             cellArgs.id = devid;
@@ -166,9 +168,11 @@ export class HeadlessCircuit {
             graph.addCell(new joint.shapes.digital.Wire({
                 source: {id: conn.from.id, port: conn.from.port},
                 target: {id: conn.to.id, port: conn.to.port},
-                netname: conn.name
+                netname: conn.name,
+                vertices: conn.vertices || []
             }));
         }
+        if (laid_out) graph.set('laid_out', true);
         return graph;
     }
     enqueue(gate) {

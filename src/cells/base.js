@@ -202,6 +202,8 @@ joint.dia.Link.define('digital.Wire', {
         };
         if (this.has('netname'))
             connector.name = this.get('netname');
+        if (this.has('vertices'))
+            connector.vertices = _.cloneDeep(this.get('vertices'));
         return connector;
     }
 });
