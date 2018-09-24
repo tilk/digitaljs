@@ -11,6 +11,9 @@ Yosys output files to DigitalJS. It is also intended to be a teaching tool,
 therefore readability and ease of inspection is one of top concerns for
 the project.
 
+You can [try it out online](http://digitaljs.tilk.eu/). The web app is
+[a separate Github project](https://github.com/tilk/digitaljs_online/).
+
 # Input format
 
 Circuits are represented using JSON. The top-level object has three keys, `devices`,
