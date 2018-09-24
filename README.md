@@ -1,3 +1,5 @@
+![][digitaljs-logo]
+
 [![Build Status](https://travis-ci.org/tilk/digitaljs.svg?branch=master)](https://travis-ci.org/tilk/digitaljs)
 # DigitalJS
 
@@ -60,6 +62,7 @@ Some ideas for further developing the simulator.
  * Simulation time control: changing the tick time, pausing the simulation.
  * Displaying waveforms for selected wires.
  * More editing capability: adding and removing blocks, modifying some of blocks' properties.
+ * Undo-redo capability.
  * Saving and loading circuits, including layout and state.
  * Generic handling of negation for unary/binary gates (negation on inputs/outputs) for better clarity.
  * Better algorithm for graph layout.
@@ -67,4 +70,6 @@ Some ideas for further developing the simulator.
  * SVG export.
  * Verilog export.
  * Smartphone and tablet compatible UI.
+
+[digitaljs-logo]: docs/resources/digitaljs_textpath_right.svg
 
