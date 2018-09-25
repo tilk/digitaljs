@@ -71,9 +71,6 @@ export class HeadlessCircuit {
     shutdown() {
         this.stopListening();
     }
-    displayOn(elem) {
-        return this.makePaper(elem, this._graph);
-    }
     makeGraph(data, subcircuits) {
         const graph = new joint.dia.Graph();
         this.listenTo(graph, 'change:buttonState', function(gate, sig) {

@@ -44,6 +44,9 @@ export class Circuit extends HeadlessCircuit {
         super.shutdown();
         this.stop();
     }
+    displayOn(elem) {
+        return this.makePaper(elem, this._graph);
+    }
     makePaper(elem, graph) {
         const paper = new joint.dia.Paper({
             el: elem,
