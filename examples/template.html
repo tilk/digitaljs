@@ -10,6 +10,7 @@
     <script>
       const circuit = new digitaljs.Circuit(<%= htmlWebpackPlugin.options.test %>);
       const paper = circuit.displayOn($('#paper'));
+      circuit.start();
     </script>
   </body>
 </html>
