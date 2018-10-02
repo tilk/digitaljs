@@ -11,6 +11,32 @@ Yosys output files to DigitalJS. It is also intended to be a teaching tool,
 therefore readability and ease of inspection is one of top concerns for
 the project.
 
+You can [try it out online](http://digitaljs.tilk.eu/). The web app is
+[a separate Github project](https://github.com/tilk/digitaljs_online/).
+
+# Usage
+
+You can use DigitalJS in your project by installing it from NPM:
+
+```bash
+npm install digitaljs
+```
+
+Or you can use the [Webpack bundle](https://tilk.github.io/digitaljs/main.js) directly.
+
+To simulate a circuit represented using the JSON input format (described later)
+and display it on a `div` named `#paper`, you need to run the following
+JS code ([see running example](https://tilk.github.io/digitaljs/test/fulladder.html)):
+
+```javascript
+// create the simulation object
+const circuit = new digitaljs.Circuit(input_goes_here);
+// display on #paper
+const paper = circuit.displayOn($('#paper'));
+// activate real-time simulation
+circuit.start();
+```
+
 # Input format
 
 Circuits are represented using JSON. The top-level object has three keys, `devices`,
