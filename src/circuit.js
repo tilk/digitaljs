@@ -230,8 +230,10 @@ export class HeadlessCircuit {
                 devices: {},
                 connectors: []
             };
+            const laid_out = graph.get('laid_out');
             for (const elem of graph.getElements()) {
                 const args = ret.devices[elem.get('id')] = elem.getGateParams();
+                if (!laid_out) delete args.position;
                 if (elem instanceof joint.shapes.digital.Subcircuit && !subcircuits[elem.get('celltype')]) {
                     subcircuits[elem.get('celltype')] = fromGraph(elem.get('graph'));
                 }
