@@ -124,7 +124,13 @@ joint.shapes.digital.Box.define('digital.Memory', {
             if (port.transparent) do_read('rd' + num, port);
         return out;
     },
-    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits', 'abits', 'rdports', 'wrports', 'words', 'offset']) // TODO memdata
+    getGateParams: function() { 
+        // hack to get memdata back
+        const params = joint.shapes.digital.Box.prototype.getGateParams.apply(this, arguments);
+        params.memdata = this.memdata.map(x => x.toBin());
+        return params;
+    },
+    gateParams: joint.shapes.digital.Box.prototype.gateParams.concat(['bits', 'abits', 'rdports', 'wrports', 'words', 'offset'])
 });
 joint.shapes.digital.MemoryView = joint.shapes.digital.BoxView;
 
