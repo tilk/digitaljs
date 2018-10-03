@@ -28,6 +28,7 @@ joint.shapes.digital.Gate.define('digital.NumBase', {
         '<body xmlns="http://www.w3.org/1999/xhtml">',
         '<select class="numbase">',
         '<option value="hex">hex</option>',
+        '<option value="dec">dec</option>',
         '<option value="oct">oct</option>',
         '<option value="bin">bin</option>',
         '</select>',

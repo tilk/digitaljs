@@ -265,10 +265,12 @@ joint.shapes.digital.WireView = joint.dia.LinkView.extend({
 
     hover_gentext: function() {
         if (!this.wire_hover) return;
+        const sig = this.model.get('signal');
         const hovertext = [
-            'Hex: ' + this.model.get('signal').toHex() + '<br>',
-            'Oct: ' + this.model.get('signal').toOct() + '<br>',
-            'Bin: ' + this.model.get('signal').toBin()
+            'Hex: ' + sig.toHex() + '<br>',
+            'Dec: ' + help.sig2base(sig, 'dec') + '<br>',
+            'Oct: ' + sig.toOct() + '<br>',
+            'Bin: ' + sig.toBin()
         ].join('');
         this.wire_hover.html(hovertext);
     },
