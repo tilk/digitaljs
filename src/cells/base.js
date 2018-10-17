@@ -144,6 +144,21 @@ joint.dia.Link.define('digital.Wire', {
         '<g class="link-tools"/>'
     ].join(''),
 
+    toolMarkup: [
+        '<g class="link-tool">',
+        '<g class="tool-remove" event="remove">',
+        '<circle r="11" />',
+        '<path transform="scale(.8) translate(-16, -16)" d="M24.778,21.419 19.276,15.917 24.777,10.415 21.949,7.585 16.447,13.087 10.945,7.585 8.117,10.415 13.618,15.917 8.116,21.419 10.946,24.248 16.447,18.746 21.948,24.248z" />',
+        '<title>Remove link.</title>',
+        '</g>',
+        '<g class="tool-monitor" event="link:monitor">',
+        '<circle r="11" transform="translate(25)"/>',
+        '<path fill="white" transform="scale(.025) translate(750, -250)" d="m280,278a153,153 0 1,0-2,2l170,170m-91-117 110,110-26,26-110-110"/>',
+        '<title>Monitor link.</title>',
+        '</g>',
+        '</g>'
+    ].join(''),
+
     arrowheadMarkup: [
         '<g class="marker-arrowhead-group marker-arrowhead-group-<%= end %>">',
         '<circle class="marker-arrowhead" end="<%= end %>" r="7"/>',
@@ -342,5 +357,4 @@ joint.shapes.digital.BoxView = joint.shapes.digital.GateView.extend({
         this.model.set('size', _.set(_.clone(this.model.get('size')), 'width', width));
     }
 });
-
 

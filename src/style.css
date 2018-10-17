@@ -37,6 +37,30 @@
     stroke: none;
 }
 
+.link-tools .tool-monitor circle {
+    fill: white;
+    stroke: #ccc;
+    stroke-width: 1px;
+    stroke-opacity: .5;
+}
+
+.link-tools .tool-monitor:hover circle {
+    fill: #4c3ce7;
+    stroke: #392bc0;
+}
+
+.link-tools .tool-monitor path {
+    stroke: #ccc;
+}
+
+.link-tools .tool-monitor circle {
+    transition: fill 1s;
+}
+
+.link-tools .tool-monitor:hover path {
+    stroke: none;
+}
+
 .marker-arrowhead, .marker-vertex {
     fill: #fff;
     stroke: #7f8c8d;
@@ -396,6 +420,12 @@ Do not allow adding new vertices: .connection-wrap { pointer-events: none; }
     fill: #FF0000;
 }
 .joint-link.joint-theme-default .link-tools .tool-remove path {
+    fill: #FFFFFF;
+}
+.joint-link.joint-theme-default .link-tools .tool-monitor circle {
+    fill: #0000FF;
+}
+.joint-link.joint-theme-default .link-tools .tool-monitor path {
     fill: #FFFFFF;
 }
 

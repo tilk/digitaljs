@@ -9,10 +9,11 @@ import 'jquery-ui/ui/widgets/dialog';
 import 'jquery-ui/themes/base/all.css';
 import '@app/cells.js';
 import { HeadlessCircuit, getCellType } from '@app/circuit.js';
+import { MonitorView, Monitor } from '@app/monitor.js';
 import '@app/style.css';
 
-export { HeadlessCircuit, getCellType };
-    
+export { HeadlessCircuit, getCellType, MonitorView, Monitor };
+
 export class Circuit extends HeadlessCircuit {
     constructor(data) {
         super(data);
@@ -107,6 +108,7 @@ export class Circuit extends HeadlessCircuit {
                 div.remove();
             });
         });
+        this.trigger('new:paper', paper);
         return paper;
     }
 };
