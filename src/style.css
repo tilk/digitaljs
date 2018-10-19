@@ -639,3 +639,20 @@ div.wire_hover {
     text-anchor: middle;
 }
 
+table.monitor tr {
+  padding: 0; margin: 0;
+  font-size: 10px;
+}
+
+table.monitor td {
+  padding: 0; margin: 0;
+}
+
+table.monitor {
+  border-collapse: collapse;
+}
+
+canvas.wavecanvas {
+  display: block;
+}
+
