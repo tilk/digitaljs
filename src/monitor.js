@@ -71,11 +71,16 @@ export class MonitorView extends Backbone.View {
     initialize() {
         this._width = 800;
         this._settings = extendSettings(defaultSettings, {start: 0, pixelsPerTick: 5, gridStep: 1});
+        this._settingsFor = new Map();
         this.listenTo(this.model, 'add', this._handleAdd);
         this.listenTo(this.model, 'remove', this._handleRemove);
         this.listenTo(this.model._circuit, 'postUpdateGates', (tick) => { this._settings.start = tick - this._width / this._settings.pixelsPerTick; this._settings.present = tick; this._drawAll(); });
         this.render();
-        this.$el.on('click', 'button[name=remove]', (e) => { this.model.removeWire($(e.target).closest('tr').attr('wireid')); });
+        function evt_wireid(e) {
+            return $(e.target).closest('tr').attr('wireid');
+        }
+        this.$el.on('click', 'button[name=remove]', (e) => { this.model.removeWire(evt_wireid(e)); });
+        this.$el.on('input', 'select[name=base]', (e) => { this._settingsFor.get(evt_wireid(e)).base = e.target.value; });
     }
     render() {
         this.$el.html('<table class="monitor"></table>');
@@ -99,19 +104,24 @@ export class MonitorView extends Backbone.View {
         }
     }
     _draw(wireid) {
-        const canvas = this.$('tr[wireid='+wireid+']').find('canvas');
+        const canvas = this.$('tr[wireid="'+wireid+'"]').find('canvas');
         const waveform = this.model._wires.get(wireid).waveform;
-        drawWaveform(waveform, canvas[0].getContext('2d'), this._settings);
+        drawWaveform(waveform, canvas[0].getContext('2d'), this._settingsFor.get(wireid));
     }
     _handleAdd(wire) {
+        const wireid = getWireId(wire);
+        this._settingsFor.set(wireid, extendSettings(this._settings, {base: 'hex'}));
         this.$('table').append(this._createRow(wire));
     }
     _handleRemove(wire) {
-        this.$('tr[wireid='+getWireId(wire)+']').remove();
+        const wireid = getWireId(wire);
+        this.$('tr[wireid="'+wireid+'"]').remove();
+        this._settingsFor.delete(wireid);
     }
     _createRow(wire) {
         const wireid = getWireId(wire);
-        const row = $('<tr><td class="name"></td><td><button type="button" name="remove">Remove</button></td><td><canvas class="wavecanvas" width="'+this._width+'" height="25"></canvas></td></tr>');
+        const base_sel = wire.get('bits') > 1 ? '<select name="base"><option value="hex">hex</option><option value="oct">oct</option><option value="bin">bin</option></select>' : '';
+        const row = $('<tr><td class="name"></td><td>'+base_sel+'</td><td><button type="button" name="remove">✖</button></td><td><canvas class="wavecanvas" height="30"></canvas></td></tr>');
         row.attr('wireid', wireid);
         row.children('td').first().text(getWireName(wire));
         return row;
