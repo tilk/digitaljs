@@ -650,6 +650,11 @@ table.monitor td {
 
 table.monitor {
   border-collapse: collapse;
+  width: 100%;
+}
+
+table.monitor td.name {
+  width: 100%;
 }
 
 canvas.wavecanvas {

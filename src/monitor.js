@@ -5,6 +5,7 @@ import _ from 'lodash';
 import Backbone from 'backbone';
 import { Vector3vl } from '3vl';
 import { Waveform, drawWaveform, defaultSettings, extendSettings } from 'wavecanvas';
+import { ResizeSensor } from 'css-element-queries';
 
 function getWireId(wire) {
     const hier = [wire.cid];
@@ -61,7 +62,15 @@ export class MonitorView extends Backbone.View {
             this.$('table').append(this._createRow(wire));
         }
         this._drawAll();
+        this._canvasResize();
+        new ResizeSensor(this.$el, () => {
+            this._canvasResize();
+        });
         return this;
+    }
+    _canvasResize() {
+        this._width = Math.max(this.$el.width() - 300, 100);
+        this.$('canvas').attr('width', this._width);
     }
     _drawAll() {
         for (const wireid of this.model._wires.keys()) {
@@ -81,7 +90,7 @@ export class MonitorView extends Backbone.View {
     }
     _createRow(wire) {
         const wireid = getWireId(wire);
-        const row = $('<tr><td></td><td><canvas class="wavecanvas" width="'+this._width+'" height="25"></canvas></td></tr>');
+        const row = $('<tr><td class="name"></td><td><canvas class="wavecanvas" width="'+this._width+'" height="25"></canvas></td></tr>');
         row.attr('wireid', wireid);
         row.children('td').first().text(wireid);
         return row;
