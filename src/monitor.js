@@ -16,6 +16,24 @@ function getWireId(wire) {
     return hier.join('.');
 }
 
+function getWireName(wire) {
+    const hier = [];
+    if (wire.has('netname')) hier.push(wire.get('netname'));
+    else {
+        const source = wire.source();
+        hier.push(source.port);
+        const cell = wire.graph.getCell(source.id);
+        if (cell.has('label')) hier.push(cell.get('label'));
+        else hier.push(source.id);
+    }
+    for (let sc = wire.graph.get('subcircuit'); sc != null; sc = sc.graph.get('subcircuit')) {
+        if (sc.has('label')) hier.push(sc.get('label'));
+        else hier.push(sc.id);
+    }
+    hier.reverse();
+    return hier.join('.');
+}
+
 export class Monitor {
     constructor(circuit) {
         this._circuit = circuit;
@@ -95,7 +113,7 @@ export class MonitorView extends Backbone.View {
         const wireid = getWireId(wire);
         const row = $('<tr><td class="name"></td><td><button type="button" name="remove">Remove</button></td><td><canvas class="wavecanvas" width="'+this._width+'" height="25"></canvas></td></tr>');
         row.attr('wireid', wireid);
-        row.children('td').first().text(wireid);
+        row.children('td').first().text(getWireName(wire));
         return row;
     }
 }
