@@ -37,6 +37,7 @@ export class Monitor {
         this.trigger('add', wire);
     }
     removeWire(wire) {
+        if (typeof wire == 'string') wire = this._wires.get(wire).wire;
         this.trigger('remove', wire);
         this.stopListening(wire);
         this._wires.delete(getWireId(wire));
@@ -53,8 +54,10 @@ export class MonitorView extends Backbone.View {
         this._width = 800;
         this._settings = extendSettings(defaultSettings, {start: 0, pixelsPerTick: 5, gridStep: 1});
         this.listenTo(this.model, 'add', this._handleAdd);
+        this.listenTo(this.model, 'remove', this._handleRemove);
         this.listenTo(this.model._circuit, 'postUpdateGates', (tick) => { this._settings.start = tick - this._width / this._settings.pixelsPerTick; this._settings.present = tick; this._drawAll(); });
         this.render();
+        this.$el.on('click', 'button[name=remove]', (e) => { this.model.removeWire($(e.target).closest('tr').attr('wireid')); });
     }
     render() {
         this.$el.html('<table class="monitor"></table>');
@@ -90,7 +93,7 @@ export class MonitorView extends Backbone.View {
     }
     _createRow(wire) {
         const wireid = getWireId(wire);
-        const row = $('<tr><td class="name"></td><td><canvas class="wavecanvas" width="'+this._width+'" height="25"></canvas></td></tr>');
+        const row = $('<tr><td class="name"></td><td><button type="button" name="remove">Remove</button></td><td><canvas class="wavecanvas" width="'+this._width+'" height="25"></canvas></td></tr>');
         row.attr('wireid', wireid);
         row.children('td').first().text(wireid);
         return row;
