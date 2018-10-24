@@ -83,10 +83,12 @@ export class MonitorView extends Backbone.View {
         this.$el.on('input', 'select[name=base]', (e) => { this._settingsFor.get(evt_wireid(e)).base = e.target.value; });
     }
     render() {
-        this.$el.html('<table class="monitor"></table>');
+        this.$el.html('<div><button name="ppt_up" type="button">+</button><button name="ppt_down">-</button></div><table class="monitor"></table>');
         for (const wobj of this.model._wires.values()) {
             this.$('table').append(this._createRow(wire));
         }
+        this.$('button[name=ppt_up]').on('click', (e) => { this._settings.pixelsPerTick *= 2; });
+        this.$('button[name=ppt_down]').on('click', (e) => { this._settings.pixelsPerTick /= 2; });
         this._drawAll();
         this._canvasResize();
         new ResizeSensor(this.$el, () => {
