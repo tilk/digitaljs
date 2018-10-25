@@ -72,23 +72,51 @@ export class MonitorView extends Backbone.View {
         this._width = 800;
         this._settings = extendSettings(defaultSettings, {start: 0, pixelsPerTick: 5, gridStep: 1});
         this._settingsFor = new Map();
+        this._live = true;
         this.listenTo(this.model, 'add', this._handleAdd);
         this.listenTo(this.model, 'remove', this._handleRemove);
-        this.listenTo(this.model._circuit, 'postUpdateGates', (tick) => { this._settings.start = tick - this._width / this._settings.pixelsPerTick; this._settings.present = tick; this._drawAll(); });
+        this.listenTo(this.model._circuit, 'postUpdateGates', (tick) => { 
+            if (this._live) this._settings.start = tick - this._width / this._settings.pixelsPerTick;
+            this._settings.present = tick;
+            this._drawAll();
+        });
         this.render();
         function evt_wireid(e) {
             return $(e.target).closest('tr').attr('wireid');
         }
         this.$el.on('click', 'button[name=remove]', (e) => { this.model.removeWire(evt_wireid(e)); });
         this.$el.on('input', 'select[name=base]', (e) => { this._settingsFor.get(evt_wireid(e)).base = e.target.value; });
+
+        const dragImg = new Image(0,0);
+        dragImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+        let dragX, dragStart;
+        const do_drag = (e) => {
+            const offset = e.originalEvent.screenX - dragX;
+            this._settings.start = dragStart - offset / this._settings.pixelsPerTick;
+        };
+        this.$el.on('dragstart', 'canvas', (e) => {
+            const dt = e.originalEvent.dataTransfer;
+            dt.setData('text/plain', 'dragging'); 
+            dt.setDragImage(dragImg, 0, 0);
+            dragX = e.originalEvent.screenX;
+            dragStart = this._settings.start;
+            this._live = false;
+            $(document).on('dragover', do_drag);
+        });
+        this.$el.on('dragend', 'canvas', (e) => {
+            $(document).off('dragover', do_drag);
+        });
     }
     render() {
-        this.$el.html('<div><button name="ppt_up" type="button">+</button><button name="ppt_down">-</button></div><table class="monitor"></table>');
+        this.$el.html('<div><button name="ppt_up" type="button">+</button><button name="ppt_down">-</button><button name="left">&lt;</button><button name="right">&gt;</button><button name="live">live</button></div><table class="monitor"></table>');
         for (const wobj of this.model._wires.values()) {
             this.$('table').append(this._createRow(wire));
         }
         this.$('button[name=ppt_up]').on('click', (e) => { this._settings.pixelsPerTick *= 2; });
         this.$('button[name=ppt_down]').on('click', (e) => { this._settings.pixelsPerTick /= 2; });
+        this.$('button[name=left]').on('click', (e) => { this._live = false; this._settings.start -= this._width / this._settings.pixelsPerTick / 4; });
+        this.$('button[name=right]').on('click', (e) => { this._live = false; this._settings.start += this._width / this._settings.pixelsPerTick / 4; });
+        this.$('button[name=live]').on('click', (e) => { this._live = true; });
         this._drawAll();
         this._canvasResize();
         new ResizeSensor(this.$el, () => {
@@ -123,7 +151,7 @@ export class MonitorView extends Backbone.View {
     _createRow(wire) {
         const wireid = getWireId(wire);
         const base_sel = wire.get('bits') > 1 ? '<select name="base"><option value="hex">hex</option><option value="oct">oct</option><option value="bin">bin</option></select>' : '';
-        const row = $('<tr><td class="name"></td><td>'+base_sel+'</td><td><button type="button" name="remove">✖</button></td><td><canvas class="wavecanvas" height="30"></canvas></td></tr>');
+        const row = $('<tr><td class="name"></td><td>'+base_sel+'</td><td><button type="button" name="remove">✖</button></td><td><canvas class="wavecanvas" height="30" draggable="true"></canvas></td></tr>');
         row.attr('wireid', wireid);
         row.children('td').first().text(getWireName(wire));
         return row;
