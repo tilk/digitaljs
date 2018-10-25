@@ -106,6 +106,12 @@ export class MonitorView extends Backbone.View {
         this.$el.on('dragend', 'canvas', (e) => {
             $(document).off('dragover', do_drag);
         });
+        this.$el.on('wheel', 'canvas', (e) => {
+            e.preventDefault();
+            const scaling = 2 ** (e.originalEvent.deltaY / 3);
+            this._settings.start += e.originalEvent.offsetX / this._settings.pixelsPerTick * (1 - 1 / scaling);
+            this._settings.pixelsPerTick *= scaling;
+        });
     }
     render() {
         this.$el.html('<div><button name="ppt_up" type="button">+</button><button name="ppt_down">-</button><button name="left">&lt;</button><button name="right">&gt;</button><button name="live">live</button></div><table class="monitor"></table>');
