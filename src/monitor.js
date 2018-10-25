@@ -76,7 +76,7 @@ export class MonitorView extends Backbone.View {
         this.listenTo(this.model, 'add', this._handleAdd);
         this.listenTo(this.model, 'remove', this._handleRemove);
         this.listenTo(this.model._circuit, 'postUpdateGates', (tick) => { 
-            if (this._live) this._settings.start = tick - this._width / this._settings.pixelsPerTick;
+            if (this._live) this.start = tick - this._width / this._settings.pixelsPerTick;
             this._settings.present = tick;
             this._drawAll();
         });
@@ -92,7 +92,7 @@ export class MonitorView extends Backbone.View {
         let dragX, dragStart;
         const do_drag = (e) => {
             const offset = e.originalEvent.screenX - dragX;
-            this._settings.start = dragStart - offset / this._settings.pixelsPerTick;
+            this.start = dragStart - offset / this._settings.pixelsPerTick;
         };
         this.$el.on('dragstart', 'canvas', (e) => {
             const dt = e.originalEvent.dataTransfer;
@@ -100,7 +100,7 @@ export class MonitorView extends Backbone.View {
             dt.setDragImage(dragImg, 0, 0);
             dragX = e.originalEvent.screenX;
             dragStart = this._settings.start;
-            this._live = false;
+            this.live = false;
             $(document).on('dragover', do_drag);
         });
         this.$el.on('dragend', 'canvas', (e) => {
@@ -109,26 +109,48 @@ export class MonitorView extends Backbone.View {
         this.$el.on('wheel', 'canvas', (e) => {
             e.preventDefault();
             const scaling = 2 ** (e.originalEvent.deltaY / 3);
-            this._settings.start += e.originalEvent.offsetX / this._settings.pixelsPerTick * (1 - 1 / scaling);
-            this._settings.pixelsPerTick *= scaling;
+            this.start += e.originalEvent.offsetX / this._settings.pixelsPerTick * (1 - 1 / scaling);
+            this.pixelsPerTick *= scaling;
         });
     }
     render() {
-        this.$el.html('<div><button name="ppt_up" type="button">+</button><button name="ppt_down">-</button><button name="left">&lt;</button><button name="right">&gt;</button><button name="live">live</button></div><table class="monitor"></table>');
+        this.$el.html('<table class="monitor"></table>');
         for (const wobj of this.model._wires.values()) {
             this.$('table').append(this._createRow(wire));
         }
-        this.$('button[name=ppt_up]').on('click', (e) => { this._settings.pixelsPerTick *= 2; });
-        this.$('button[name=ppt_down]').on('click', (e) => { this._settings.pixelsPerTick /= 2; });
-        this.$('button[name=left]').on('click', (e) => { this._live = false; this._settings.start -= this._width / this._settings.pixelsPerTick / 4; });
-        this.$('button[name=right]').on('click', (e) => { this._live = false; this._settings.start += this._width / this._settings.pixelsPerTick / 4; });
-        this.$('button[name=live]').on('click', (e) => { this._live = true; });
         this._drawAll();
         this._canvasResize();
         new ResizeSensor(this.$el, () => {
             this._canvasResize();
         });
         return this;
+    }
+    get width() {
+        return this._width;
+    }
+    get live() {
+        return this._live;
+    }
+    set live(val) {
+        if (this.live == val) return;
+        this._live = val;
+        this.trigger('change:live', val);
+    }
+    get start() {
+        return this._settings.start;
+    }
+    set start(val) {
+        if (this._settings.start == val) return;
+        this._settings.start = val;
+        this.trigger('change:start', val);
+    }
+    get pixelsPerTick() {
+        return this._settings.pixelsPerTick;
+    }
+    set pixelsPerTick(val) {
+        if (this._settings.pixelsPerTick == val) return;
+        this._settings.pixelsPerTick = val;
+        this.trigger('change:pixelsPerTick', val);
     }
     _canvasResize() {
         this._width = Math.max(this.$el.width() - 300, 100);

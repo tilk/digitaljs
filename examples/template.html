@@ -7,6 +7,9 @@
   <body>
     <div id="paper">
     </div>
+    <div>
+        <button name="ppt_up" type="button">+</button><button name="ppt_down">-</button><button name="left">&lt;</button><button name="right">&gt;</button><button name="live">live</button></div>
+    </div>
     <div id="monitor">
     </div>
     <script>
@@ -14,6 +17,11 @@
       const monitor = new digitaljs.Monitor(circuit);
       const monitorview = new digitaljs.MonitorView({model: monitor, el: $('#monitor') });
       const paper = circuit.displayOn($('#paper'));
+      $('button[name=ppt_up]').on('click', (e) => { monitorview.pixelsPerTick *= 2; });
+      $('button[name=ppt_down]').on('click', (e) => { monitorview.pixelsPerTick /= 2; });
+      $('button[name=left]').on('click', (e) => { monitorview.live = false; monitorview.start -= monitorview._width / monitorview.pixelsPerTick / 4; });
+      $('button[name=right]').on('click', (e) => { monitorview.live = false; monitorview.start += monitorview._width / monitorview.pixelsPerTick / 4; });
+      $('button[name=live]').on('click', (e) => { monitorview.live = true; });
       circuit.start();
     </script>
   </body>
