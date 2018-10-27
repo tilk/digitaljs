@@ -68,11 +68,13 @@ export class Monitor {
 _.extend(Monitor.prototype, Backbone.Events);
 
 export class MonitorView extends Backbone.View {
-    initialize() {
+    initialize(args) {
         this._width = 800;
         this._settings = extendSettings(defaultSettings, {start: 0, pixelsPerTick: 5, gridStep: 1});
         this._settingsFor = new Map();
         this._live = true;
+        this._removeButtonMarkup = args.removeButtonMarkup || '<button type="button" name="remove">✖</button>';
+        this._baseSelectorMarkup = args.baseSelectorMarkup || '<select name="base"><option value="hex">hex</option><option value="oct">oct</option><option value="bin">bin</option></select>';
         this.listenTo(this.model, 'add', this._handleAdd);
         this.listenTo(this.model, 'remove', this._handleRemove);
         this.listenTo(this.model._circuit, 'postUpdateGates', (tick) => { 
@@ -186,8 +188,8 @@ export class MonitorView extends Backbone.View {
     }
     _createRow(wire) {
         const wireid = getWireId(wire);
-        const base_sel = wire.get('bits') > 1 ? '<select name="base"><option value="hex">hex</option><option value="oct">oct</option><option value="bin">bin</option></select>' : '';
-        const row = $('<tr><td class="name"></td><td>'+base_sel+'</td><td><button type="button" name="remove">✖</button></td><td><canvas class="wavecanvas" height="30" draggable="true"></canvas></td></tr>');
+        const base_sel = wire.get('bits') > 1 ? this._baseSelectorMarkup : '';
+        const row = $('<tr><td class="name"></td><td>'+base_sel+'</td><td>'+this._removeButtonMarkup+'</td><td><canvas class="wavecanvas" height="30" draggable="true"></canvas></td></tr>');
         row.attr('wireid', wireid);
         row.children('td').first().text(getWireName(wire));
         return row;
