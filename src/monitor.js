@@ -120,10 +120,18 @@ export class MonitorView extends Backbone.View {
         }
         this._drawAll();
         this._canvasResize();
-        new ResizeSensor(this.$el, () => {
+        this._resizeSensor = new ResizeSensor(this.$el, () => {
             this._canvasResize();
         });
         return this;
+    }
+    shutdown() {
+        this.$el.off();
+        if (this._resizeSensor) {
+            this._resizeSensor.detach();
+            this._resizeSensor = undefined;
+        }
+        this.stopListening();
     }
     get width() {
         return this._width;
