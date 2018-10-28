@@ -110,7 +110,7 @@ export class MonitorView extends Backbone.View {
         });
         this.$el.on('wheel', 'canvas', (e) => {
             e.preventDefault();
-            const scaling = 2 ** (e.originalEvent.deltaY / 3);
+            const scaling = 2 ** Math.sign(e.originalEvent.deltaY);
             this.start += e.originalEvent.offsetX / this._settings.pixelsPerTick * (1 - 1 / scaling);
             this.pixelsPerTick *= scaling;
         });
