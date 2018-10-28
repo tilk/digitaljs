@@ -73,6 +73,7 @@ export class MonitorView extends Backbone.View {
         this._settings = extendSettings(defaultSettings, {start: 0, pixelsPerTick: 5, gridStep: 1});
         this._settingsFor = new Map();
         this._live = true;
+        this._autoredraw = false;
         this._removeButtonMarkup = args.removeButtonMarkup || '<button type="button" name="remove">✖</button>';
         this._baseSelectorMarkup = args.baseSelectorMarkup || '<select name="base"><option value="hex">hex</option><option value="oct">oct</option><option value="bin">bin</option></select>';
         this.listenTo(this.model, 'add', this._handleAdd);
@@ -87,7 +88,11 @@ export class MonitorView extends Backbone.View {
             return $(e.target).closest('tr').attr('wireid');
         }
         this.$el.on('click', 'button[name=remove]', (e) => { this.model.removeWire(evt_wireid(e)); });
-        this.$el.on('input', 'select[name=base]', (e) => { this._settingsFor.get(evt_wireid(e)).base = e.target.value; });
+        this.$el.on('input', 'select[name=base]', (e) => { 
+            this._settingsFor.get(evt_wireid(e)).base = e.target.value;
+            this.trigger('change');
+        });
+        this.listenTo(this, 'change', () => { if (this._autoredraw) this._drawAll() });
 
         const dragImg = new Image(0,0);
         dragImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
@@ -120,7 +125,6 @@ export class MonitorView extends Backbone.View {
         for (const wobj of this.model._wires.values()) {
             this.$('table').append(this._createRow(wire));
         }
-        this._drawAll();
         this._canvasResize();
         this._resizeSensor = new ResizeSensor(this.$el, () => {
             this._canvasResize();
@@ -135,6 +139,13 @@ export class MonitorView extends Backbone.View {
         }
         this.stopListening();
     }
+    get autoredraw() {
+        return this._autoredraw;
+    }
+    set autoredraw(val) {
+        this._autoredraw = val;
+        if (val) this._drawAll();
+    }
     get width() {
         return this._width;
     }
@@ -145,6 +156,7 @@ export class MonitorView extends Backbone.View {
         if (this.live == val) return;
         this._live = val;
         this.trigger('change:live', val);
+        this.trigger('change');
     }
     get start() {
         return this._settings.start;
@@ -153,6 +165,7 @@ export class MonitorView extends Backbone.View {
         if (this._settings.start == val) return;
         this._settings.start = val;
         this.trigger('change:start', val);
+        this.trigger('change');
     }
     get pixelsPerTick() {
         return this._settings.pixelsPerTick;
@@ -161,10 +174,13 @@ export class MonitorView extends Backbone.View {
         if (this._settings.pixelsPerTick == val) return;
         this._settings.pixelsPerTick = val;
         this.trigger('change:pixelsPerTick', val);
+        this.trigger('change');
     }
     _canvasResize() {
         this._width = Math.max(this.$el.width() - 300, 100);
         this.$('canvas').attr('width', this._width);
+        this.trigger('change:width', this._width);
+        this.trigger('change');
     }
     _drawAll() {
         for (const wireid of this.model._wires.keys()) {
