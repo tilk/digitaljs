@@ -4,7 +4,7 @@ import joint from 'jointjs';
 import _ from 'lodash';
 import Backbone from 'backbone';
 import { Vector3vl } from '3vl';
-import { Waveform, drawWaveform, defaultSettings, extendSettings } from 'wavecanvas';
+import { Waveform, drawWaveform, defaultSettings, extendSettings, calcGridStep } from 'wavecanvas';
 import { ResizeSensor } from 'css-element-queries';
 
 function getWireId(wire) {
@@ -138,6 +138,9 @@ export class MonitorView extends Backbone.View {
             this._resizeSensor = undefined;
         }
         this.stopListening();
+    }
+    get gridStep() {
+        return calcGridStep(this._settings);
     }
     get autoredraw() {
         return this._autoredraw;
