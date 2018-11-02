@@ -3,7 +3,7 @@
 import joint from 'jointjs';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
-import { Vector3vl } from '3vl';
+import { Vector3vl, Mem3vl } from '3vl';
 
 // Memory cell
 joint.shapes.digital.Box.define('digital.Memory', {
@@ -25,11 +25,11 @@ joint.shapes.digital.Box.define('digital.Memory', {
         if (!args.words) args.words = 1 << args.abits;
         if (!args.offset) args.offset = 0;
         if (args.memdata)
-            this.memdata = args.memdata.map(x => Vector3vl.fromBin(x, args.bits));
+            this.memdata = Mem3vl.fromJSON(args.bits, args.memdata);
         else
-            this.memdata = Array(args.words).fill(Vector3vl.xes(args.bits));
+            this.memdata = new Mem3vl(args.bits, args.words);
         delete args.memdata; // performance hack
-        console.assert(this.memdata.length == args.words);
+        console.assert(this.memdata.words == args.words);
         this.last_clk = {};
         const markup = [];
         const lblmarkup = [];
@@ -104,7 +104,7 @@ joint.shapes.digital.Box.define('digital.Memory', {
             else {
                 const addr = calc_addr(data[portname + 'addr']);
                 if (valid_addr(addr))
-                    out[portname + 'data'] = this.memdata[addr];
+                    out[portname + 'data'] = this.memdata.get(addr);
                 else
                     out[portname + 'data'] = Vector3vl.xes(this.get('bits'));
             }
@@ -114,7 +114,7 @@ joint.shapes.digital.Box.define('digital.Memory', {
             if (!data[portname + 'addr'].isFullyDefined) return;
             const addr = calc_addr(data[portname + 'addr']);
             if (valid_addr(addr))
-                this.memdata[addr] = data[portname + 'data'];
+                this.memdata.set(addr, data[portname + 'data']);
         };
         for (const [num, port] of this.get('rdports').entries())
             if (!port.transparent) do_read('rd' + num, port);
@@ -127,7 +127,7 @@ joint.shapes.digital.Box.define('digital.Memory', {
     getGateParams: function() { 
         // hack to get memdata back
         const params = joint.shapes.digital.Box.prototype.getGateParams.apply(this, arguments);
-        params.memdata = this.memdata.map(x => x.toBin());
+        params.memdata = this.memdata.toJSON();
         return params;
     },
     gateParams: joint.shapes.digital.Box.prototype.gateParams.concat(['bits', 'abits', 'rdports', 'wrports', 'words', 'offset'])
