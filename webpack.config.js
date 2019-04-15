@@ -1,7 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CleanWebpackPlugin = require("clean-webpack-plugin");
-const babelenv = require('babel-preset-env');
+const babelenv = require('@babel/preset-env');
 
 const outputDirectory = 'dist';
 
@@ -70,7 +70,7 @@ module.exports = {
         ]
     },
     plugins: [
-        new CleanWebpackPlugin([outputDirectory]),
+        new CleanWebpackPlugin(),
     ].concat(tests.map(t => new HtmlWebpackPlugin({
             title: t.title,
             template: 'examples/template.html',
