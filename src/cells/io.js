@@ -308,7 +308,7 @@ joint.shapes.digital.NumBase.define('digital.Constant', {
     constructor: function(args) {
         args.constantCache = Vector3vl.fromBin(args.constant, args.constant.length);
         args.bits = args.constant.length;
-        args.outputSignals = { out: args.constantCache };
+        args.outputSignals = { out: Vector3vl.xes(args.constant.length) };
         this.markup = [
             this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.constant.length }),
             '<rect class="body"/>',
