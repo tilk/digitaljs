@@ -50,11 +50,13 @@ export class Circuit extends HeadlessCircuit {
     displayOn(elem) {
         return this.makePaper(elem, this._graph);
     }
-    makePaper(elem, graph) {
+    makePaper(elem, graph, opts) {
+        opts = opts || {};
         const paper = new joint.dia.Paper({
+            async: true,
             el: elem,
             model: graph,
-            width: 1000, height: 600, gridSize: 5,
+            width: 100, height: 100, gridSize: 5,
             snapLinks: true,
             linkPinning: false,
             defaultLink: new cells.Wire,
@@ -79,6 +81,7 @@ export class Circuit extends HeadlessCircuit {
                 }
             }
         });
+        paper.freeze();
         // required for the paper to visualize the graph (jointjs bug?)
         graph.resetCells(graph.getCells());
         // lazy graph layout
@@ -93,7 +96,14 @@ export class Circuit extends HeadlessCircuit {
             });
             graph.set('laid_out', true);
         }
-        paper.fitToContent({ padding: 30, allowNewOrigin: 'any' });
+        paper.unfreeze({
+            progress(done, processed, total) {
+                if (done) {
+                    paper.fitToContent({ padding: 30, allowNewOrigin: 'any' });
+                    if (opts.onDone) opts.onDone();
+                }
+            }
+        });
         // subcircuit display
         this.listenTo(paper, 'cell:pointerdblclick', function(view, evt) {
             if (!(view.model instanceof cells.Subcircuit)) return;
@@ -104,13 +114,16 @@ export class Circuit extends HeadlessCircuit {
             div.append(pdiv);
             $('body').append(div);
             const graph = view.model.get('graph');
-            const paper = this.makePaper(pdiv, graph);
-            const maxWidth = $(window).width() * 0.9;
-            const maxHeight = $(window).height() * 0.9;
-            div.dialog({ width: Math.min(maxWidth, pdiv.outerWidth() + 60), height: Math.min(maxHeight, pdiv.outerHeight() + 60) });
-            div.on('dialogclose', function(evt) {
-                paper.remove();
-                div.remove();
+            const paper = this.makePaper(pdiv, graph, {
+                onDone() {
+                    const maxWidth = $(window).width() * 0.9;
+                    const maxHeight = $(window).height() * 0.9;
+                    div.dialog({ width: Math.min(maxWidth, pdiv.outerWidth() + 60), height: Math.min(maxHeight, pdiv.outerHeight() + 60) });
+                    div.on('dialogclose', function(evt) {
+                        paper.remove();
+                        div.remove();
+                    });
+                }
             });
         });
         this.trigger('new:paper', paper);
