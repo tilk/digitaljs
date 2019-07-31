@@ -92,19 +92,23 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
 });
 
 export const GateView = joint.dia.ElementView.extend({
-    stopprop: function(evt) {
+    presentationAttributes: joint.dia.ElementView.addPresentationAttributes({
+        inputSignals: 'flag:inputSignals',
+        outputSignals: 'flag:outputSignals'
+    }),
+    stopprop(evt) {
         evt.stopPropagation();
     },
-    initialize: function() {
-        this.listenTo(this.model, 'change:inputSignals', function(wire, signal) {
-            this.updatePortSignals('in', signal);
-        });
-        this.listenTo(this.model, 'change:outputSignals', function(wire, signal) {
-            this.updatePortSignals('out', signal);
-        });
-        joint.dia.ElementView.prototype.initialize.apply(this, arguments);
+    confirmUpdate(flags) {
+        if (this.hasFlag(flags, 'flag:inputSignals')) {
+            this.updatePortSignals('in', this.model.get('inputSignals'));
+        };
+        if (this.hasFlag(flags, 'flag:outputSignals')) {
+            this.updatePortSignals('out', this.model.get('outputSignals'));
+        };
+        joint.dia.ElementView.prototype.confirmUpdate.apply(this, arguments);
     },
-    updatePortSignals: function(dir, signal) {
+    updatePortSignals(dir, signal) {
         for (const port of Object.values(this.model.ports)) {
             if (port.dir !== dir) continue;
             let classes = ['port', port.dir, 'port_' + port.id];
@@ -114,7 +118,7 @@ export const GateView = joint.dia.ElementView.extend({
             this.$('circle.port_' + port.id).attr('class', classes.join(' '));
         }
     },
-    render: function() {
+    render() {
         joint.dia.ElementView.prototype.render.apply(this, arguments);
         this.updatePortSignals('in', this.model.get('inputSignals'));
         this.updatePortSignals('out', this.model.get('outputSignals'));
@@ -229,8 +233,12 @@ export const WireView = joint.dia.LinkView.extend({
         'mouseleave': 'hover_mouseout',
         'mousedown': 'hover_mouseout',
     },
+    presentationAttributes: joint.dia.LinkView.addPresentationAttributes({
+        signal: 'flag:signal',
+        bits: 'flag:bits'
+    }),
 
-	_translateAndAutoOrientArrows: function(sourceArrow, targetArrow) {
+    _translateAndAutoOrientArrows(sourceArrow, targetArrow) {
         if (sourceArrow) {
             sourceArrow.translate(this.sourcePoint.x, this.sourcePoint.y, {absolute: true});
         }
@@ -239,27 +247,31 @@ export const WireView = joint.dia.LinkView.extend({
         }
     },
 
-    initialize: function() {
+    initialize() {
         joint.dia.LinkView.prototype.initialize.apply(this, arguments);
         this.updateColor(this.model.get('signal'));
         this.$el.toggleClass('bus', this.model.get('bits') > 1);
-        this.listenTo(this.model, 'change:signal', (wire, signal) => {
-            this.updateColor(this.model.get('signal'));
-        });
-        this.listenTo(this.model, 'change:bits', function(wire, bits) {
-            this.$el.toggleClass('bus', bits > 1);
-        });
         this.prevModels = { source: null, target: null };
     },
+    
+    confirmUpdate(flags) {
+        joint.dia.LinkView.prototype.confirmUpdate.apply(this, arguments);
+        if (this.hasFlag(flags, 'flag:signal')) {
+            this.updateColor(this.model.get('signal'));
+        };
+        if (this.hasFlag(flags, 'flag:bits')) {
+            this.$el.toggleClass('bus', this.model.get('bits') > 1);
+        };
+    },
 
-    updateColor: function(sig) {
+    updateColor(sig) {
         const h = sig.isHigh, l = sig.isLow;
         this.$el.toggleClass('live', h);
         this.$el.toggleClass('low', l);
         this.$el.toggleClass('defined', !h && !l && sig.isDefined);
     },
 
-    hover_mouseover: function(evt) {
+    hover_mouseover(evt) {
         if (this.model.get('bits') == 1) return;
         if (this.wire_hover) this.hover_mouseout();
         this.wire_hover = $('<div class="wire_hover">')
@@ -270,7 +282,7 @@ export const WireView = joint.dia.LinkView.extend({
         this.listenTo(this.model, 'change:signal', this.hover_gentext);
     },
 
-    hover_mouseout: function() {
+    hover_mouseout() {
         if (this.wire_hover) {
             this.wire_hover.remove();
             this.wire_hover = null;
@@ -278,7 +290,7 @@ export const WireView = joint.dia.LinkView.extend({
         }
     },
 
-    hover_gentext: function() {
+    hover_gentext() {
         if (!this.wire_hover) return;
         const sig = this.model.get('signal');
         const hovertext = [
@@ -296,7 +308,7 @@ export const WireView = joint.dia.LinkView.extend({
     }, joint.dia.LinkView.prototype.options),
 
     // Quick-and-dirty performance fix
-    onEndModelChange: function(endType, endModel, opt) {
+    onEndModelChange(endType, endModel, opt) {
         if (typeof endModel == 'object' && endModel != null &&
             endModel == this.prevModels[endType] &&
             Object.keys(endModel.changed).length > 0 &&

@@ -53,16 +53,21 @@ export const GenMux = Gate.define('GenMux', {
     gateParams: Gate.prototype.gateParams.concat(['bits'])
 });
 export const GenMuxView = GateView.extend({
-    initialize: function() {
+    initialize() {
         this.n_ins = this.model.muxNumInputs(this.model.get('bits').sel);
-        this.listenTo(this.model, 'change:inputSignals', (_, data) => this.updateMux(data));
         GateView.prototype.initialize.apply(this, arguments);
     },
-    render: function() {
+    confirmUpdate(flags) {
+        GateView.prototype.confirmUpdate.apply(this, arguments);
+        if (this.hasFlag(flags, 'flag:inputSignals')) {
+            this.updateMux(this.model.get('inputSignals'));
+        }
+    },
+    render() {
         GateView.prototype.render.apply(this, arguments);
         this.updateMux(this.model.get('inputSignals'));
     },
-    updateMux: function(data) {
+    updateMux(data) {
         const i = this.model.muxInput(data.sel);
         for (const num of Array(this.n_ins).keys()) {
             this.$('text.arrow_in' + num).css('visibility', i == num ? 'visible' : 'hidden');

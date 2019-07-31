@@ -1,6 +1,6 @@
 "use strict";
 
-//import * as joint from 'jointjs';
+import * as joint from 'jointjs';
 import { Gate, GateView } from '@app/cells/base';
 import _ from 'lodash';
 import bigInt from 'big-integer';
@@ -136,22 +136,28 @@ export const NumEntry = NumBase.define('NumEntry', {
     gateParams: NumBase.prototype.gateParams.concat(['bits'])
 });
 export const NumEntryView = NumBaseView.extend({
+    presentationAttributes: NumBaseView.addPresentationAttributes({
+        buttonState: 'flag:buttonState',
+        numbase: 'flag:buttonState'
+    }),
     events: _.merge({
         "click input": "stopprop",
         "mousedown input": "stopprop",
         "change input": "change"
     }, NumBaseView.prototype.events),
-    initialize: function(args) {
+    initialize(args) {
         NumBaseView.prototype.initialize.apply(this, arguments);
-        const settext = () => {
-            this.$('input').val(help.sig2base(this.model.get('buttonState'), this.model.get('numbase')));
-            this.$('input').removeClass('invalid');
-        };
-        settext();
-        this.listenTo(this.model, 'change:buttonState', settext);
-        this.listenTo(this.model, 'change:numbase', settext);
+        this.settext();
     },
-    change: function(evt) {
+    confirmUpdate(flags) {
+        NumBaseView.prototype.confirmUpdate.apply(this, arguments);
+        if (this.hasFlag(flags, 'flag:buttonState')) this.settext();
+    },
+    settext() {
+        this.$('input').val(help.sig2base(this.model.get('buttonState'), this.model.get('numbase')));
+        this.$('input').removeClass('invalid');
+    },
+    change(evt) {
         const numbase = this.model.get('numbase');
         if (help.validNumber(evt.target.value, numbase)) {
             const val = help.base2sig(evt.target.value, this.model.get('bits'), numbase);
@@ -184,15 +190,17 @@ export const Lamp = Gate.define('Lamp', {
     }
 });
 export const LampView = GateView.extend({
-    initialize: function() {
-        GateView.prototype.initialize.apply(this, arguments);
-        this.listenTo(this.model, 'change:inputSignals', (wire, signal) => { this.updateLamp(signal) });
+    confirmUpdate(flags) {
+        GateView.prototype.confirmUpdate.apply(this, arguments);
+        if (this.hasFlag(flags, 'flag:inputSignals')) {
+            this.updateLamp(this.model.get('inputSignals'));
+        };
     },
-    updateLamp: function(signal) {
+    updateLamp(signal) {
         this.$(".led").toggleClass('live', signal.in.isHigh);
         this.$(".led").toggleClass('low', signal.in.isLow);
     },
-    render: function() {
+    render() {
         GateView.prototype.render.apply(this, arguments);
         this.updateLamp(this.model.get('inputSignals'));
     }
@@ -226,18 +234,24 @@ export const Button = Gate.define('Button', {
     }
 });
 export const ButtonView = GateView.extend({
+    presentationAttributes: GateView.addPresentationAttributes({
+        buttonState: 'flag:buttonState',
+    }),
     initialize: function() {
         GateView.prototype.initialize.apply(this, arguments);
         this.$(".btnface").toggleClass('live', this.model.get('buttonState'));
-        this.listenTo(this.model, 'change:buttonState', function(wire, signal) {
-            this.$(".btnface").toggleClass('live', signal);
-        });
+    },
+    confirmUpdate(flags) {
+        GateView.prototype.confirmUpdate.apply(this, arguments);
+        if (this.hasFlag(flags, 'flag:buttonState')) {
+            this.$(".btnface").toggleClass('live', this.model.get('buttonState'));
+        }
     },
     events: {
         "click .btnface": "activateButton",
         "mousedown .btnface": "stopprop"
     },
-    activateButton: function() {
+    activateButton() {
         this.model.set('buttonState', !this.model.get('buttonState'));
     },
 });
@@ -357,4 +371,5 @@ export const Clock = Gate.define('Clock', {
         return { out: this.get('outputSignals').out.not() };
     }
 });
+export const ClockView = GateView;
 

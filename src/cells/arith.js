@@ -1,7 +1,7 @@
 "use strict";
 
 import * as joint from 'jointjs';
-import { Gate } from '@app/cells/base';
+import { Gate, GateView } from '@app/cells/base';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
 import { Vector3vl } from '3vl';
@@ -176,6 +176,7 @@ export const Negation = Arith11.define('Negation', {
 }, {
     arithop: i => bigInt.zero.minus(i)
 });
+export const NegationView = GateView;
 
 // Unary plus
 export const UnaryPlus = Arith11.define('UnaryPlus', {
@@ -185,6 +186,7 @@ export const UnaryPlus = Arith11.define('UnaryPlus', {
 }, {
     arithop: i => i
 });
+export const UnaryPlusView = GateView;
 
 // Addition
 export const Addition = Arith21.define('Addition', {
@@ -194,6 +196,7 @@ export const Addition = Arith21.define('Addition', {
 }, {
     arithop: (i, j) => i.plus(j)
 });
+export const AdditionView = GateView;
 
 // Subtraction
 export const Subtraction = Arith21.define('Subtraction', {
@@ -203,6 +206,7 @@ export const Subtraction = Arith21.define('Subtraction', {
 }, {
     arithop: (i, j) => i.minus(j)
 });
+export const SubtractionView = GateView;
 
 // Multiplication
 export const Multiplication = Arith21.define('Multiplication', {
@@ -212,6 +216,7 @@ export const Multiplication = Arith21.define('Multiplication', {
 }, {
     arithop: (i, j) => i.multiply(j)
 });
+export const MultiplicationView = GateView;
 
 // Division
 export const Division = Arith21.define('Division', {
@@ -221,6 +226,7 @@ export const Division = Arith21.define('Division', {
 }, {
     arithop: (i, j) => j.isZero() ? i : i.divide(j) // as in IEEE Verilog
 });
+export const DivisionView = GateView;
 
 // Modulo
 export const Modulo = Arith21.define('Modulo', {
@@ -230,6 +236,7 @@ export const Modulo = Arith21.define('Modulo', {
 }, {
     arithop: (i, j) => j.isZero() ? i : i.mod(j) // as in IEEE Verilog
 });
+export const ModuloView = GateView;
 
 // Power
 export const Power = Arith21.define('Power', {
@@ -239,6 +246,7 @@ export const Power = Arith21.define('Power', {
 }, {
     arithop: (i, j) => i.pow(j)
 });
+export const PowerView = GateView;
 
 // Shift left operator
 export const ShiftLeft = Shift.define('ShiftLeft', {
@@ -248,6 +256,7 @@ export const ShiftLeft = Shift.define('ShiftLeft', {
 }, {
     shiftdir: -1
 });
+export const ShiftLeftView = GateView;
 
 // Shift right operator
 export const ShiftRight = Shift.define('ShiftRight', {
@@ -257,6 +266,7 @@ export const ShiftRight = Shift.define('ShiftRight', {
 }, {
     shiftdir: 1
 });
+export const ShiftRightView = GateView;
 
 // Less than operator
 export const Lt = Compare.define('Lt', {
@@ -266,6 +276,7 @@ export const Lt = Compare.define('Lt', {
 }, {
     arithcomp: (i, j) => i.lt(j)
 });
+export const LtView = GateView;
 
 // Less or equal operator
 export const Le = Compare.define('Le', {
@@ -275,6 +286,7 @@ export const Le = Compare.define('Le', {
 }, {
     arithcomp: (i, j) => i.leq(j)
 });
+export const LeView = GateView;
 
 // Greater than operator
 export const Gt = Compare.define('Gt', {
@@ -284,6 +296,7 @@ export const Gt = Compare.define('Gt', {
 }, {
     arithcomp: (i, j) => i.gt(j)
 });
+export const GtView = GateView;
 
 // Less than operator
 export const Ge = Compare.define('Ge', {
@@ -293,6 +306,7 @@ export const Ge = Compare.define('Ge', {
 }, {
     arithcomp: (i, j) => i.geq(j)
 });
+export const GeView = GateView;
 
 // Equality operator
 export const Eq = Compare.define('Eq', {
@@ -302,6 +316,7 @@ export const Eq = Compare.define('Eq', {
 }, {
     arithcomp: (i, j) => i.eq(j)
 });
+export const EqView = GateView;
 
 // Nonequality operator
 export const Ne = Compare.define('Ne', {
@@ -311,4 +326,5 @@ export const Ne = Compare.define('Ne', {
 }, {
     arithcomp: (i, j) => i.neq(j)
 });
+export const NeView = GateView;
 
