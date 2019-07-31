@@ -1,11 +1,13 @@
 "use strict";
 
-import joint from 'jointjs';
+import * as joint from 'jointjs';
+import { Gate, Box, BoxView } from '@app/cells/base';
+import { IO, Input, Output } from '@app/cells/io';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
 
 // Subcircuit model -- embeds a circuit graph in an element
-joint.shapes.digital.Box.define('digital.Subcircuit', {
+export const Subcircuit = Box.define('Subcircuit', {
     propagation: 0,
     attrs: {
         'path.wire' : { 'ref-y': .5, stroke: 'black' },
@@ -23,16 +25,16 @@ joint.shapes.digital.Box.define('digital.Subcircuit', {
 }, {
     initialize: function() {
         this.listenTo(this, 'change:size', (model, size) => this.attr('.tooltip/width', size.width));
-        joint.shapes.digital.Box.prototype.initialize.apply(this, arguments);
+        Box.prototype.initialize.apply(this, arguments);
     },
     constructor: function(args) {
         console.assert(args.graph instanceof joint.dia.Graph);
         const graph = args.graph;
         graph.set('subcircuit', this);
         const IOs = graph.getCells()
-            .filter((cell) => cell instanceof joint.shapes.digital.IO);
-        const inputs = IOs.filter((cell) => cell instanceof joint.shapes.digital.Input);
-        const outputs = IOs.filter((cell) => cell instanceof joint.shapes.digital.Output);
+            .filter((cell) => cell instanceof IO);
+        const inputs = IOs.filter((cell) => cell instanceof Input);
+        const outputs = IOs.filter((cell) => cell instanceof Output);
         function sortfun(x, y) {
             if (x.has('order') || y.has('order'))
                 return x.get('order') - y.get('order');
@@ -65,11 +67,11 @@ joint.shapes.digital.Box.define('digital.Subcircuit', {
         args.size = size;
         args.attrs['rect.body'] = size;
         args.circuitIOmap = iomap;
-        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        Gate.prototype.constructor.apply(this, arguments);
     }
 });
 
-joint.shapes.digital.SubcircuitView = joint.shapes.digital.BoxView.extend({
+export const SubcircuitView = BoxView.extend({
     events: {
         "click foreignObject.tooltip": "stopprop",
         "mousedown foreignObject.tooltip": "stopprop",

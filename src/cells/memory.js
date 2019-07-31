@@ -1,12 +1,13 @@
 "use strict";
 
-import joint from 'jointjs';
+import * as joint from 'jointjs';
+import { Box, BoxView } from '@app/cells/base';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
 import { Vector3vl, Mem3vl } from '3vl';
 
 // Memory cell
-joint.shapes.digital.Box.define('digital.Memory', {
+export const Memory = Box.define('Memory', {
     attrs: {
         'line.portsplit': {
             stroke: 'black', x1: 0, x2: 40
@@ -15,7 +16,7 @@ joint.shapes.digital.Box.define('digital.Memory', {
 }, {
     initialize: function() {
         this.listenTo(this, 'change:size', (model, size) => this.attr('line.portsplit/x2', size.width));
-        joint.shapes.digital.Box.prototype.initialize.apply(this, arguments);
+        Box.prototype.initialize.apply(this, arguments);
     },
     constructor: function(args) {
         if (!args.bits) args.bits = 1;
@@ -73,7 +74,7 @@ joint.shapes.digital.Box.define('digital.Memory', {
         markup.push('<text class="label"/>');
         markup.push(lblmarkup.join(''));
         this.markup = markup.join('');
-        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        Box.prototype.constructor.apply(this, arguments);
     },
     operation: function(data) {
         const out = {};
@@ -126,11 +127,11 @@ joint.shapes.digital.Box.define('digital.Memory', {
     },
     getGateParams: function() { 
         // hack to get memdata back
-        const params = joint.shapes.digital.Box.prototype.getGateParams.apply(this, arguments);
+        const params = Box.prototype.getGateParams.apply(this, arguments);
         params.memdata = this.memdata.toJSON();
         return params;
     },
-    gateParams: joint.shapes.digital.Box.prototype.gateParams.concat(['bits', 'abits', 'rdports', 'wrports', 'words', 'offset'])
+    gateParams: Box.prototype.gateParams.concat(['bits', 'abits', 'rdports', 'wrports', 'words', 'offset'])
 });
-joint.shapes.digital.MemoryView = joint.shapes.digital.BoxView;
+export const MemoryView = BoxView;
 

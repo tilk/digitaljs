@@ -1,12 +1,13 @@
 "use strict";
 
-import joint from 'jointjs';
+import * as joint from 'jointjs';
+import { Box, BoxView } from '@app/cells/base';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
 import { Vector3vl } from '3vl';
 
 // D flip-flops
-joint.shapes.digital.Box.define('digital.Dff', {
+export const Dff = Box.define('Dff', {
 }, {
     constructor: function(args) {
         _.defaults(args, { bits: 1, polarity: {} });
@@ -28,7 +29,7 @@ joint.shapes.digital.Box.define('digital.Dff', {
         this.markup = markup.join('');
         const size = { width: 80, height: num*16+8 };
         args.size = size;
-        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        Box.prototype.constructor.apply(this, arguments);
         this.last_clk = 0;
     },
     operation: function(data) {
@@ -47,7 +48,7 @@ joint.shapes.digital.Box.define('digital.Dff', {
                 return this.get('outputSignals');
         } else return { out: data.in };
     },
-    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['polarity', 'bits'])
+    gateParams: Box.prototype.gateParams.concat(['polarity', 'bits'])
 });
-joint.shapes.digital.DffView = joint.shapes.digital.BoxView;
+export const DffView = BoxView;
 

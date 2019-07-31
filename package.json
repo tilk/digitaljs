@@ -1,6 +1,6 @@
 {
   "name": "digitaljs",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Digital logic simulator",
   "main": "dist/main.js",
   "scripts": {
@@ -28,18 +28,20 @@
     "html-webpack-plugin": "^3.2.0",
     "jest": "^24.7.1",
     "style-loader": "^0.23.1",
-    "webpack": "^4.30.0",
-    "webpack-cli": "^3.3.0"
+    "webpack": "^4.38.0",
+    "webpack-cli": "^3.3.6"
   },
   "dependencies": {
-    "3vl": "^0.2.0",
+    "3vl": "^0.2.1",
     "babel-polyfill": "^6.26.0",
-    "big-integer": "^1.6.43",
+    "big-integer": "^1.6.44",
     "css-element-queries": "^1.1.1",
-    "jointjs": "^2.2.1",
-    "jquery": "^3.4.0",
+    "jointjs": "^3.0.3",
+    "jquery": "^3.4.1",
     "jquery-ui": "^1.12.1",
-    "wavecanvas": "^0.0.3"
+    "wavecanvas": "^0.1.0",
+    "dagre": "^0.8.4",
+    "graphlib": "^2.1.7"
   },
   "homepage": "https://github.com/tilk/digitaljs",
   "repository": {

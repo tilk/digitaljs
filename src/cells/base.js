@@ -1,12 +1,12 @@
 "use strict";
 
-import joint from 'jointjs';
+import * as joint from 'jointjs';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
 import { Vector3vl } from '3vl';
 
 // Common base class for gate models
-joint.shapes.basic.Generic.define('digital.Gate', {
+export const Gate = joint.shapes.basic.Generic.define('Gate', {
     size: { width: 80, height: 30 },
     inputSignals: {},
     outputSignals: {},
@@ -91,7 +91,7 @@ joint.shapes.basic.Generic.define('digital.Gate', {
     gateParams: ['label', 'position', 'celltype', 'propagation']
 });
 
-joint.shapes.digital.GateView = joint.dia.ElementView.extend({
+export const GateView = joint.dia.ElementView.extend({
     stopprop: function(evt) {
         evt.stopPropagation();
     },
@@ -122,7 +122,7 @@ joint.shapes.digital.GateView = joint.dia.ElementView.extend({
 });
 
 // Connecting wire model
-joint.dia.Link.define('digital.Wire', {
+export const Wire = joint.dia.Link.define('Wire', {
     attrs: {
         '.connection': { 'stroke-width': 2 },
         '.marker-vertex': { r: 7 }
@@ -223,7 +223,7 @@ joint.dia.Link.define('digital.Wire', {
     }
 });
 
-joint.shapes.digital.WireView = joint.dia.LinkView.extend({
+export const WireView = joint.dia.LinkView.extend({
     events: {
         'mouseenter': 'hover_mouseover',
         'mouseleave': 'hover_mouseout',
@@ -306,7 +306,7 @@ joint.shapes.digital.WireView = joint.dia.LinkView.extend({
     }
 });
 
-joint.shapes.digital.Gate.define('digital.Box', {
+export const Box = Gate.define('Box', {
     attrs: {
         'text.iolabel': { fill: 'black', 'dominant-baseline': 'ideographic' },
         'path.decor': { stroke: 'black', fill: 'transparent' }
@@ -342,9 +342,9 @@ joint.shapes.digital.Gate.define('digital.Box', {
     }
 });
 
-joint.shapes.digital.BoxView = joint.shapes.digital.GateView.extend({
+export const BoxView = GateView.extend({
     render: function() {
-        joint.shapes.digital.GateView.prototype.render.apply(this, arguments);
+        GateView.prototype.render.apply(this, arguments);
         if (this.model.get('box_resized')) return;
         this.model.set('box_resized', true);
         const labels = Array.from(this.el.querySelectorAll('text.iolabel'));

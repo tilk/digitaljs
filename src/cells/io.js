@@ -1,13 +1,14 @@
 "use strict";
 
-import joint from 'jointjs';
+//import * as joint from 'jointjs';
+import { Gate, GateView } from '@app/cells/base';
 import _ from 'lodash';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
 import { Vector3vl } from '3vl';
 
 // Things with numbers
-joint.shapes.digital.Gate.define('digital.NumBase', {
+export const NumBase = Gate.define('NumBase', {
     numbase: 'hex',
     attrs: {
         '.tooltip': {
@@ -20,7 +21,7 @@ joint.shapes.digital.Gate.define('digital.NumBase', {
         this.listenTo(this, 'change:size', (x, size) => {
             this.attr('.tooltip/width', Math.max(size.width, 50))
         });
-        joint.shapes.digital.Gate.prototype.initialize.apply(this, arguments);
+        Gate.prototype.initialize.apply(this, arguments);
     },
     numbaseMarkup: [
         // requiredExtensions="http://www.w3.org/1999/xhtml" not supported by Chrome
@@ -33,9 +34,9 @@ joint.shapes.digital.Gate.define('digital.NumBase', {
         '<option value="bin">bin</option>',
         '</select>',
         '</body></foreignObject>'].join(''),
-    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['numbase'])
+    gateParams: Gate.prototype.gateParams.concat(['numbase'])
 });
-joint.shapes.digital.NumBaseView = joint.shapes.digital.GateView.extend({
+export const NumBaseView = GateView.extend({
     events: {
         "click select.numbase": "stopprop",
         "mousedown select.numbase": "stopprop",
@@ -45,7 +46,7 @@ joint.shapes.digital.NumBaseView = joint.shapes.digital.GateView.extend({
         this.model.set('numbase', evt.target.value || 'bin');
     },
     render: function() {
-        joint.shapes.digital.GateView.prototype.render.apply(this, arguments);
+        GateView.prototype.render.apply(this, arguments);
         if (this.model.get('box_resized')) return;
         this.model.set('box_resized', true);
         const testtext = document.createElementNS('http://www.w3.org/2000/svg', 'text');
@@ -59,7 +60,7 @@ joint.shapes.digital.NumBaseView = joint.shapes.digital.GateView.extend({
 });
 
 // Numeric display -- displays a number
-joint.shapes.digital.NumBase.define('digital.NumDisplay', {
+export const NumDisplay = NumBase.define('NumDisplay', {
     bits: 1,
     propagation: 0,
     attrs: {
@@ -80,10 +81,10 @@ joint.shapes.digital.NumBase.define('digital.NumDisplay', {
             '<text class="value numvalue"/>',
             '<text class="label"/>',
         ].join('');
-        joint.shapes.digital.NumBase.prototype.constructor.apply(this, arguments);
+        NumBase.prototype.constructor.apply(this, arguments);
     },
     initialize: function(args) {
-        joint.shapes.digital.NumBase.prototype.initialize.apply(this, arguments);
+        NumBase.prototype.initialize.apply(this, arguments);
         const settext = () => {
             this.attr('text.value/text', help.sig2base(this.get('inputSignals').in, this.get('numbase')));
         }
@@ -91,12 +92,12 @@ joint.shapes.digital.NumBase.define('digital.NumDisplay', {
         this.listenTo(this, 'change:inputSignals', settext);
         this.listenTo(this, 'change:numbase', settext);
     },
-    gateParams: joint.shapes.digital.NumBase.prototype.gateParams.concat(['bits'])
+    gateParams: NumBase.prototype.gateParams.concat(['bits'])
 });
-joint.shapes.digital.NumDisplayView = joint.shapes.digital.NumBaseView;
+export const NumDisplayView = NumBaseView;
 
 // Numeric entry -- parses a number from a text box
-joint.shapes.digital.NumBase.define('digital.NumEntry', {
+export const NumEntry = NumBase.define('NumEntry', {
     bits: 1,
     propagation: 0,
     buttonState: Vector3vl.xes(1),
@@ -112,7 +113,7 @@ joint.shapes.digital.NumBase.define('digital.NumEntry', {
         this.listenTo(this, 'change:size', (x, size) => {
             this.attr('foreignObject.valinput/width', size.width - 10)
         });
-        joint.shapes.digital.NumBase.prototype.initialize.apply(this, arguments);
+        NumBase.prototype.initialize.apply(this, arguments);
     },
     constructor: function(args) {
         if (!args.bits) args.bits = 1;
@@ -127,21 +128,21 @@ joint.shapes.digital.NumBase.define('digital.NumEntry', {
             '</body></foreignObject>',
         ].join('');
         args.buttonState = args.outputSignals.out;
-        joint.shapes.digital.NumBase.prototype.constructor.apply(this, arguments);
+        NumBase.prototype.constructor.apply(this, arguments);
     },
     operation: function() {
         return { out: this.get('buttonState') };
     },
-    gateParams: joint.shapes.digital.NumBase.prototype.gateParams.concat(['bits'])
+    gateParams: NumBase.prototype.gateParams.concat(['bits'])
 });
-joint.shapes.digital.NumEntryView = joint.shapes.digital.NumBaseView.extend({
+export const NumEntryView = NumBaseView.extend({
     events: _.merge({
         "click input": "stopprop",
         "mousedown input": "stopprop",
         "change input": "change"
-    }, joint.shapes.digital.NumBaseView.prototype.events),
+    }, NumBaseView.prototype.events),
     initialize: function(args) {
-        joint.shapes.digital.NumBaseView.prototype.initialize.apply(this, arguments);
+        NumBaseView.prototype.initialize.apply(this, arguments);
         const settext = () => {
             this.$('input').val(help.sig2base(this.model.get('buttonState'), this.model.get('numbase')));
             this.$('input').removeClass('invalid');
@@ -162,7 +163,7 @@ joint.shapes.digital.NumEntryView = joint.shapes.digital.NumBaseView.extend({
 });
 
 // Lamp model -- displays a single-bit input
-joint.shapes.digital.Gate.define('digital.Lamp', {
+export const Lamp = Gate.define('Lamp', {
     size: { width: 30, height: 30 },
     attrs: {
         'rect.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 30, height: 30 },
@@ -179,12 +180,12 @@ joint.shapes.digital.Gate.define('digital.Lamp', {
             '<circle class="led"/>',
             '<text class="label"/>',
         ].join('')
-        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        Gate.prototype.constructor.apply(this, arguments);
     }
 });
-joint.shapes.digital.LampView = joint.shapes.digital.GateView.extend({
+export const LampView = GateView.extend({
     initialize: function() {
-        joint.shapes.digital.GateView.prototype.initialize.apply(this, arguments);
+        GateView.prototype.initialize.apply(this, arguments);
         this.listenTo(this.model, 'change:inputSignals', (wire, signal) => { this.updateLamp(signal) });
     },
     updateLamp: function(signal) {
@@ -192,13 +193,13 @@ joint.shapes.digital.LampView = joint.shapes.digital.GateView.extend({
         this.$(".led").toggleClass('low', signal.in.isLow);
     },
     render: function() {
-        joint.shapes.digital.GateView.prototype.render.apply(this, arguments);
+        GateView.prototype.render.apply(this, arguments);
         this.updateLamp(this.model.get('inputSignals'));
     }
 });
 
 // Button model -- single-bit clickable input
-joint.shapes.digital.Gate.define('digital.Button', {
+export const Button = Gate.define('Button', {
     size: { width: 30, height: 30 },
     buttonState: false,
     propagation: 0,
@@ -218,15 +219,15 @@ joint.shapes.digital.Gate.define('digital.Button', {
             '<rect class="btnface"/>',
             '<text class="label"/>',
         ].join('');
-        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        Gate.prototype.constructor.apply(this, arguments);
     },
     operation: function() {
         return { out: this.get('buttonState') ? Vector3vl.ones(1) : Vector3vl.zeros(1) };
     }
 });
-joint.shapes.digital.ButtonView = joint.shapes.digital.GateView.extend({
+export const ButtonView = GateView.extend({
     initialize: function() {
-        joint.shapes.digital.GateView.prototype.initialize.apply(this, arguments);
+        GateView.prototype.initialize.apply(this, arguments);
         this.$(".btnface").toggleClass('live', this.model.get('buttonState'));
         this.listenTo(this.model, 'change:buttonState', function(wire, signal) {
             this.$(".btnface").toggleClass('live', signal);
@@ -242,7 +243,7 @@ joint.shapes.digital.ButtonView = joint.shapes.digital.GateView.extend({
 });
 
 // Input/output model
-joint.shapes.digital.Gate.define('digital.IO', {
+export const IO = Gate.define('IO', {
     bits: 1,
     propagation: 0,
     attrs: {
@@ -265,13 +266,13 @@ joint.shapes.digital.Gate.define('digital.IO', {
         ].join('');
         if ('bits' in args) _.set(args, ['attrs', 'circle', 'port', 'bits'], args.bits);
         _.set(args, ['attrs', 'text', 'text'], args.net);
-        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        Gate.prototype.constructor.apply(this, arguments);
     },
-    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits','net'])
+    gateParams: Gate.prototype.gateParams.concat(['bits','net'])
 });
-joint.shapes.digital.IOView = joint.shapes.digital.GateView.extend({
+export const IOView = GateView.extend({
     render: function() {
-        joint.shapes.digital.GateView.prototype.render.apply(this, arguments);
+        GateView.prototype.render.apply(this, arguments);
         if (this.model.get('box_resized')) return;
         this.model.set('box_resized', true);
         const width = this.el.querySelector('text.ioname').getBBox().width + 10;
@@ -280,21 +281,21 @@ joint.shapes.digital.IOView = joint.shapes.digital.GateView.extend({
 });
 
 // Input model
-joint.shapes.digital.IO.define('digital.Input', {
+export const Input = IO.define('Input', {
 }, {
     io_dir: 'out'
 });
-joint.shapes.digital.InputView = joint.shapes.digital.IOView;
+export const InputView = IOView;
 
 // Output model
-joint.shapes.digital.IO.define('digital.Output', {
+export const Output = IO.define('Output', {
 }, {
     io_dir: 'in'
 });
-joint.shapes.digital.OutputView = joint.shapes.digital.IOView;
+export const OutputView = IOView;
 
 // Constant
-joint.shapes.digital.NumBase.define('digital.Constant', {
+export const Constant = NumBase.define('Constant', {
     propagation: 0,
     attrs: {
         '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
@@ -316,10 +317,10 @@ joint.shapes.digital.NumBase.define('digital.Constant', {
             '<text class="label" />',
             '<text class="value numvalue" />',
         ].join('');
-        joint.shapes.digital.NumBase.prototype.constructor.apply(this, arguments);
+        NumBase.prototype.constructor.apply(this, arguments);
     },
     initialize: function(args) {
-        joint.shapes.digital.NumBase.prototype.initialize.apply(this, arguments);
+        NumBase.prototype.initialize.apply(this, arguments);
         const settext = () => {
             this.attr('text.value/text', help.sig2base(this.get('constantCache'), this.get('numbase')));
         }
@@ -329,12 +330,12 @@ joint.shapes.digital.NumBase.define('digital.Constant', {
     operation: function() {
         return { out: this.get('constantCache') };
     },
-    gateParams: joint.shapes.digital.NumBase.prototype.gateParams.concat(['constant'])
+    gateParams: NumBase.prototype.gateParams.concat(['constant'])
 });
-joint.shapes.digital.ConstantView = joint.shapes.digital.NumBaseView;
+export const ConstantView = NumBaseView;
 
 // Clock
-joint.shapes.digital.Gate.define('digital.Clock', {
+export const Clock = Gate.define('Clock', {
     size: { width: 30, height: 30 },
     attrs: {
         'rect.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 30, height: 30 },
@@ -349,7 +350,7 @@ joint.shapes.digital.Gate.define('digital.Clock', {
             '<path class="decor" d="M7.5 7.5 L7.5 22.5 L15 22.5 L15 7.5 L22.5 7.5 L22.5 22.5" />',
             '<text class="label" />',
         ].join('');
-        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        Gate.prototype.constructor.apply(this, arguments);
     },
     operation: function() {
         this.trigger("change:inputSignals", this, {});

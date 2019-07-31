@@ -1,65 +1,65 @@
 "use strict";
 
-import joint from 'jointjs';
+import * as joint from 'jointjs';
 import _ from 'lodash';
 import Backbone from 'backbone';
 import { Vector3vl } from '3vl';
-import '@app/cells.js';
+import * as cells from '@app/cells.js';
     
 export function getCellType(tp) {
     const types = {
-        '$not': joint.shapes.digital.Not,
-        '$and': joint.shapes.digital.And,
-        '$nand': joint.shapes.digital.Nand,
-        '$or': joint.shapes.digital.Or,
-        '$nor': joint.shapes.digital.Nor,
-        '$xor': joint.shapes.digital.Xor,
-        '$xnor': joint.shapes.digital.Xnor,
-        '$reduce_and': joint.shapes.digital.AndReduce,
-        '$reduce_nand': joint.shapes.digital.NandReduce,
-        '$reduce_or': joint.shapes.digital.OrReduce,
-        '$reduce_nor': joint.shapes.digital.NorReduce,
-        '$reduce_xor': joint.shapes.digital.XorReduce,
-        '$reduce_xnor': joint.shapes.digital.XnorReduce,
-        '$reduce_bool': joint.shapes.digital.OrReduce,
-        '$logic_not': joint.shapes.digital.NorReduce,
-        '$repeater': joint.shapes.digital.Repeater,
-        '$shl': joint.shapes.digital.ShiftLeft,
-        '$shr': joint.shapes.digital.ShiftRight,
-        '$lt': joint.shapes.digital.Lt,
-        '$le': joint.shapes.digital.Le,
-        '$eq': joint.shapes.digital.Eq,
-        '$ne': joint.shapes.digital.Ne,
-        '$gt': joint.shapes.digital.Gt,
-        '$ge': joint.shapes.digital.Ge,
-        '$constant': joint.shapes.digital.Constant,
-        '$neg': joint.shapes.digital.Negation,
-        '$pos': joint.shapes.digital.UnaryPlus,
-        '$add': joint.shapes.digital.Addition,
-        '$sub': joint.shapes.digital.Subtraction,
-        '$mul': joint.shapes.digital.Multiplication,
-        '$div': joint.shapes.digital.Division,
-        '$mod': joint.shapes.digital.Modulo,
-        '$pow': joint.shapes.digital.Power,
-        '$mux': joint.shapes.digital.Mux,
-        '$pmux': joint.shapes.digital.Mux1Hot,
-        '$dff': joint.shapes.digital.Dff,
-        '$mem': joint.shapes.digital.Memory,
-        '$clock': joint.shapes.digital.Clock,
-        '$button': joint.shapes.digital.Button,
-        '$lamp': joint.shapes.digital.Lamp,
-        '$numdisplay': joint.shapes.digital.NumDisplay,
-        '$numentry': joint.shapes.digital.NumEntry,
-        '$input': joint.shapes.digital.Input,
-        '$output': joint.shapes.digital.Output,
-        '$busgroup': joint.shapes.digital.BusGroup,
-        '$busungroup': joint.shapes.digital.BusUngroup,
-        '$busslice': joint.shapes.digital.BusSlice,
-        '$zeroextend': joint.shapes.digital.ZeroExtend,
-        '$signextend': joint.shapes.digital.SignExtend
+        '$not': cells.Not,
+        '$and': cells.And,
+        '$nand': cells.Nand,
+        '$or': cells.Or,
+        '$nor': cells.Nor,
+        '$xor': cells.Xor,
+        '$xnor': cells.Xnor,
+        '$reduce_and': cells.AndReduce,
+        '$reduce_nand': cells.NandReduce,
+        '$reduce_or': cells.OrReduce,
+        '$reduce_nor': cells.NorReduce,
+        '$reduce_xor': cells.XorReduce,
+        '$reduce_xnor': cells.XnorReduce,
+        '$reduce_bool': cells.OrReduce,
+        '$logic_not': cells.NorReduce,
+        '$repeater': cells.Repeater,
+        '$shl': cells.ShiftLeft,
+        '$shr': cells.ShiftRight,
+        '$lt': cells.Lt,
+        '$le': cells.Le,
+        '$eq': cells.Eq,
+        '$ne': cells.Ne,
+        '$gt': cells.Gt,
+        '$ge': cells.Ge,
+        '$constant': cells.Constant,
+        '$neg': cells.Negation,
+        '$pos': cells.UnaryPlus,
+        '$add': cells.Addition,
+        '$sub': cells.Subtraction,
+        '$mul': cells.Multiplication,
+        '$div': cells.Division,
+        '$mod': cells.Modulo,
+        '$pow': cells.Power,
+        '$mux': cells.Mux,
+        '$pmux': cells.Mux1Hot,
+        '$dff': cells.Dff,
+        '$mem': cells.Memory,
+        '$clock': cells.Clock,
+        '$button': cells.Button,
+        '$lamp': cells.Lamp,
+        '$numdisplay': cells.NumDisplay,
+        '$numentry': cells.NumEntry,
+        '$input': cells.Input,
+        '$output': cells.Output,
+        '$busgroup': cells.BusGroup,
+        '$busungroup': cells.BusUngroup,
+        '$busslice': cells.BusSlice,
+        '$zeroextend': cells.ZeroExtend,
+        '$signextend': cells.SignExtend
     };
     if (tp in types) return types[tp];
-    else return joint.shapes.digital.Subcircuit;
+    else return cells.Subcircuit;
 }
     
 export class HeadlessCircuit {
@@ -83,10 +83,10 @@ export class HeadlessCircuit {
         });
         this.listenTo(graph, 'change:inputSignals', function(gate, sigs) {
             // forward the change back from a subcircuit
-            if (gate instanceof joint.shapes.digital.Output) {
+            if (gate instanceof cells.Output) {
                 const subcir = gate.graph.get('subcircuit');
                 if (subcir == null) return; // not in a subcircuit
-                console.assert(subcir instanceof joint.shapes.digital.Subcircuit);
+                console.assert(subcir instanceof cells.Subcircuit);
                 subcir.set('outputSignals', _.chain(subcir.get('outputSignals'))
                     .clone().set(gate.get('net'), sigs.in).value());
             } else this.enqueue(gate);
@@ -110,10 +110,10 @@ export class HeadlessCircuit {
             gate.set('inputSignals', _.chain(gate.get('inputSignals'))
                 .clone().set(end.port, sig).value());
             // forward the input change to a subcircuit
-            if (gate instanceof joint.shapes.digital.Subcircuit) {
+            if (gate instanceof cells.Subcircuit) {
                 const iomap = gate.get('circuitIOmap');
                 const input = gate.get('graph').getCell(iomap[end.port]);
-                console.assert(input instanceof joint.shapes.digital.Input);
+                console.assert(input instanceof cells.Input);
                 input.set('outputSignals', { out: sig });
             }
         }
@@ -155,14 +155,14 @@ export class HeadlessCircuit {
             const cellType = getCellType(dev.celltype);
             const cellArgs = _.clone(dev);
             cellArgs.id = devid;
-            if (cellType == joint.shapes.digital.Subcircuit)
+            if (cellType == cells.Subcircuit)
                 cellArgs.graph = this.makeGraph(subcircuits[dev.celltype], subcircuits);
             const cell = new cellType(cellArgs);
             graph.addCell(cell);
             this.enqueue(cell);
         }
         for (const conn of data.connectors) {
-            graph.addCell(new joint.shapes.digital.Wire({
+            graph.addCell(new cells.Wire({
                 source: {id: conn.from.id, port: conn.from.port},
                 target: {id: conn.to.id, port: conn.to.port},
                 netname: conn.name,
@@ -191,9 +191,9 @@ export class HeadlessCircuit {
         while (q.size) {
             const [gate, args] = q.entries().next().value;
             q.delete(gate);
-            if (gate instanceof joint.shapes.digital.Subcircuit) continue;
-            if (gate instanceof joint.shapes.digital.Input) continue;
-            if (gate instanceof joint.shapes.digital.Output) continue;
+            if (gate instanceof cells.Subcircuit) continue;
+            if (gate instanceof cells.Input) continue;
+            if (gate instanceof cells.Output) continue;
             const graph = gate.graph;
             if (!graph) continue;
             gate.set('outputSignals', gate.operation(args));
@@ -231,7 +231,7 @@ export class HeadlessCircuit {
             for (const elem of graph.getElements()) {
                 const args = ret.devices[elem.get('id')] = elem.getGateParams();
                 if (!laid_out) delete args.position;
-                if (elem instanceof joint.shapes.digital.Subcircuit && !subcircuits[elem.get('celltype')]) {
+                if (elem instanceof cells.Subcircuit && !subcircuits[elem.get('celltype')]) {
                     subcircuits[elem.get('celltype')] = fromGraph(elem.get('graph'));
                 }
             }

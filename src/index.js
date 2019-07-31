@@ -1,13 +1,15 @@
 "use strict";
 
 import 'babel-polyfill';
-import joint from 'jointjs';
+import dagre from 'dagre';
+import graphlib from 'graphlib';
+import * as joint from 'jointjs';
 import _ from 'lodash';
 import Backbone from 'backbone';
 import { Vector3vl } from '3vl';
 import 'jquery-ui/ui/widgets/dialog';
 import 'jquery-ui/themes/base/all.css';
-import '@app/cells.js';
+import * as cells from '@app/cells.js';
 import { HeadlessCircuit, getCellType } from '@app/circuit.js';
 import { MonitorView, Monitor } from '@app/monitor.js';
 import '@app/style.css';
@@ -55,7 +57,8 @@ export class Circuit extends HeadlessCircuit {
             width: 1000, height: 600, gridSize: 5,
             snapLinks: true,
             linkPinning: false,
-            defaultLink: new joint.shapes.digital.Wire,
+            defaultLink: new cells.Wire,
+            cellViewNamespace: cells,
             validateConnection: function(vs, ms, vt, mt, e, vl) {
                 if (e === 'target') {
                     if (!mt) return false;
@@ -84,14 +87,16 @@ export class Circuit extends HeadlessCircuit {
                 nodeSep: 20,
                 edgeSep: 0,
                 rankSep: 110,
-                rankDir: "LR"
+                rankDir: "LR",
+                dagre: dagre,
+                graphlib: graphlib
             });
             graph.set('laid_out', true);
         }
         paper.fitToContent({ padding: 30, allowNewOrigin: 'any' });
         // subcircuit display
         this.listenTo(paper, 'cell:pointerdblclick', function(view, evt) {
-            if (!(view.model instanceof joint.shapes.digital.Subcircuit)) return;
+            if (!(view.model instanceof cells.Subcircuit)) return;
             const div = $('<div>', { 
                 title: view.model.get('celltype') + ' ' + view.model.get('label') 
             });

@@ -1,12 +1,13 @@
 "use strict";
 
-import joint from 'jointjs';
+import * as joint from 'jointjs';
+import { Gate, GateView } from '@app/cells/base';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
 import { Vector3vl } from '3vl';
 
 // Single-input gate model
-joint.shapes.digital.Gate.define('digital.Gate11', {
+export const Gate11 = Gate.define('Gate11', {
     size: { width: 60, height: 40 },
     attrs: {
         '.body': { width: 60, height: 40 }
@@ -20,13 +21,13 @@ joint.shapes.digital.Gate.define('digital.Gate11', {
             '<image class="body"/>',
             '<text class="label"/>',
         ].join('');
-        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        Gate.prototype.constructor.apply(this, arguments);
     },
-    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits'])
+    gateParams: Gate.prototype.gateParams.concat(['bits'])
 });
 
 // Two-input gate model
-joint.shapes.digital.Gate.define('digital.Gate21', {
+export const Gate21 = Gate.define('Gate21', {
     size: { width: 60, height: 40 },
     attrs: {
         '.body': { width: 60, height: 40 }
@@ -41,13 +42,13 @@ joint.shapes.digital.Gate.define('digital.Gate21', {
             '<image class="body"/>',
             '<text class="label"/>',
         ].join('');
-        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        Gate.prototype.constructor.apply(this, arguments);
     },
-    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits'])
+    gateParams: Gate.prototype.gateParams.concat(['bits'])
 });
 
 // Reducing gate model
-joint.shapes.digital.Gate.define('digital.GateReduce', {
+export const GateReduce = Gate.define('GateReduce', {
     size: { width: 60, height: 40 },
     attrs: {
         '.body': { width: 60, height: 40 }
@@ -61,41 +62,42 @@ joint.shapes.digital.Gate.define('digital.GateReduce', {
             '<image class="body"/>',
             '<text class="label"/>',
         ].join('');
-        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        Gate.prototype.constructor.apply(this, arguments);
     },
 });
 
 // Repeater (buffer) gate model
-joint.shapes.digital.Gate11.define('digital.Repeater', {
+export const Repeater = Gate11.define('Repeater', {
     attrs: { image: { 'xlink:href': require('./gate-repeater.svg') }}
 }, {
     operation: function(data) {
         return { out: data.in };
     }
 });
+export const RepeaterView = GateView;
 
 // Not gate model
-joint.shapes.digital.Gate11.define('digital.Not', {
+export const Not = Gate11.define('Not', {
     attrs: { image: { 'xlink:href': require('./gate-not.svg') }}
 }, {
     operation: function(data) {
         return { out: data.in.not() };
     }
 });
-joint.shapes.digital.NotView = joint.shapes.digital.GateView;
+export const NotView = GateView;
 
 // Or gate model
-joint.shapes.digital.Gate21.define('digital.Or', {
+export const Or = Gate21.define('Or', {
     attrs: { image: { 'xlink:href': require('./gate-or.svg') }}
 }, {
     operation: function(data) {
         return { out: data.in1.or(data.in2) };
     }
 });
-joint.shapes.digital.OrView = joint.shapes.digital.GateView;
+export const OrView = GateView;
 
 // And gate model
-joint.shapes.digital.Gate21.define('digital.And', {
+export const And = Gate21.define('And', {
     attrs: { image: { 'xlink:href': require('./gate-and.svg') }}
 
 }, {
@@ -103,99 +105,105 @@ joint.shapes.digital.Gate21.define('digital.And', {
         return { out: data.in1.and(data.in2) };
     }
 });
-joint.shapes.digital.AndView = joint.shapes.digital.GateView;
+export const AndView = GateView;
 
 // Nor gate model
-joint.shapes.digital.Gate21.define('digital.Nor', {
+export const Nor = Gate21.define('Nor', {
     attrs: { image: { 'xlink:href': require('./gate-nor.svg') }}
 }, {
     operation: function(data) {
         return { out: data.in1.nor(data.in2) };
     }
 });
-joint.shapes.digital.NorView = joint.shapes.digital.GateView;
+export const NorView = GateView;
 
 // Nand gate model
-joint.shapes.digital.Gate21.define('digital.Nand', {
+export const Nand = Gate21.define('Nand', {
     attrs: { image: { 'xlink:href': require('./gate-nand.svg') }}
 }, {
     operation: function(data) {
         return { out: data.in1.nand(data.in2) };
     }
 });
-joint.shapes.digital.NandView = joint.shapes.digital.GateView;
+export const NandView = GateView;
 
 // Xor gate model
-joint.shapes.digital.Gate21.define('digital.Xor', {
+export const Xor = Gate21.define('Xor', {
     attrs: { image: { 'xlink:href': require('./gate-xor.svg') }}
 }, {
     operation: function(data) {
         return { out: data.in1.xor(data.in2) };
     }
 });
-joint.shapes.digital.XorView = joint.shapes.digital.GateView;
+export const XorView = GateView;
 
 // Xnor gate model
-joint.shapes.digital.Gate21.define('digital.Xnor', {
+export const Xnor = Gate21.define('Xnor', {
     attrs: { image: { 'xlink:href': require('./gate-xnor.svg') }}
 }, {
     operation: function(data) {
         return { out: data.in1.xnor(data.in2) };
     }
 });
-joint.shapes.digital.XnorView = joint.shapes.digital.GateView;
+export const XnorView = GateView;
 
 // Reducing Or gate model
-joint.shapes.digital.GateReduce.define('digital.OrReduce', {
+export const OrReduce = GateReduce.define('OrReduce', {
     attrs: { image: { 'xlink:href': require('./gate-or.svg') }}
 }, {
     operation: function(data) {
         return { out: data.in.reduceOr() };
     }
 });
+export const OrReduceView = GateView;
 
 // Reducing Nor gate model
-joint.shapes.digital.GateReduce.define('digital.NorReduce', {
+export const NorReduce = GateReduce.define('NorReduce', {
     attrs: { image: { 'xlink:href': require('./gate-nor.svg') }}
 }, {
     operation: function(data) {
         return { out: data.in.reduceNor() };
     }
 });
+export const NorReduceView = GateView;
 
 // Reducing And gate model
-joint.shapes.digital.GateReduce.define('digital.AndReduce', {
+export const AndReduce = GateReduce.define('AndReduce', {
     attrs: { image: { 'xlink:href': require('./gate-and.svg') }}
 }, {
     operation: function(data) {
         return { out: data.in.reduceAnd() };
     }
 });
+export const AndReduceView = GateView;
 
 // Reducing Nand gate model
-joint.shapes.digital.GateReduce.define('digital.NandReduce', {
+export const NandReduce = GateReduce.define('NandReduce', {
     attrs: { image: { 'xlink:href': require('./gate-nand.svg') }}
 }, {
     operation: function(data) {
         return { out: data.in.reduceNand() };
     }
 });
+export const NandReduceView = GateView;
 
 // Reducing Xor gate model
-joint.shapes.digital.GateReduce.define('digital.XorReduce', {
+export const XorReduce = GateReduce.define('XorReduce', {
     attrs: { image: { 'xlink:href': require('./gate-xor.svg') }}
 }, {
     operation: function(data) {
         return { out: data.in.reduceXor() };
     }
 });
+export const XorReduceView = GateView;
 
 // Reducing Xnor gate model
-joint.shapes.digital.GateReduce.define('digital.XnorReduce', {
+export const XnorReduce = GateReduce.define('XnorReduce', {
     attrs: { image: { 'xlink:href': require('./gate-xor.svg') }}
 }, {
     operation: function(data) {
         return { out: data.in.reduceXnor() };
     }
 });
+export const XnorReduceView = GateView;
 

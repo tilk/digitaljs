@@ -1,12 +1,13 @@
 "use strict";
 
-import joint from 'jointjs';
+import * as joint from 'jointjs';
+import { Gate, GateView } from '@app/cells/base';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
 import { Vector3vl } from '3vl';
 
 // Multiplexers
-joint.shapes.digital.Gate.define('digital.GenMux', {
+export const GenMux = Gate.define('GenMux', {
     attrs: {
         "rect.wtf": {
             y: -4, width: 40, height: 1, visibility: 'hidden'
@@ -42,23 +43,23 @@ joint.shapes.digital.Gate.define('digital.GenMux', {
             };
         }
         this.markup = markup.join('');
-        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        Gate.prototype.constructor.apply(this, arguments);
     },
     operation: function(data) {
         const i = this.muxInput(data.sel);
         if (i === undefined) return { out: Vector3vl.xes(this.get('bits').in) };
         return { out: data['in' + i] };
     },
-    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits'])
+    gateParams: Gate.prototype.gateParams.concat(['bits'])
 });
-joint.shapes.digital.GenMuxView = joint.shapes.digital.GateView.extend({
+export const GenMuxView = GateView.extend({
     initialize: function() {
         this.n_ins = this.model.muxNumInputs(this.model.get('bits').sel);
         this.listenTo(this.model, 'change:inputSignals', (_, data) => this.updateMux(data));
-        joint.shapes.digital.GateView.prototype.initialize.apply(this, arguments);
+        GateView.prototype.initialize.apply(this, arguments);
     },
     render: function() {
-        joint.shapes.digital.GateView.prototype.render.apply(this, arguments);
+        GateView.prototype.render.apply(this, arguments);
         this.updateMux(this.model.get('inputSignals'));
     },
     updateMux: function(data) {
@@ -70,15 +71,15 @@ joint.shapes.digital.GenMuxView = joint.shapes.digital.GateView.extend({
 });
 
 // Multiplexer with binary selection
-joint.shapes.digital.GenMux.define('digital.Mux', {
+export const Mux = GenMux.define('Mux', {
 }, {
     muxNumInputs: n => 1 << n,
     muxInput: i => i.isFullyDefined ? help.sig2bigint(i).toString() : undefined
 });
-joint.shapes.digital.MuxView = joint.shapes.digital.GenMuxView;
+export const MuxView = GenMuxView;
 
 // Multiplexer with one-hot selection
-joint.shapes.digital.GenMux.define('digital.Mux1Hot', {
+export const Mux1Hot = GenMux.define('Mux1Hot', {
 }, {
     muxNumInputs: n => n + 1,
     muxInput: s => {
@@ -87,5 +88,5 @@ joint.shapes.digital.GenMux.define('digital.Mux1Hot', {
             ? String(i.indexOf(1)+1) : undefined
     }
 });
-joint.shapes.digital.Mux1HotView = joint.shapes.digital.GenMuxView;
+export const Mux1HotView = GenMuxView;
 

@@ -1,12 +1,13 @@
 "use strict";
 
-import joint from 'jointjs';
+import * as joint from 'jointjs';
+import { Gate, GateView, Box, BoxView } from '@app/cells/base';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
 import { Vector3vl } from '3vl';
 
 // Bit extending
-joint.shapes.digital.Gate.define('digital.BitExtend', {
+export const BitExtend = Gate.define('BitExtend', {
     propagation: 0,
     attrs: {
         "text.value": {
@@ -25,16 +26,17 @@ joint.shapes.digital.Gate.define('digital.BitExtend', {
             '<rect class="body"/><text class="label"/>',
             '<text class="value"/>',
         ].join('');
-        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        Gate.prototype.constructor.apply(this, arguments);
     },
     operation: function(data) {
         const ex = this.get('extend');
         return { out: data.in.concat(Vector3vl.make(ex.output - ex.input, this.extbit(data.in))) };
     },
-    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['extend'])
+    gateParams: Gate.prototype.gateParams.concat(['extend'])
 });
+export const BitExtendView = GateView;
 
-joint.shapes.digital.BitExtend.define('digital.ZeroExtend', {
+export const ZeroExtend = BitExtend.define('ZeroExtend', {
     attrs: {
         "text.value": { text: 'zero-extend' }
     }
@@ -43,8 +45,9 @@ joint.shapes.digital.BitExtend.define('digital.ZeroExtend', {
         return -1;
     }
 });
+export const ZeroExtendView = BitExtendView;
 
-joint.shapes.digital.BitExtend.define('digital.SignExtend', {
+export const SignExtend = BitExtend.define('SignExtend', {
     attrs: {
         "text.value": { text: 'sign-extend' }
     }
@@ -53,9 +56,10 @@ joint.shapes.digital.BitExtend.define('digital.SignExtend', {
         return i.get(i.bits - 1);
     }
 });
+export const SignExtendView = BitExtendView;
 
 // Bus slicing
-joint.shapes.digital.Box.define('digital.BusSlice', {
+export const BusSlice = Box.define('BusSlice', {
     propagation: 0,
     size: { width: 40, height: 24 },
 }, {
@@ -71,18 +75,18 @@ joint.shapes.digital.Box.define('digital.BusSlice', {
             '<rect class="body"/><text class="label"/>',
             lblmarkup.join(''),
         ].join('');
-        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        Gate.prototype.constructor.apply(this, arguments);
     },
     operation: function(data) {
         const s = this.get('slice');
         return { out: data.in.slice(s.first, s.first + s.count) };
     },
-    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['slice'])
+    gateParams: Gate.prototype.gateParams.concat(['slice'])
 });
-joint.shapes.digital.BusSliceView = joint.shapes.digital.BoxView;
+export const BusSliceView = BoxView;
 
 // Bus grouping
-joint.shapes.digital.Box.define('digital.BusRegroup', {
+export const BusRegroup = Box.define('BusRegroup', {
     propagation: 0,
 }, {
     constructor: function(args) {
@@ -104,12 +108,13 @@ joint.shapes.digital.Box.define('digital.BusRegroup', {
         markup.push('<rect class="body"/><text class="label"/>');
         markup.push(lblmarkup.join(''));
         this.markup = markup.join('');
-        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        Gate.prototype.constructor.apply(this, arguments);
     },
-    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['groups'])
+    gateParams: Gate.prototype.gateParams.concat(['groups'])
 });
+export const BusRegroupView = BoxView;
 
-joint.shapes.digital.BusRegroup.define('digital.BusGroup', {
+export const BusGroup = BusRegroup.define('BusGroup', {
 }, {
     group_dir : 'in',
     operation: function(data) {
@@ -120,9 +125,9 @@ joint.shapes.digital.BusRegroup.define('digital.BusGroup', {
         return { out : Vector3vl.concat(...outdata) };
     }
 });
-joint.shapes.digital.BusGroupView = joint.shapes.digital.BoxView;
+export const BusGroupView = BusRegroupView;
 
-joint.shapes.digital.BusRegroup.define('digital.BusUngroup', {
+export const BusUngroup = BusRegroup.define('BusUngroup', {
 }, {
     group_dir : 'out',
     operation: function(data) {
@@ -135,5 +140,5 @@ joint.shapes.digital.BusRegroup.define('digital.BusUngroup', {
         return outdata;
     }
 });
-joint.shapes.digital.BusUngroupView = joint.shapes.digital.BoxView;
+export const BusUngroupView = BusRegroupView;
 

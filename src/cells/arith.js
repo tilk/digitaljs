@@ -1,12 +1,13 @@
 "use strict";
 
-import joint from 'jointjs';
+import * as joint from 'jointjs';
+import { Gate } from '@app/cells/base';
 import bigInt from 'big-integer';
 import * as help from '@app/help.js';
 import { Vector3vl } from '3vl';
 
 // Unary arithmetic operations
-joint.shapes.digital.Gate.define('digital.Arith11', {
+export const Arith11 = Gate.define('Arith11', {
     size: { width: 40, height: 40 },
     attrs: {
         'circle.body': { r: 20, cx: 20, cy: 20 },
@@ -28,7 +29,7 @@ joint.shapes.digital.Gate.define('digital.Arith11', {
             '<text class="label"/>',
             '<text class="oper"/>',
         ].join('');
-        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        Gate.prototype.constructor.apply(this, arguments);
     },
     operation: function(data) {
         const bits = this.get('bits');
@@ -38,11 +39,11 @@ joint.shapes.digital.Gate.define('digital.Arith11', {
             out: help.bigint2sig(this.arithop(help.sig2bigint(data.in, this.get('signed'))), bits.out)
         };
     },
-    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits', 'signed'])
+    gateParams: Gate.prototype.gateParams.concat(['bits', 'signed'])
 });
 
 // Binary arithmetic operations
-joint.shapes.digital.Gate.define('digital.Arith21', {
+export const Arith21 = Gate.define('Arith21', {
     size: { width: 40, height: 40 },
     attrs: {
         'circle.body': { r: 20, cx: 20, cy: 20 },
@@ -65,7 +66,7 @@ joint.shapes.digital.Gate.define('digital.Arith21', {
             '<text class="label"/>',
             '<text class="oper"/>',
         ].join('');
-        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        Gate.prototype.constructor.apply(this, arguments);
     },
     operation: function(data) {
         const bits = this.get('bits');
@@ -78,11 +79,11 @@ joint.shapes.digital.Gate.define('digital.Arith21', {
                     help.sig2bigint(data.in2, sgn.in2)), bits.out)
         };
     },
-    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits', 'signed'])
+    gateParams: Gate.prototype.gateParams.concat(['bits', 'signed'])
 });
 
 // Bit shift operations
-joint.shapes.digital.Gate.define('digital.Shift', {
+export const Shift = Gate.define('Shift', {
     size: { width: 40, height: 40 },
     attrs: {
         'circle.body': { r: 20, cx: 20, cy: 20 },
@@ -106,7 +107,7 @@ joint.shapes.digital.Gate.define('digital.Shift', {
             '<text class="label"/>',
             '<text class="oper"/>',
         ].join('');
-        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        Gate.prototype.constructor.apply(this, arguments);
     },
     operation: function(data) {
         const bits = this.get('bits');
@@ -124,11 +125,11 @@ joint.shapes.digital.Gate.define('digital.Shift', {
             : my_in.slice(am).concat(Vector3vl.make(am, fillx ? 0 : sgn.out ? my_in.get(my_in.bits-1) : -1));
         return { out: out.slice(0, bits.out) };
     },
-    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits', 'signed', 'fillx'])
+    gateParams: Gate.prototype.gateParams.concat(['bits', 'signed', 'fillx'])
 });
 
 // Comparison operations
-joint.shapes.digital.Gate.define('digital.Compare', {
+export const Compare = Gate.define('Compare', {
     size: { width: 40, height: 40 },
     attrs: {
         'circle.body': { r: 20, cx: 20, cy: 20 },
@@ -151,7 +152,7 @@ joint.shapes.digital.Gate.define('digital.Compare', {
             '<text class="label"/>',
             '<text class="oper"/>',
         ].join('');
-        joint.shapes.digital.Gate.prototype.constructor.apply(this, arguments);
+        Gate.prototype.constructor.apply(this, arguments);
     },
     operation: function(data) {
         const bits = this.get('bits');
@@ -164,11 +165,11 @@ joint.shapes.digital.Gate.define('digital.Compare', {
                     help.sig2bigint(data.in2, sgn.in2)))
         };
     },
-    gateParams: joint.shapes.digital.Gate.prototype.gateParams.concat(['bits', 'signed'])
+    gateParams: Gate.prototype.gateParams.concat(['bits', 'signed'])
 });
 
 // Negation
-joint.shapes.digital.Arith11.define('digital.Negation', {
+export const Negation = Arith11.define('Negation', {
     attrs: {
         'text.oper': { text: '-' }
     }
@@ -177,7 +178,7 @@ joint.shapes.digital.Arith11.define('digital.Negation', {
 });
 
 // Unary plus
-joint.shapes.digital.Arith11.define('digital.UnaryPlus', {
+export const UnaryPlus = Arith11.define('UnaryPlus', {
     attrs: {
         'text.oper': { text: '+' }
     }
@@ -186,7 +187,7 @@ joint.shapes.digital.Arith11.define('digital.UnaryPlus', {
 });
 
 // Addition
-joint.shapes.digital.Arith21.define('digital.Addition', {
+export const Addition = Arith21.define('Addition', {
     attrs: {
         'text.oper': { text: '+' }
     }
@@ -195,7 +196,7 @@ joint.shapes.digital.Arith21.define('digital.Addition', {
 });
 
 // Subtraction
-joint.shapes.digital.Arith21.define('digital.Subtraction', {
+export const Subtraction = Arith21.define('Subtraction', {
     attrs: {
         'text.oper': { text: '-' }
     }
@@ -204,7 +205,7 @@ joint.shapes.digital.Arith21.define('digital.Subtraction', {
 });
 
 // Multiplication
-joint.shapes.digital.Arith21.define('digital.Multiplication', {
+export const Multiplication = Arith21.define('Multiplication', {
     attrs: {
         'text.oper': { text: '×' }
     }
@@ -213,7 +214,7 @@ joint.shapes.digital.Arith21.define('digital.Multiplication', {
 });
 
 // Division
-joint.shapes.digital.Arith21.define('digital.Division', {
+export const Division = Arith21.define('Division', {
     attrs: {
         'text.oper': { text: '÷' }
     }
@@ -222,7 +223,7 @@ joint.shapes.digital.Arith21.define('digital.Division', {
 });
 
 // Modulo
-joint.shapes.digital.Arith21.define('digital.Modulo', {
+export const Modulo = Arith21.define('Modulo', {
     attrs: {
         'text.oper': { text: '%' }
     }
@@ -231,7 +232,7 @@ joint.shapes.digital.Arith21.define('digital.Modulo', {
 });
 
 // Power
-joint.shapes.digital.Arith21.define('digital.Power', {
+export const Power = Arith21.define('Power', {
     attrs: {
         'text.oper': { text: '**' }
     }
@@ -240,7 +241,7 @@ joint.shapes.digital.Arith21.define('digital.Power', {
 });
 
 // Shift left operator
-joint.shapes.digital.Shift.define('digital.ShiftLeft', {
+export const ShiftLeft = Shift.define('ShiftLeft', {
     attrs: {
         'text.oper': { text: '≪' }
     }
@@ -249,7 +250,7 @@ joint.shapes.digital.Shift.define('digital.ShiftLeft', {
 });
 
 // Shift right operator
-joint.shapes.digital.Shift.define('digital.ShiftRight', {
+export const ShiftRight = Shift.define('ShiftRight', {
     attrs: {
         'text.oper': { text: '≫' }
     }
@@ -258,7 +259,7 @@ joint.shapes.digital.Shift.define('digital.ShiftRight', {
 });
 
 // Less than operator
-joint.shapes.digital.Compare.define('digital.Lt', {
+export const Lt = Compare.define('Lt', {
     attrs: {
         'text.oper': { text: '<' }
     }
@@ -267,7 +268,7 @@ joint.shapes.digital.Compare.define('digital.Lt', {
 });
 
 // Less or equal operator
-joint.shapes.digital.Compare.define('digital.Le', {
+export const Le = Compare.define('Le', {
     attrs: {
         'text.oper': { text: '≤' }
     }
@@ -276,7 +277,7 @@ joint.shapes.digital.Compare.define('digital.Le', {
 });
 
 // Greater than operator
-joint.shapes.digital.Compare.define('digital.Gt', {
+export const Gt = Compare.define('Gt', {
     attrs: {
         'text.oper': { text: '>' }
     }
@@ -285,7 +286,7 @@ joint.shapes.digital.Compare.define('digital.Gt', {
 });
 
 // Less than operator
-joint.shapes.digital.Compare.define('digital.Ge', {
+export const Ge = Compare.define('Ge', {
     attrs: {
         'text.oper': { text: '≥' }
     }
@@ -294,7 +295,7 @@ joint.shapes.digital.Compare.define('digital.Ge', {
 });
 
 // Equality operator
-joint.shapes.digital.Compare.define('digital.Eq', {
+export const Eq = Compare.define('Eq', {
     attrs: {
         'text.oper': { text: '=' }
     }
@@ -303,7 +304,7 @@ joint.shapes.digital.Compare.define('digital.Eq', {
 });
 
 // Nonequality operator
-joint.shapes.digital.Compare.define('digital.Ne', {
+export const Ne = Compare.define('Ne', {
     attrs: {
         'text.oper': { text: '≠' }
     }
