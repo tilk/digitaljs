@@ -114,8 +114,11 @@ export class Circuit extends HeadlessCircuit {
             div.append(pdiv);
             $('body').append(div);
             const graph = view.model.get('graph');
+            var didResize = false;
             const paper = this.makePaper(pdiv, graph, {
                 onDone() {
+                    if (didResize) return;
+                    didResize = true;
                     const maxWidth = $(window).width() * 0.9;
                     const maxHeight = $(window).height() * 0.9;
                     div.dialog({ width: Math.min(maxWidth, pdiv.outerWidth() + 60), height: Math.min(maxHeight, pdiv.outerHeight() + 60) });
