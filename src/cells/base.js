@@ -2,7 +2,7 @@
 
 import * as joint from 'jointjs';
 import bigInt from 'big-integer';
-import * as help from '@app/help.js';
+import * as help from '../help.js';
 import { Vector3vl } from '3vl';
 
 // Common base class for gate models

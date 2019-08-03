@@ -1,10 +1,10 @@
 "use strict";
 
 import * as joint from 'jointjs';
-import { Gate, Box, BoxView } from '@app/cells/base';
-import { IO, Input, Output } from '@app/cells/io';
+import { Gate, Box, BoxView } from './base';
+import { IO, Input, Output } from './io';
 import bigInt from 'big-integer';
-import * as help from '@app/help.js';
+import * as help from '../help.js';
 
 // Subcircuit model -- embeds a circuit graph in an element
 export const Subcircuit = Box.define('Subcircuit', {

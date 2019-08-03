@@ -4,7 +4,7 @@ import * as joint from 'jointjs';
 import _ from 'lodash';
 import Backbone from 'backbone';
 import { Vector3vl } from '3vl';
-import * as cells from '@app/cells.js';
+import * as cells from './cells.js';
     
 export function getCellType(tp) {
     const types = {

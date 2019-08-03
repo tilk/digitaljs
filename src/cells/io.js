@@ -1,10 +1,10 @@
 "use strict";
 
 import * as joint from 'jointjs';
-import { Gate, GateView } from '@app/cells/base';
+import { Gate, GateView } from './base';
 import _ from 'lodash';
 import bigInt from 'big-integer';
-import * as help from '@app/help.js';
+import * as help from '../help.js';
 import { Vector3vl } from '3vl';
 
 // Things with numbers

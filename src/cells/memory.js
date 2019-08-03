@@ -1,9 +1,9 @@
 "use strict";
 
 import * as joint from 'jointjs';
-import { Box, BoxView } from '@app/cells/base';
+import { Box, BoxView } from './base';
 import bigInt from 'big-integer';
-import * as help from '@app/help.js';
+import * as help from '../help.js';
 import { Vector3vl, Mem3vl } from '3vl';
 
 // Memory cell

@@ -9,10 +9,10 @@ import Backbone from 'backbone';
 import { Vector3vl } from '3vl';
 import 'jquery-ui/ui/widgets/dialog';
 import 'jquery-ui/themes/base/all.css';
-import * as cells from '@app/cells.js';
-import { HeadlessCircuit, getCellType } from '@app/circuit.js';
-import { MonitorView, Monitor } from '@app/monitor.js';
-import '@app/style.css';
+import * as cells from './cells.js';
+import { HeadlessCircuit, getCellType } from './circuit.js';
+import { MonitorView, Monitor } from './monitor.js';
+import './style.css';
 
 export { HeadlessCircuit, getCellType, MonitorView, Monitor };
 

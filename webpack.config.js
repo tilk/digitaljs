@@ -26,12 +26,6 @@ module.exports = {
     },
     entry: "./src/index.js",
     devtool: "source-map",
-    resolve: {
-        extensions: ['.js', '.jsx', '.json', '.css'],
-        alias: {
-            '@app': path.resolve(__dirname, 'src/')
-        }
-    },
     module: {
         rules: [
             {
@@ -41,12 +35,6 @@ module.exports = {
                     'css-loader'
                 ]
             },
-/*            {
-                test: /\.png/,
-                use: [
-                    'file-loader'
-                ]
-            },*/
             {
                 test: /\.svg|\.png/,
                 use: [
