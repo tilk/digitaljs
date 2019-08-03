@@ -2,6 +2,7 @@
 
 import joint from 'jointjs';
 import _ from 'lodash';
+import $ from 'jquery';
 import Backbone from 'backbone';
 import { Vector3vl } from '3vl';
 import { Waveform, drawWaveform, defaultSettings, extendSettings, calcGridStep } from 'wavecanvas';
