@@ -3,6 +3,7 @@
 import * as joint from 'jointjs';
 import { Gate, GateView } from './base';
 import _ from 'lodash';
+import $ from 'jquery';
 import bigInt from 'big-integer';
 import * as help from '../help.js';
 import { Vector3vl } from '3vl';
@@ -353,7 +354,11 @@ export const Clock = Gate.define('Clock', {
     size: { width: 30, height: 30 },
     attrs: {
         'rect.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 30, height: 30 },
-        'path.decor': { stroke: 'black' }
+        'path.decor': { stroke: 'black' },
+        '.tooltip': {
+            'ref-x': 0, 'ref-y': -30,
+            width: 80, height: 30
+        },
     }
 }, {
     constructor: function(args) {
@@ -363,6 +368,10 @@ export const Clock = Gate.define('Clock', {
             '<rect class="body"/>',
             '<path class="decor" d="M7.5 7.5 L7.5 22.5 L15 22.5 L15 7.5 L22.5 7.5 L22.5 22.5" />',
             '<text class="label" />',
+            '<foreignObject class="tooltip">',
+            '<body xmlns="http://www.w3.org/1999/xhtml">',
+            '<input type="number" min="1" step="1" />',
+            '</body></foreignObject>'
         ].join('');
         Gate.prototype.constructor.apply(this, arguments);
     },
@@ -371,5 +380,28 @@ export const Clock = Gate.define('Clock', {
         return { out: this.get('outputSignals').out.not() };
     }
 });
-export const ClockView = GateView;
+export const ClockView = GateView.extend({
+    presentationAttributes: GateView.addPresentationAttributes({
+        propagation: 'flag:propagation'
+    }),
+    events: {
+        "click input": "stopprop",
+        "mousedown input": "stopprop",
+        "change input": "changePropagation"
+    },
+    render(args) {
+        GateView.prototype.render.apply(this, arguments);
+        this.updatePropagation();
+    },
+    confirmUpdate(flags) {
+        GateView.prototype.confirmUpdate.apply(this, arguments);
+        if (this.hasFlag(flags, 'flag:propagation')) this.updatePropagation();
+    },
+    changePropagation(evt) {
+        this.model.set('propagation', Number(evt.target.value) || 1);
+    },
+    updatePropagation() {
+        this.$('input').val(this.model.get('propagation'));
+    }
+});
 

@@ -591,6 +591,10 @@ body {
     width: 100%;
 }
 
+.joint-element foreignObject.tooltip body input[type='number'] {
+    width: calc(100% - 20px);
+}
+
 .joint-element foreignObject body a {
     text-decoration: none;
 }
