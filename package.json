@@ -32,14 +32,14 @@
     "webpack-cli": "^3.3.6"
   },
   "dependencies": {
-    "3vl": "^0.2.1",
+    "3vl": "^0.2.2",
     "babel-polyfill": "^6.26.0",
     "big-integer": "^1.6.44",
     "css-element-queries": "^1.1.1",
     "jointjs": "^3.0.3",
     "jquery": "^3.4.1",
     "jquery-ui": "^1.12.1",
-    "wavecanvas": "^0.1.0",
+    "wavecanvas": "^0.1.1",
     "dagre": "^0.8.4",
     "graphlib": "^2.1.7"
   },
