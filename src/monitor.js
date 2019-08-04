@@ -61,6 +61,41 @@ export class Monitor {
         this.stopListening(wire);
         this._wires.delete(getWireId(wire));
     }
+    getWires() {
+        const ret = [];
+        for (const wobj of this._wires.values()) ret.push(wobj.wire);
+        return ret;
+    }
+    getWiresDesc() {
+        return this.getWires().map(wire => {
+            if (!wire.has('netname')) return;
+            const hier = [];
+            for (let sc = wire.graph.get('subcircuit'); sc != null; sc = sc.graph.get('subcircuit')) {
+                if (!sc.has('label')) return;
+                hier.push(sc.get('label'));
+            }
+            return {
+                name: wire.get('netname'),
+                path: hier.reverse(),
+                bits: wire.get('bits')
+            };
+        }).filter(x => x !== undefined);
+    }
+    loadWiresDesc(wd) {
+        const idx = this._circuit.makeLabelIndex();
+        for (const w of wd) {
+            const f = (p, i) => {
+                if (p == w.path.length) {
+                    const e = i.wires[w.name];
+                    if (e && e.get('bits') == w.bits) this.addWire(e);
+                } else {
+                    const s = i.subcircuits[w.path[p]];
+                    if (s) f(p+1, s);
+                }
+            };
+            f(0, idx);
+        }
+    }
     _handleChange(wire, signal) {
         this._wires.get(getWireId(wire)).waveform.push(this._circuit.tick, signal);
     }
@@ -124,7 +159,7 @@ export class MonitorView extends Backbone.View {
     render() {
         this.$el.html('<table class="monitor"></table>');
         for (const wobj of this.model._wires.values()) {
-            this.$('table').append(this._createRow(wire));
+            this.$('table').append(this._handleAdd(wobj.wire));
         }
         this._canvasResize();
         this._resizeSensor = new ResizeSensor(this.$el, () => {

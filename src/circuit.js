@@ -220,6 +220,28 @@ export class HeadlessCircuit {
         console.assert(cell.get('celltype') == '$output');
         return cell.get('inputSignals').in;
     }
+    makeLabelIndex() {
+        function fromGraph(graph) {
+            const ret = {
+                wires: {},
+                gates: {},
+                subcircuits: {}
+            };
+            for (const elem of graph.getElements()) {
+                if (!elem.has('label')) continue;
+                const label = elem.get('label');
+                ret.gates[label] = elem;
+                if (elem instanceof cells.Subcircuit)
+                    ret.subcircuits[label] = fromGraph(elem.get('graph'));
+            }
+            for (const elem of graph.getLinks()) {
+                if (!elem.has('netname')) continue;
+                ret.wires[elem.get('netname')] = elem;
+            }
+            return ret;
+        }
+        return fromGraph(this._graph);
+    }
     toJSON() {
         const subcircuits = {};
         function fromGraph(graph) {
