@@ -387,7 +387,8 @@ export const ClockView = GateView.extend({
     events: {
         "click input": "stopprop",
         "mousedown input": "stopprop",
-        "change input": "changePropagation"
+        "change input": "changePropagation",
+        "input input": "changePropagation"
     },
     render(args) {
         GateView.prototype.render.apply(this, arguments);
@@ -398,7 +399,10 @@ export const ClockView = GateView.extend({
         if (this.hasFlag(flags, 'flag:propagation')) this.updatePropagation();
     },
     changePropagation(evt) {
-        this.model.set('propagation', Number(evt.target.value) || 1);
+        const val = evt.target.value;
+        const valid = String(val) == String(Number(val));
+        if (valid) this.model.set('propagation', Number(val) || 1);
+        this.$('input').toggleClass('invalid', !valid);
     },
     updatePropagation() {
         this.$('input').val(this.model.get('propagation'));
