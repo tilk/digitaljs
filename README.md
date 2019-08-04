@@ -85,9 +85,8 @@ instance.
 Some ideas for further developing the simulator.
 
  * Display/editor for RAM/ROM contents.
+ * Triggers for pausing simulation on certain events.
  * Framebuffer element with character/bitmap display.
- * Simulation time control: changing the tick time, pausing the simulation.
- * Displaying waveforms for selected wires.
  * More editing capability: adding and removing blocks, modifying some of blocks' properties.
  * Undo-redo capability.
  * Saving and loading circuits, including layout and state.
