@@ -624,6 +624,10 @@ g:hover > foreignObject.tooltip {
     padding: 5px;
 }
 
+.joint-element foreignObject.tooltip a.zoom {
+    cursor: pointer;
+}
+
 div.wire_hover {
     position: fixed;
     pointer-events: none;
@@ -664,5 +668,18 @@ table.monitor td.name {
 
 canvas.wavecanvas {
   display: block;
+}
+
+table.memeditor {
+    margin-top: 0.5em;
+}
+
+table.memeditor input {
+    font-family: monospace;
+}
+
+table.memeditor td:first-child {
+    font-family: monospace;
+    padding-right: 1em;
 }
 

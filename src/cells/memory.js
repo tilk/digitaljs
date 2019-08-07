@@ -1,5 +1,6 @@
 "use strict";
 
+import $ from 'jquery';
 import * as joint from 'jointjs';
 import { Box, BoxView } from './base';
 import bigInt from 'big-integer';
@@ -11,11 +12,18 @@ export const Memory = Box.define('Memory', {
     attrs: {
         'line.portsplit': {
             stroke: 'black', x1: 0, x2: 40
-        }
+        },
+        '.tooltip': {
+            'ref-x': 0, 'ref-y': -30,
+            width: 80, height: 30
+        },
     }
 }, {
     initialize: function() {
-        this.listenTo(this, 'change:size', (model, size) => this.attr('line.portsplit/x2', size.width));
+        this.listenTo(this, 'change:size', (model, size) => {
+            this.attr('line.portsplit/x2', size.width);
+            this.attr('.tooltip/width', size.width)
+        });
         Box.prototype.initialize.apply(this, arguments);
     },
     constructor: function(args) {
@@ -73,6 +81,10 @@ export const Memory = Box.define('Memory', {
         }
         markup.push('<text class="label"/>');
         markup.push(lblmarkup.join(''));
+        markup.push(['<foreignObject class="tooltip">',
+            '<body xmlns="http://www.w3.org/1999/xhtml">',
+            '<a class="zoom">🔍</a>',
+            '</body></foreignObject>'].join(''));
         this.markup = markup.join('');
         Box.prototype.constructor.apply(this, arguments);
     },
@@ -114,8 +126,12 @@ export const Memory = Box.define('Memory', {
             if (!check_enabled(portname, port)) return;
             if (!data[portname + 'addr'].isFullyDefined) return;
             const addr = calc_addr(data[portname + 'addr']);
-            if (valid_addr(addr))
+            if (valid_addr(addr)) {
+                const changed = !this.memdata.get(addr).eq(data[portname + 'data']);
                 this.memdata.set(addr, data[portname + 'data']);
+                if (changed)
+                    this.trigger("memChange", addr, data[portname + 'data']);
+            }
         };
         for (const [num, port] of this.get('rdports').entries())
             if (!port.transparent) do_read('rd' + num, port);
@@ -133,5 +149,124 @@ export const Memory = Box.define('Memory', {
     },
     gateParams: Box.prototype.gateParams.concat(['bits', 'abits', 'rdports', 'wrports', 'words', 'offset'])
 });
-export const MemoryView = BoxView;
+export const MemoryView = BoxView.extend({
+    events: {
+        "click foreignObject.tooltip": "stopprop",
+        "mousedown foreignObject.tooltip": "stopprop",
+        "click a.zoom": "displayEditor"
+    },
+    displayEditor(evt) {
+        const view = this;
+        evt.stopPropagation();
+        const div = $('<div>', {
+            title: "Memory contents: " + this.model.get('label')
+        }).appendTo('html > body');
+        div.append($(
+            '<div class="btn-toolbar" role="toolbar">' +
+            '<div class="btn-group mr-2" role="group">' +
+            '<button name="prev" type="button" class="btn btn-secondary" title="Previous page">←</button>' +
+            '<button name="next" type="button" class="btn btn-secondary" title="Next page">→</button>' +
+            '</div>' + 
+//            '<div class="btn-group mr-2" role="group">' +
+//            '<button type="button" class="btn btn-secondary" title="Load contents">Load</button>' +
+//            '<button type="button" class="btn btn-secondary" title="Save contents">Save</button>' +
+//            '</div>' + 
+            '<div class="input-group">' +
+            '<select name="numbase">' + 
+            '<option value="hex">hex</option>' +
+            '<option value="dec">dec</option>' +
+            '<option value="oct">oct</option>' +
+            '<option value="bin">bin</option>' +
+            '</select>' +
+            '</div>' +
+            '</div>' +
+            '<table class="memeditor">' +
+            '</table>'));
+        const words = this.model.get('words');
+        const memdata = this.model.memdata;
+        const ahex = Math.ceil(this.model.get('abits')/4);
+        const rows = 8;
+        let columns, address = 0;
+        const get_numbase = () => div.find('select[name=numbase]').val();
+        const updateStuff = () => {
+            const numbase = get_numbase();
+            div.find('button[name=prev]').prop('disabled', address <= 0);
+            div.find('button[name=next]').prop('disabled', address + rows * columns >= words);
+            let row = div.find('table tr:first-child');
+            const memdata = this.model.memdata;
+            for (let r = 0; r < rows; r++, row = row.next()) {
+                if (address + r * columns >= words) break;
+                const addrs = (address + r * columns).toString(16);
+                let col = row.find('td:first-child');
+                col.text('0'.repeat(ahex - addrs.length) + addrs)
+                col = col.next();
+                for (let c = 0; c < columns; c++, col = col.next()) {
+                    if (address + r * columns + c > words) break;
+                    col.find('input').val(help.sig2base(memdata.get(address + r * columns + c), numbase));
+                }
+            }
+        };
+        const redraw = () => {
+            const numbase = get_numbase();
+            const bpd = numbase == 'hex' ? 4 :
+                        numbase == 'oct' ? 3 :
+                        numbase == 'bin' ? 1 :
+                        numbase == 'dec' ? Math.log2(10) : undefined;
+            const ptrn = numbase == 'hex' ? '[0-9a-fA-Fx]*' :
+                         numbase == 'oct' ? '[0-7x]*' :
+                         numbase == 'bin' ? '[01x]*' :
+                         numbase == 'dec' ? '[0-9]*|x' : undefined;
+            const ds = Math.ceil(this.model.get('bits')/bpd);
+            columns = Math.min(16, Math.ceil(32/ds));
+            address = Math.max(0, Math.min(words - rows * columns, address));
+            const table = div.find('table');
+            table.empty();
+            for (let r = 0; r < rows; r++) {
+                if (address + r * columns >= words) break;
+                const row = $('<tr>');
+                $('<td>').appendTo(row);
+                for (let c = 0; c < columns; c++) {
+                    if (address + r * columns + c > words) break;
+                    const col = $('<td>');
+                    $('<input type="text">')
+                        .attr('size', ds)
+                        .attr('maxlength', ds)
+                        .attr('pattern', ptrn)
+                        .appendTo(col);
+                    col.appendTo(row);
+                }
+                row.appendTo(table);
+            }
+            updateStuff();
+        };
+        redraw();
+        div.find("select[name=numbase]").on('change', redraw);
+        div.find("button[name=prev]").on('click', () => {
+            address = Math.max(0, address - rows * columns);
+            updateStuff();
+        });
+        div.find("button[name=next]").on('click', () => {
+            address = Math.min(words - rows * columns, address + rows * columns);
+            updateStuff();
+        });
+        const changeCallback = (addr, data) => {
+            if (addr < address || addr > address + rows * columns) return;
+            const numbase = get_numbase();
+            const r = Math.floor((addr - address) / columns);
+            const c = addr - address - r * columns;
+            div.find('table tr:nth-child('+(r+1)+') td:nth-child('+(c+2)+') input')
+                .val(help.sig2base(memdata.get(address + r * columns + c), numbase));
+        };
+        this.listenTo(this.model, "memChange", changeCallback);
+        div.dialog({
+            width: 'auto',
+            resizable: false,
+            close() {
+                div.remove();
+                view.stopListening(null, null, changeCallback);
+            }
+        });
+        return false;
+    }
+});
 
