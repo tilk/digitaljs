@@ -48,11 +48,15 @@ export const Subcircuit = Box.define('Subcircuit', {
         const lblmarkup = [];
         const iomap = {};
         _.set(args, ['attrs', 'text.type', 'text'], args.celltype);
+        args.inputSignals = args.inputSignals || {};
+        args.outputSignals = args.outputSignals || {};
         for (const [num, io] of inputs.entries()) {
             markup.push(this.addLabelledWire(args, lblmarkup, 'left', num*16+12, { id: io.get('net'), dir: 'in', bits: io.get('bits') }));
+            args.inputSignals[io.get('net')] = io.get('outputSignals').out;
         }
         for (const [num, io] of outputs.entries()) {
             markup.push(this.addLabelledWire(args, lblmarkup, 'right', num*16+12, { id: io.get('net'), dir: 'out', bits: io.get('bits') }));
+            args.outputSignals[io.get('net')] = io.get('inputSignals').in;
         }
         markup.push('<rect class="body"/><text class="label"/><text class="type"/>');
         markup.push(lblmarkup.join(''));

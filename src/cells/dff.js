@@ -10,7 +10,11 @@ import { Vector3vl } from '3vl';
 export const Dff = Box.define('Dff', {
 }, {
     constructor: function(args) {
-        _.defaults(args, { bits: 1, polarity: {} });
+        _.defaults(args, { bits: 1, polarity: {}, initial: 'x' });
+        if (!args.outputSignals)
+            args.outputSignals = { 
+                out: Vector3vl.fromBin(args.initial, args.bits)
+            };
         if ('arst' in args.polarity && !args.arst_value)
             args.arst_value = Array(args.bits).fill('0').join('');
         const markup = [];
