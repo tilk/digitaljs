@@ -110,10 +110,8 @@ export class Circuit extends HeadlessCircuit {
             if (!(view.model instanceof cells.Subcircuit)) return;
             const div = $('<div>', { 
                 title: view.model.get('celltype') + ' ' + view.model.get('label') 
-            });
-            const pdiv = $('<div>');
-            div.append(pdiv);
-            $('body').append(div);
+            }).appendTo('html > body');
+            const pdiv = $('<div>').appendTo(div);
             const graph = view.model.get('graph');
             var didResize = false;
             const paper = this.makePaper(pdiv, graph, {
