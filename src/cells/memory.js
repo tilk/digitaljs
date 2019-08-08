@@ -1,6 +1,7 @@
 "use strict";
 
 import $ from 'jquery';
+import _ from 'lodash';
 import * as joint from 'jointjs';
 import { Box, BoxView } from './base';
 import bigInt from 'big-integer';
@@ -141,6 +142,26 @@ export const Memory = Box.define('Memory', {
             if (port.transparent) do_read('rd' + num, port);
         return out;
     },
+    updateOutputs: function(addr) {
+        if (addr < 0 || addr >= this.get('words')) return;
+        const data = this.get('inputSignals');
+        const calc_addr = sig => help.sig2bigint(sig, false) - this.get('offset');
+        const sigs = _.clone(this.get('outputSignals'));
+        let changed = false;
+        for (const [num, port] of this.get('rdports').entries()) {
+            const portname = 'rd' + num;
+            if (port.transparent
+                    && !('clock_polarity' in port)
+                    && data[portname + 'addr'].isFullyDefined
+                    && calc_addr(data[portname + 'addr']) == addr) {
+                if ('enable_polarity' in port && !data[portname + 'en'].toArray().some(x => x == pol('enable')))
+                    continue;
+                changed = true;
+                sigs[portname + 'data'] = this.memdata.get(addr);
+            }
+        }
+        if (changed) this.set('outputSignals', sigs);
+    },
     getGateParams: function() { 
         // hack to get memdata back
         const params = Box.prototype.getGateParams.apply(this, arguments);
@@ -259,6 +280,7 @@ export const MemoryView = BoxView.extend({
             if (help.validNumber(evt.target.value, numbase)) {
                 const val = help.base2sig(evt.target.value, this.model.get('bits'), numbase);
                 memdata.set(addr, val);
+                this.model.updateOutputs(addr);
             } else {
                 target.addClass('invalid');
             }
