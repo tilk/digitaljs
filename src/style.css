@@ -600,7 +600,7 @@ body {
     text-decoration: none;
 }
 
-.joint-element input.invalid {
+.joint-element input.invalid, table.memeditor input.invalid {
     background: #ffaaaa;
 }
 

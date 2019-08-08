@@ -202,7 +202,8 @@ export const MemoryView = BoxView.extend({
                 col = col.next();
                 for (let c = 0; c < columns; c++, col = col.next()) {
                     if (address + r * columns + c > words) break;
-                    col.find('input').val(help.sig2base(memdata.get(address + r * columns + c), numbase));
+                    col.find('input').val(help.sig2base(memdata.get(address + r * columns + c), numbase))
+                                     .removeClass('invalid');
                 }
             }
         };
@@ -249,13 +250,27 @@ export const MemoryView = BoxView.extend({
             address = Math.min(words - rows * columns, address + rows * columns);
             updateStuff();
         });
+        div.on("change", "input", (evt) => {
+            const numbase = get_numbase();
+            const target = $(evt.target);
+            const c = target.closest('td').index() - 1;
+            const r = target.closest('tr').index();
+            const addr = address + r * columns + c;
+            if (help.validNumber(evt.target.value, numbase)) {
+                const val = help.base2sig(evt.target.value, this.model.get('bits'), numbase);
+                memdata.set(addr, val);
+            } else {
+                target.addClass('invalid');
+            }
+        });
         const changeCallback = (addr, data) => {
             if (addr < address || addr > address + rows * columns) return;
             const numbase = get_numbase();
             const r = Math.floor((addr - address) / columns);
             const c = addr - address - r * columns;
             div.find('table tr:nth-child('+(r+1)+') td:nth-child('+(c+2)+') input')
-                .val(help.sig2base(memdata.get(address + r * columns + c), numbase));
+                .val(help.sig2base(memdata.get(address + r * columns + c), numbase))
+                .removeClass('invalid');
         };
         this.listenTo(this.model, "memChange", changeCallback);
         div.dialog({
