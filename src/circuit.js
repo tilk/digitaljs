@@ -5,6 +5,7 @@ import _ from 'lodash';
 import Backbone from 'backbone';
 import { Vector3vl } from '3vl';
 import * as cells from './cells.js';
+import FastPriorityQueue from 'fastpriorityqueue';
     
 export function getCellType(tp) {
     const types = {
@@ -65,6 +66,7 @@ export function getCellType(tp) {
 export class HeadlessCircuit {
     constructor(data) {
         this._queue = new Map();
+        this._pq = new FastPriorityQueue();
         this._tick = 0;
         this._graph = this.makeGraph(data, data.subcircuits);
     }
@@ -179,13 +181,16 @@ export class HeadlessCircuit {
             if (q !== undefined) return q;
             const q1 = new Map();
             this._queue.set(k, q1);
+            this._pq.add(k);
             return q1;
         })();
         sq.set(gate, gate.get('inputSignals'));
     }
-    updateGates() {
-        const k = this._tick;
-        const q = this._queue.get(k) || new Map();
+    updateGatesNext() {
+        const k = this._pq.poll() | 0;
+        console.assert(k >= this._tick);
+        this._tick = k;
+        const q = this._queue.get(k);
         let count = 0;
         this.trigger('preUpdateGates', k);
         while (q.size) {
@@ -200,9 +205,19 @@ export class HeadlessCircuit {
             count++;
         }
         this._queue.delete(k);
-        this._tick = (this._tick + 1) | 0;
+        this._tick = (k + 1) | 0;
         this.trigger('postUpdateGates', k, count);
         return count;
+    }
+    updateGates() {
+        if (this._pq.peek() == this._tick) return this.updateGatesNext();
+        else {
+            const k = this._tick | 0;
+            this.trigger('preUpdateGates', k);
+            this._tick = (k + 1) | 0;
+            this.trigger('postUpdateGates', k, 0);
+            return 0;
+        }
     }
     get hasPendingEvents() {
         return this._queue.size > 0;

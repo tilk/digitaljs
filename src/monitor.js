@@ -110,14 +110,18 @@ export class MonitorView extends Backbone.View {
         this._settingsFor = new Map();
         this._live = true;
         this._autoredraw = false;
+        this._idle = null;
         this._removeButtonMarkup = args.removeButtonMarkup || '<button type="button" name="remove">✖</button>';
         this._baseSelectorMarkup = args.baseSelectorMarkup || '<select name="base"><option value="hex">hex</option><option value="oct">oct</option><option value="bin">bin</option></select>';
         this.listenTo(this.model, 'add', this._handleAdd);
         this.listenTo(this.model, 'remove', this._handleRemove);
-        this.listenTo(this.model._circuit, 'postUpdateGates', (tick) => { 
+        this.listenTo(this.model._circuit, 'postUpdateGates', (tick) => {
             if (this._live) this.start = tick - this._width / this._settings.pixelsPerTick;
             this._settings.present = tick;
-            this._drawAll();
+            if (!this._idle) this._idle = requestIdleCallback(() => {
+                this._drawAll();
+                this._idle = null;
+            }, {timeout: 100});
         });
         this.render();
         function evt_wireid(e) {

@@ -36,12 +36,13 @@
     "babel-polyfill": "^6.26.0",
     "big-integer": "^1.6.44",
     "css-element-queries": "^1.1.1",
+    "dagre": "^0.8.4",
+    "fastpriorityqueue": "^0.6.3",
+    "graphlib": "^2.1.7",
     "jointjs": "^3.0.3",
     "jquery": "^3.4.1",
     "jquery-ui": "^1.12.1",
-    "wavecanvas": "^0.1.1",
-    "dagre": "^0.8.4",
-    "graphlib": "^2.1.7"
+    "wavecanvas": "^0.1.1"
   },
   "homepage": "https://github.com/tilk/digitaljs",
   "repository": {

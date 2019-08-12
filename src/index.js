@@ -22,16 +22,28 @@ export class Circuit extends HeadlessCircuit {
         super(data);
         this._interval_ms = 10;
         this._interval = null;
+        this._idle = null;
     }
     start() {
         this._interval = setInterval(() => {
             this.updateGates();
         }, this._interval_ms);
     }
+    startFast() {
+        this._idle = requestIdleCallback((dd) => {
+            while (dd.timeRemaining() > 0)
+                this.updateGatesNext();
+            this.startFast();
+        }, {timeout: 20});
+    }
     stop() {
         if (this._interval) {
             clearInterval(this._interval);
             this._interval = null;
+        }
+        if (this._idle) {
+            cancelIdleCallback(this._idle);
+            this._idle = null;
         }
     }
     get interval() {
@@ -42,7 +54,7 @@ export class Circuit extends HeadlessCircuit {
         this._interval_ms = ms;
     }
     get running() {
-        return Boolean(this._interval);
+        return Boolean(this._interval) || Boolean(this._idle);
     }
     shutdown() {
         super.shutdown();
