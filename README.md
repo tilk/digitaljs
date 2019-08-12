@@ -84,13 +84,14 @@ instance.
 
 Some ideas for further developing the simulator.
 
- * Display/editor for RAM/ROM contents.
+ * RAM/ROM import/export for Verilog format and Intel HEX.
  * Triggers for pausing simulation on certain events.
  * Framebuffer element with character/bitmap display.
  * More editing capability: adding and removing blocks, modifying some of blocks' properties.
  * Undo-redo capability.
  * Saving and loading circuits, including layout and state.
  * Generic handling of negation for unary/binary gates (negation on inputs/outputs) for better clarity.
+ * N-ary gates as generalization of binary gates.
  * Better algorithm for graph layout.
  * Zooming in/out on schematics.
  * SVG export.
