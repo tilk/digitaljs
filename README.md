@@ -85,7 +85,7 @@ instance.
 Some ideas for further developing the simulator.
 
  * RAM/ROM import/export for Verilog format and Intel HEX.
- * Triggers for pausing simulation on certain events.
+ * Scripting language for writing testbenches. (Maybe Lua?)
  * Framebuffer element with character/bitmap display.
  * More editing capability: adding and removing blocks, modifying some of blocks' properties.
  * Undo-redo capability.
