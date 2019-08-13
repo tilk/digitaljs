@@ -4,6 +4,7 @@ import joint from 'jointjs';
 import _ from 'lodash';
 import $ from 'jquery';
 import Backbone from 'backbone';
+import * as help from './help.js';
 import { Vector3vl } from '3vl';
 import { Waveform, drawWaveform, defaultSettings, extendSettings, calcGridStep } from 'wavecanvas';
 import { ResizeSensor } from 'css-element-queries';
@@ -98,6 +99,7 @@ export class Monitor {
     }
     _handleChange(wire, signal) {
         this._wires.get(getWireId(wire)).waveform.push(this._circuit.tick, signal);
+        this.trigger('change', wire, signal);
     }
 }
 
@@ -113,8 +115,11 @@ export class MonitorView extends Backbone.View {
         this._idle = null;
         this._removeButtonMarkup = args.removeButtonMarkup || '<button type="button" name="remove">✖</button>';
         this._baseSelectorMarkup = args.baseSelectorMarkup || '<select name="base"><option value="hex">hex</option><option value="oct">oct</option><option value="bin">bin</option></select>';
+        this._bitTriggerMarkup = args.bitTriggerMarkup || '<select name="trigger" title="Trigger"><option value="none"></option><option value="rising">↑</option><option value="falling">↓</option><option value="risefall">↕</option><option value="undef">x</option></select>';
+        this._busTriggerMarkup = args.busTriggerMarkup || '<input type="text" name="trigger" title="Trigger" placeholder="trigger" pattern="[0-9a-fx]*">';
         this.listenTo(this.model, 'add', this._handleAdd);
         this.listenTo(this.model, 'remove', this._handleRemove);
+        this.listenTo(this.model, 'change', this._handleChange);
         this.listenTo(this.model._circuit, 'postUpdateGates', (tick) => {
             if (this._live) this.start = tick - this._width / this._settings.pixelsPerTick;
             this._settings.present = tick;
@@ -129,8 +134,31 @@ export class MonitorView extends Backbone.View {
         }
         this.$el.on('click', 'button[name=remove]', (e) => { this.model.removeWire(evt_wireid(e)); });
         this.$el.on('input', 'select[name=base]', (e) => { 
-            this._settingsFor.get(evt_wireid(e)).base = e.target.value;
+            const base = e.target.value;
+            const settings = this._settingsFor.get(evt_wireid(e));
+            settings.base = base;
+            const row = $(e.target).closest('tr');
+            const trig = row.find('input[name=trigger]');
+            trig.attr('pattern', help.basePattern(base));
+            if (settings.trigger)
+                trig.val(help.sig2base(settings.trigger, base));
             this.trigger('change');
+        });
+        this.$el.on('input', 'select[name=trigger]', (e) => {
+            this._settingsFor.get(evt_wireid(e)).trigger = e.target.value;
+        });
+        this.$el.on('change', 'input[name=trigger]', (e) => {
+            const settings = this._settingsFor.get(evt_wireid(e));
+            const base = settings.base;
+            if (e.target.value == "") {
+                settings.trigger = "";
+            } else if (help.validNumber(e.target.value, base)) {
+                const bits = this.model._wires.get(evt_wireid(e)).waveform.bits;
+                settings.trigger = help.base2sig(e.target.value, bits, base);
+                e.target.value = help.sig2base(settings.trigger, base);
+            } else {
+                settings.trigger = null;
+            }
         });
         this.listenTo(this, 'change', () => { if (this._autoredraw) this._drawAll() });
 
@@ -245,10 +273,36 @@ export class MonitorView extends Backbone.View {
         this.$('tr[wireid="'+wireid+'"]').remove();
         this._settingsFor.delete(wireid);
     }
+    _handleChange(wire, signal) {
+        const wireid = getWireId(wire);
+        const trigger = this._settingsFor.get(wireid).trigger;
+        if (trigger instanceof Vector3vl) {
+            if (signal.eq(trigger)) this._triggered();
+        } else switch(trigger) {
+            case 'rising':
+                if (signal.isHigh) this._triggered();
+                break;
+            case 'falling':
+                if (signal.isLow) this._triggered();
+                break;
+            case 'risefall':
+                if (signal.isHigh || signal.isLow) this._triggered();
+                break;
+            case 'undef':
+                if (!signal.isDefined) this._triggered();
+                break;
+        }
+    }
+    _triggered() {
+        if (this.model._circuit.running) {
+            this.model._circuit.stop();
+        }
+    }
     _createRow(wire) {
         const wireid = getWireId(wire);
         const base_sel = wire.get('bits') > 1 ? this._baseSelectorMarkup : '';
-        const row = $('<tr><td class="name"></td><td>'+base_sel+'</td><td>'+this._removeButtonMarkup+'</td><td><canvas class="wavecanvas" height="30" draggable="true"></canvas></td></tr>');
+        const trigger = wire.get('bits') > 1 ? this._busTriggerMarkup : this._bitTriggerMarkup;
+        const row = $('<tr><td class="name"></td><td>'+base_sel+'</td><td>'+trigger+'</td><td>'+this._removeButtonMarkup+'</td><td><canvas class="wavecanvas" height="30" draggable="true"></canvas></td></tr>');
         row.attr('wireid', wireid);
         row.children('td').first().text(getWireName(wire));
         return row;

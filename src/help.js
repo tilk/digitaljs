@@ -16,6 +16,15 @@ export function validNumber(str, base) {
     return re.test(str);
 }
 
+export function basePattern(base) {
+    switch(base) {
+        case 'hex': return '[0-9a-fx]*';
+        case 'oct': return '[0-7x]*';
+        case 'bin': return '[01x]*';
+        case 'dec': return '[0-9]*|x';
+    }
+}
+
 export function base2sig(str, bits, base) {
     switch(base) {
         case 'bin': return Vector3vl.fromBin(str, bits);
@@ -35,6 +44,15 @@ export function sig2base(sig, base) {
         case 'dec': 
             if (!sig.isFullyDefined) return 'x';
             return sig2bigint(sig).toString();
+    }
+}
+
+export function bitsPerDigit(base) {
+    switch(base) {
+        case 'hex': return 4;
+        case 'oct': return 3;
+        case 'bin': return 1;
+        case 'dec': return Math.log2(10);
     }
 }
 

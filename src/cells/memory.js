@@ -230,14 +230,8 @@ export const MemoryView = BoxView.extend({
         };
         const redraw = () => {
             const numbase = get_numbase();
-            const bpd = numbase == 'hex' ? 4 :
-                        numbase == 'oct' ? 3 :
-                        numbase == 'bin' ? 1 :
-                        numbase == 'dec' ? Math.log2(10) : undefined;
-            const ptrn = numbase == 'hex' ? '[0-9a-fA-Fx]*' :
-                         numbase == 'oct' ? '[0-7x]*' :
-                         numbase == 'bin' ? '[01x]*' :
-                         numbase == 'dec' ? '[0-9]*|x' : undefined;
+            const bpd = help.bitsPerDigit(numbase);
+            const ptrn = help.basePattern(numbase);
             const ds = Math.ceil(this.model.get('bits')/bpd);
             columns = Math.min(16, Math.ceil(32/ds));
             address = Math.max(0, Math.min(words - rows * columns, address));

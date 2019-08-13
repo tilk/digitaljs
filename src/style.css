@@ -666,6 +666,10 @@ table.monitor td.name {
   width: 100%;
 }
 
+table.monitor input[name=trigger], table.monitor select[name=trigger] {
+    width: 5em;
+}
+
 canvas.wavecanvas {
   display: block;
 }
