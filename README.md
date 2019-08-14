@@ -80,6 +80,31 @@ cannot (currently) define their own subcircuits. A subcircuit can include
 `$input` and `$output` devices, these are mapped to ports on a subcircuit
 instance.
 
+## Device types
+
+ * Unary gates: `$not`, `$repeater`
+ * Binary gates: `$and`, `$nand`, `$or`, `$nor`, `$xor`, `$xnor`
+ * Reducing gates: `$reduce_and`, `$reduce_nand`, `$reduce_or`, `$reduce_nor`, `$reduce_xor`, `$reduce_xnor`
+ * Bit shifts: `$shl`, `$shr`
+ * Comparisons: `$eq`, `$ne`, `$lt`, `$le`, `$gt`, `$ge`
+ * Number constant: `$constant`
+ * Unary arithmetic: `$neg`, `$pos`
+ * Binary arithmetic: `$add`, `$sub`, `$mul`, `$div`, `$mod`, `$pow`
+ * Multiplexer: `$mux`
+ * One-hot multiplexer: `$pmux`
+ * D flip-flop: `$dff`
+ * Memory: `$mem`
+ * Clock source: `$clock` 
+ * Button input: `$button`
+ * Lamp output: `$lamp`
+ * Number input: `$numentry`
+ * Number output: `$numdisplay`
+ * Subcircuit input/output: `$input`, `$output`
+ * Bus grouping: `$busgroup`
+ * Bus ungrouping: `$busungroup`
+ * Bus slicing: `$busslice`
+ * Zero- and sign-extension: `$zeroextend`, `$signextend`
+
 # TODO
 
 Some ideas for further developing the simulator.
