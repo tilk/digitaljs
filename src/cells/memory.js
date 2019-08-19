@@ -177,7 +177,6 @@ export const MemoryView = BoxView.extend({
         "click a.zoom": "displayEditor"
     },
     displayEditor(evt) {
-        const view = this;
         evt.stopPropagation();
         const div = $('<div>', {
             title: "Memory contents: " + this.model.get('label')
@@ -288,13 +287,13 @@ export const MemoryView = BoxView.extend({
                 .val(help.sig2base(memdata.get(address + r * columns + c), numbase))
                 .removeClass('invalid');
         };
-        this.listenTo(this.model, "memChange", changeCallback);
+        this.model.on("memChange", changeCallback);
         div.dialog({
             width: 'auto',
             resizable: false,
-            close() {
+            close: () => {
                 div.remove();
-                view.stopListening(null, null, changeCallback);
+                this.model.off("memChange", changeCallback);
             }
         });
         return false;
