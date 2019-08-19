@@ -80,6 +80,93 @@ cannot (currently) define their own subcircuits. A subcircuit can include
 `$input` and `$output` devices, these are mapped to ports on a subcircuit
 instance.
 
+## Device types
+
+ * Unary gates: `$not`, `$repeater`
+    * Attributes: `bits` (natural number)
+    * Inputs: `in` (`bits`-bit)
+    * Outputs: `out` (`bits`-bit)
+ * Binary gates: `$and`, `$nand`, `$or`, `$nor`, `$xor`, `$xnor`
+    * Attributes: `bits` (natural number)
+    * Inputs: `in1`, `in2` (`bits`-bit)
+    * Outputs: `out` (`bits`-bit)
+ * Reducing gates: `$reduce_and`, `$reduce_nand`, `$reduce_or`, `$reduce_nor`, `$reduce_xor`, `$reduce_xnor`
+    * Attributes: `bits` (natural number)
+    * Inputs: `in` (`bits`-bit)
+    * Outputs: `out` (1-bit)
+ * Bit shifts: `$shl`, `$shr`
+    * Attributes: `bits.in1`, `bits.in2` and `bits.out` (natural number), `signed.in1`, `signed.in2`, `signed.out` and `fillx` (boolean)
+    * Inputs: `in1` (`bits.in1`-bit), `in2` (`bits.in2`-bit)
+    * Outputs: `out` (`bits.out`-bit)
+ * Comparisons: `$eq`, `$ne`, `$lt`, `$le`, `$gt`, `$ge`
+    * Attributes: `bits.in1` and `bits.in2` (natural number), `signed.in1` and `signed.in2` (boolean)
+    * Inputs: `in1` (`bits.in1`-bit), `in2` (`bits.in2`-bit)
+    * Outputs: `out` (1-bit)
+ * Number constant: `$constant`
+    * Attributes: `constant` (binary string)
+    * Outputs: `out` (`constant.length`-bit)
+ * Unary arithmetic: `$neg`, `$pos`
+    * Attributes: `bits.in` and `bits.out` (natural number), `signed` (boolean)
+    * Inputs: `in` (`bits.in`-bit)
+    * Outputs: `out` (`bits.out`-bit)
+ * Binary arithmetic: `$add`, `$sub`, `$mul`, `$div`, `$mod`, `$pow`
+    * Attributes: `bits.in1`, `bits.in2` and `bits.out` (natural number), `signed.in1` and `signed.in2` (boolean)
+    * Inputs: `in1` (`bits.in1`-bit), `in2` (`bits.in2`-bit)
+    * Outputs: `out` (`bits.out`-bit)
+ * Multiplexer: `$mux`
+    * Attributes: `bits.in`, `bits.sel` (natural number)
+    * Inputs: `in0` ... `inN` (`bits.in`-bit, `N` = 2**`bits.sel`-1), `sel` (`bits.sel`-bit)
+    * Outputs: `out` (`bits.in`-bit)
+ * One-hot multiplexer: `$pmux`
+    * Attributes: `bits.in`, `bits.sel` (natural number)
+    * Inputs: `in0` ... `inN` (`bits.in`-bit, `N` = `bits.sel`), `sel` (`bits.sel`-bit)
+    * Outputs: `out` (`bits.in`-bit)
+ * D flip-flop: `$dff`
+    * Attributes: `bits` (natural number), `polarity.clock`, `polarity.arst`, `polarity.enable` (optional booleans), `initial` (optional binary string)
+    * Inptus: `in` (`bits`-bit), `clk` (1-bit, if `polarity.clock` is present), `arst` (1-bit, if `polarity.arst` is present), `en` (1-bit, if `polarity.enable` is present)
+    * Outputs: `out` (`bits`-bit)
+ * Memory: `$mem`
+    * Attributes: `bits`, `abits`, `words`, `offset` (natural number), `rdports` (array of read port descriptors), `wrports` (array of write port descriptors), `memdata` (memory contents description)
+    * Read port descriptor attributes: `enable_polarity`, `clock_polarity`, `transparent` (optional booleans)
+    * Write port descriptor attributes: `enable_polarity`, `clock_polarity` (optional booleans)
+    * Inputs (per read port): `rdKaddr` (`abits`-bit), `rdKen` (1-bit, if `enable_polarity` is present), `rdKclk` (1-bit, if `clock_polarity` is present)
+    * Outputs (per read port): `rdKdata` (`bits`-bit)
+    * Inputs (per write port): `wrKaddr` (`abits`-bit), `wrKdata` (`bits`-bit), `wrKen` (1-bit, if `enable_polarity` is present), `wrKclk` (1-bit, if `clock_polarity` is present)
+ * Clock source: `$clock` 
+    * Outputs: `out` (1-bit)
+ * Button input: `$button`
+    * Outputs: `out` (1-bit)
+ * Lamp output: `$lamp`
+    * Inputs: `in` (1-bit)
+ * Number input: `$numentry`
+    * Attributes: `bits` (natural number), `numbase` (string)
+    * Outputs: `out` (`bits`-bit)
+ * Number output: `$numdisplay`
+    * Attributes: `bits` (natural number), `numbase` (string)
+    * Inputs: `in` (`bits`-bit)
+ * Subcircuit input: `$input`
+    * Attributes: `bits` (natural number)
+    * Outputs: `out` (`bits`-bit)
+ * Subcircuit output: `$output`
+    * Attributes: `bits` (natural number)
+    * Inputs: `in` (`bits`-bit)
+ * Bus grouping: `$busgroup`
+    * Attributes: `groups` (array of natural numbers)
+    * Inputs: `in0` (`groups[0]`-bit) ... `inN` (`groups[N]`-bit)
+    * Outputs: `out` (sum-of-`groups`-bit)
+ * Bus ungrouping: `$busungroup`
+    * Attributes: `groups` (array of natural numbers)
+    * Inputs: `in` (sum-of-`groups`-bit)
+    * Outputs: `out0` (`groups[0]`-bit) ... `outN` (`groups[N]`-bit)
+ * Bus slicing: `$busslice`
+    * Attributes: `slice.first`, `slice.count`, `slice.total` (natural number)
+    * Inputs: `in` (`slice.total`-bit)
+    * Outputs: `out` (`slice.count`-bit)
+ * Zero- and sign-extension: `$zeroextend`, `$signextend`
+    * Attributes: `extend.input`, `extend.output` (natural number)
+    * Inputs: `in` (`extend.input`-bit)
+    * Outputs: `out` (`extend.output`-bit)
+
 # TODO
 
 Some ideas for further developing the simulator.
