@@ -680,10 +680,24 @@ table.memeditor {
 
 table.memeditor input {
     font-family: monospace;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    padding: 0.2em 0.5em;
 }
 
 table.memeditor td:first-child {
     font-family: monospace;
     padding-right: 1em;
 }
+
+table.memeditor input.flash {
+    animation-name: flash-animation;
+    animation-duration: 1s;
+}
+
+@keyframes flash-animation {
+    from { background-color: yellow; }
+    to   { background-color: default; }
+}
+
 

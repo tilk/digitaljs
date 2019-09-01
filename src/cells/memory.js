@@ -283,9 +283,11 @@ export const MemoryView = BoxView.extend({
             const numbase = get_numbase();
             const r = Math.floor((addr - address) / columns);
             const c = addr - address - r * columns;
-            div.find('table tr:nth-child('+(r+1)+') td:nth-child('+(c+2)+') input')
+            const z = div.find('table tr:nth-child('+(r+1)+') td:nth-child('+(c+2)+') input')
                 .val(help.sig2base(memdata.get(address + r * columns + c), numbase))
-                .removeClass('invalid');
+                .removeClass('invalid')
+                .removeClass('flash');
+            setTimeout(() => { z.addClass('flash') }, 10);
         };
         this.model.on("memChange", changeCallback);
         div.dialog({
