@@ -9,4 +9,5 @@ export * from "./cells/subcircuit.js";
 export * from "./cells/mux.js";
 export * from "./cells/dff.js";
 export * from "./cells/memory.js";
+export * from "./cells/fsm.js";
 
