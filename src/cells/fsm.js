@@ -7,13 +7,38 @@ import { Box, BoxView } from './base';
 import bigInt from 'big-integer';
 import * as help from '../help.js';
 import { Vector3vl, Mem3vl } from '3vl';
+import dagre from 'dagre';
+import graphlib from 'graphlib';
 
 export const FSM = Box.define('FSM', {
-    size: { width: 80, height: 3*16+8 }
+    size: { width: 80, height: 3*16+8 },
+    attrs: {
+        '.tooltip': {
+            'ref-x': 0, 'ref-y': -30,
+            width: 80, height: 30
+        },
+    }
 }, {
+    initialize: function() {
+        this.listenTo(this, 'change:size', (model, size) => {
+            this.attr('.tooltip/width', size.width)
+        });
+        this.listenTo(this, 'change:current_state', (model, state) => {
+            const pstate = model.previous('current_state');
+            this.fsmgraph.getCell('state' + pstate).removeAttr('body/class');
+            this.fsmgraph.getCell('state' + state).attr('body/class', 'current_state');
+        });
+        this.listenTo(this, 'change:next_trans', (model, id) => {
+            const pid = model.previous('next_trans');
+            if (pid) this.fsmgraph.getCell(pid).removeAttr('line/class');
+            if (id) this.fsmgraph.getCell(id).attr('line/class', 'next_trans');
+        });
+        Box.prototype.initialize.apply(this, arguments);
+    },
     constructor: function(args) {
         if (!args.init_state) args.init_state = 0;
         if (!('current_state' in args)) args.current_state = args.init_state;
+        args.next_trans = undefined;
         const markup = [];
         const lblmarkup = [];
         markup.push(this.addLabelledWire(args, lblmarkup, 'left', 16+12, { id: 'clk', dir: 'in', bits: 1, polarity: args.polarity.clock, clock: true }));
@@ -22,12 +47,17 @@ export const FSM = Box.define('FSM', {
         markup.push(this.addLabelledWire(args, lblmarkup, 'right', 12, { id: 'out', dir: 'out', bits: args.bits.out }));
         markup.push('<rect class="body"/><text class="label"/>');
         markup.push(lblmarkup.join(''));
+        markup.push(['<foreignObject class="tooltip">',
+            '<body xmlns="http://www.w3.org/1999/xhtml">',
+            '<a class="zoom">🔍</a>',
+            '</body></foreignObject>'].join(''));
         this.markup = markup.join('');
         this.fsmgraph = new joint.dia.Graph;
         const statenodes = [];
         for (let n = 0; n < args.states; n++) {
             const node = new joint.shapes.standard.Circle({stateNo: n, id: 'state' + n, isInit: n == args.init_state});
             node.attr('label/text', String(n));
+            node.resize(100,50);
             node.addTo(this.fsmgraph);
             statenodes.push(node);
         }
@@ -76,11 +106,51 @@ export const FSM = Box.define('FSM', {
             }
         }
         const trans = next_trans();
+        this.set('next_trans', trans.id);
         if (!trans) return { out: Vector3vl.xes(bits.out) };
         else return { out: trans.get('ctrlOut') };
     }
 });
 
 export const FSMView = BoxView.extend({
+    events: {
+        "click foreignObject.tooltip": "stopprop",
+        "mousedown foreignObject.tooltip": "stopprop",
+        "click a.zoom": "displayEditor"
+    },
+    displayEditor(evt) {
+        evt.stopPropagation();
+        const div = $('<div>', {
+            title: "FSM: " + this.model.get('label')
+        }).appendTo('html > body');
+        const pdiv = $('<div>').appendTo(div);
+        const graph = this.model.fsmgraph;
+        const paper = new joint.dia.Paper({
+            el: pdiv,
+            model: graph
+        });
+        // to visualize the cells
+        graph.resetCells(graph.getCells());
+        // lazy layout
+        if (!graph.get('laid_out')) {
+            joint.layout.DirectedGraph.layout(graph, {
+                dagre: dagre,
+                graphlib: graphlib
+            });
+            graph.set('laid_out', true);
+        }
+        paper.fitToContent({ padding: 30, allowNewOrigin: 'any' });
+        const maxWidth = $(window).width() * 0.9;
+        const maxHeight = $(window).height() * 0.9;
+        div.dialog({
+            width: Math.min(maxWidth, pdiv.outerWidth() + 60), 
+            height: Math.min(maxHeight, pdiv.outerHeight() + 60),
+            close: () => {
+                paper.remove();
+                div.remove();
+            }
+        });
+        return false;
+    }
 });
 

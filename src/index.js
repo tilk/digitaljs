@@ -102,6 +102,7 @@ export class Circuit extends HeadlessCircuit {
                 }
             }
         });
+        paper.$el.addClass('djs');
         paper.freeze();
         // required for the paper to visualize the graph (jointjs bug?)
         graph.resetCells(graph.getCells());

@@ -106,30 +106,30 @@
     transition: all 0.2s;
 }
 
-.joint-element circle {
+.djs .joint-element circle {
     fill: #fff;
     stroke: #7f8c8d;
     stroke-opacity: 0.5;
     stroke-width: 2px;
 }
 
-.joint-element circle.live {
+.djs .joint-element circle.live {
     stroke: #03c03c;
 }
 
-.joint-element circle.low {
+.djs .joint-element circle.low {
     stroke: #fc7c68;
 }
 
-.joint-element circle.defined {
+.djs .joint-element circle.defined {
     stroke: #779ecb;
 }
 
-.joint-element circle.led.live {
+.djs .joint-element circle.led.live {
     fill: #03c03c;
 }
 
-.joint-element circle.led.low {
+.djs .joint-element circle.led.low {
     fill: #fc7c68;
 }
 
@@ -698,6 +698,14 @@ table.memeditor input.flash {
 @keyframes flash-animation {
     from { background-color: yellow; }
     to   { background-color: default; }
+}
+
+.joint-element circle.current_state {
+    fill: yellow;
+}
+
+.joint-link path.next_trans {
+    stroke: #03c03c;
 }
 
 
