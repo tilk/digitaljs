@@ -1,6 +1,6 @@
 {
   "name": "digitaljs",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Digital logic simulator",
   "main": "src/index.js",
   "scripts": {
