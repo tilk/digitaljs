@@ -30,8 +30,21 @@ export const FSM = Box.define('FSM', {
         });
         this.listenTo(this, 'change:next_trans', (model, id) => {
             const pid = model.previous('next_trans');
-            if (pid) this.fsmgraph.getCell(pid).removeAttr('line/class');
-            if (id) this.fsmgraph.getCell(id).attr('line/class', 'next_trans');
+            if (pid) {
+                const cell = this.fsmgraph.getCell(pid);
+                cell.removeAttr('line/class');
+                cell.removeAttr('line/targetMarker/class');
+            }
+            if (id) {
+                this.fsmgraph.getCell(id).attr({
+                    line: {
+                        class: 'next_trans',
+                        targetMarker: {
+                            class: 'next_trans'
+                        }
+                    }
+                });
+            }
         });
         Box.prototype.initialize.apply(this, arguments);
     },
@@ -139,6 +152,10 @@ export const FSMView = BoxView.extend({
             });
             graph.set('laid_out', true);
         }
+        // auto-resizing
+        this.listenTo(graph, 'change:position', (elem) => {
+            paper.fitToContent({ padding: 30, allowNewOrigin: 'any' });
+        });
         paper.fitToContent({ padding: 30, allowNewOrigin: 'any' });
         const maxWidth = $(window).width() * 0.9;
         const maxHeight = $(window).height() * 0.9;

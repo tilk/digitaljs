@@ -704,8 +704,12 @@ table.memeditor input.flash {
     fill: yellow;
 }
 
-.joint-link path.next_trans {
+.joint-link path.next_trans, marker path.next_trans {
     stroke: #03c03c;
+    fill: #03c03c;
 }
 
-
+/* jqueryui fix */
+.ui-dialog, .ui-dialog-content {
+    box-sizing: content-box;
+}
