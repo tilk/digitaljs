@@ -72,7 +72,8 @@ export const Subcircuit = Box.define('Subcircuit', {
         args.attrs['rect.body'] = size;
         args.circuitIOmap = iomap;
         Gate.prototype.constructor.apply(this, arguments);
-    }
+    },
+    gateParams: Box.prototype.gateParams.concat(['celltype'])
 });
 
 export const SubcircuitView = BoxView.extend({

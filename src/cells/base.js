@@ -88,7 +88,7 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
     getGateParams: function() {
         return _.cloneDeep(_.pick(this.attributes, this.gateParams))
     },
-    gateParams: ['label', 'position', 'celltype', 'propagation']
+    gateParams: ['label', 'position', 'type', 'propagation']
 });
 
 export const GateView = joint.dia.ElementView.extend({
