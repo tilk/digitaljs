@@ -155,7 +155,7 @@ export class HeadlessCircuit {
         for (const devid in data.devices) {
             const dev = data.devices[devid];
             if (dev.position) laid_out = true;
-            const cellType = getCellType(dev.celltype);
+            const cellType = (dev.type in cells) ? cells[dev.type] : getCellType(dev.celltype);
             const cellArgs = _.clone(dev);
             cellArgs.id = devid;
             if (cellType == cells.Subcircuit)
