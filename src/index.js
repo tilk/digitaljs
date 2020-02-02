@@ -149,6 +149,11 @@ export class Circuit extends HeadlessCircuit {
                 }
             });
         });
+        paper.fixed = function(fixed) {
+            console.log(this, fixed);
+            this.setInteractivity(!fixed);
+            this.$el.toggleClass('fixed', fixed);
+        };
         this.trigger('new:paper', paper);
         return paper;
     }

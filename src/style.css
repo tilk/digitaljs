@@ -173,6 +173,19 @@
     stroke: #4B4F6A;
 }
 
+.djs.fixed .joint-link,
+.djs.fixed .joint-element:not(.joint-type-subcircuit):not(.joint-type-numentry):not(.joint-type-numdisplay):not(.joint-type-constant):not(.joint-type-button):not(.joint-type-memory) {
+    pointer-events: none;
+}
+.djs.fixed .joint-element.joint-type-subcircuit,
+.djs.fixed .joint-element.joint-type-numentry,
+.djs.fixed .joint-element.joint-type-numdisplay,
+.djs.fixed .joint-element.joint-type-constant,
+.djs.fixed .joint-element.joint-type-button,
+.djs.fixed .joint-element.joint-type-memory {
+    cursor: default;
+}
+
 
 
 /* .viewport is a <g> node wrapping all diagram elements in the paper */
