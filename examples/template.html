@@ -18,12 +18,24 @@
     </div>
     <script>
       var circuit, monitor, monitorview, paper;
+      var subpapers = {};
+      const fixed = function (fixed) {
+        paper.fixed(fixed);
+        Object.values(subpapers).forEach(p => p.fixed(fixed));
+      }
       const loadCircuit = function (json) {
         circuit = new digitaljs.Circuit(json);
         monitor = new digitaljs.Monitor(circuit);
         monitorview = new digitaljs.MonitorView({model: monitor, el: $('#monitor') });
         paper = circuit.displayOn($('#paper'));
-        paper.fixed($('input[name=fixed]').prop('checked'));
+        fixed($('input[name=fixed]').prop('checked'));
+        circuit.on('new:paper', function(subpaper) {
+          subpaper.fixed($('input[name=fixed]').prop('checked'));
+          subpapers[subpaper.cid] = subpaper;
+        });
+        circuit.on('remove:paper', function(subpaper) {
+          delete subpapers[subpaper.cid];
+        });
         circuit.start();
       }
       $('button[name=json]').on('click', (e) => {
@@ -34,7 +46,7 @@
         loadCircuit(json);
       });
       $('input[name=fixed]').change(function () {
-        paper.fixed($(this).prop('checked'));
+        fixed($(this).prop('checked'));
       });
       $('button[name=ppt_up]').on('click', (e) => { monitorview.pixelsPerTick *= 2; });
       $('button[name=ppt_down]').on('click', (e) => { monitorview.pixelsPerTick /= 2; });

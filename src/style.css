@@ -173,16 +173,10 @@
     stroke: #4B4F6A;
 }
 
-.djs.fixed .joint-link,
-.djs.fixed .joint-element:not(.joint-type-subcircuit):not(.joint-type-numentry):not(.joint-type-numdisplay):not(.joint-type-constant):not(.joint-type-button):not(.joint-type-memory) {
+.djs.fixed .joint-link {
     pointer-events: none;
 }
-.djs.fixed .joint-element.joint-type-subcircuit,
-.djs.fixed .joint-element.joint-type-numentry,
-.djs.fixed .joint-element.joint-type-numdisplay,
-.djs.fixed .joint-element.joint-type-constant,
-.djs.fixed .joint-element.joint-type-button,
-.djs.fixed .joint-element.joint-type-memory {
+.djs.fixed .joint-element {
     cursor: default;
 }
 
@@ -218,10 +212,10 @@ path:not([d]) {
 
 
 /* magnet is an element that can be either source or a target of a link */
-[magnet=true]:not(.joint-element) {
+.djs:not(.fixed) [magnet=true]:not(.joint-element) {
    cursor: crosshair;
 }
-[magnet=true]:not(.joint-element):hover {
+.djs:not(.fixed) [magnet=true]:not(.joint-element):hover {
    opacity: .7;
 }
 

@@ -72,6 +72,7 @@ export class Circuit extends HeadlessCircuit {
         return this.makePaper(elem, this._graph);
     }
     makePaper(elem, graph, opts) {
+        const circuit = this;
         opts = opts || {};
         const paper = new joint.dia.Paper({
             async: true,
@@ -145,12 +146,12 @@ export class Circuit extends HeadlessCircuit {
                     div.on('dialogclose', function(evt) {
                         paper.remove();
                         div.remove();
+                        circuit.trigger('remove:paper', paper);
                     });
                 }
             });
         });
         paper.fixed = function(fixed) {
-            console.log(this, fixed);
             this.setInteractivity(!fixed);
             this.$el.toggleClass('fixed', fixed);
         };
