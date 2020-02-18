@@ -290,13 +290,9 @@ export const MemoryView = BoxView.extend({
             setTimeout(() => { z.addClass('flash') }, 10);
         };
         this.model.on("memChange", changeCallback);
-        div.dialog({
-            width: 'auto',
-            resizable: false,
-            close: () => {
-                div.remove();
-                this.model.off("memChange", changeCallback);
-            }
+        this.paper.trigger('open:memorycontent', div, () => {
+            div.remove();
+            this.model.off("memChange", changeCallback);
         });
         return false;
     }
