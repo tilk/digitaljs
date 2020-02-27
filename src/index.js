@@ -15,11 +15,11 @@ import { HeadlessCircuit, getCellType } from './circuit.js';
 import { MonitorView, Monitor } from './monitor.js';
 import './style.css';
 
-export { HeadlessCircuit, getCellType, MonitorView, Monitor };
+export { HeadlessCircuit, getCellType, cells, MonitorView, Monitor };
 
 export class Circuit extends HeadlessCircuit {
-    constructor(data, windowCallback) {
-        super(data);
+    constructor(data, windowCallback, cellsNamespace) {
+        super(data, cellsNamespace);
         this._windowCallback = windowCallback || this._defaultWindowCallback;
         this._interval_ms = 10;
         this._interval = null;
@@ -92,8 +92,8 @@ export class Circuit extends HeadlessCircuit {
             width: 100, height: 100, gridSize: 5,
             snapLinks: true,
             linkPinning: false,
-            defaultLink: new cells.Wire,
-            cellViewNamespace: cells,
+            defaultLink: new this._cells.Wire,
+            cellViewNamespace: this._cells,
             validateConnection: function(vs, ms, vt, mt, e, vl) {
                 if (e === 'target') {
                     if (!mt) return false;

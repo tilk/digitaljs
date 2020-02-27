@@ -65,7 +65,8 @@ export function getCellType(tp) {
 }
     
 export class HeadlessCircuit {
-    constructor(data) {
+    constructor(data, cellsNamespace) {
+        this._cells = Object.assign(cells, cellsNamespace || {});
         this._queue = new Map();
         this._pq = new FastPriorityQueue();
         this._tick = 0;
@@ -76,6 +77,7 @@ export class HeadlessCircuit {
     }
     makeGraph(data, subcircuits) {
         const graph = new joint.dia.Graph();
+        const circuit = this;
         this.listenTo(graph, 'change:buttonState', function(gate, sig) {
             this.enqueue(gate);
             this.trigger('userChange');
@@ -86,10 +88,10 @@ export class HeadlessCircuit {
         });
         this.listenTo(graph, 'change:inputSignals', function(gate, sigs) {
             // forward the change back from a subcircuit
-            if (gate instanceof cells.Output) {
+            if (gate instanceof circuit._cells.Output) {
                 const subcir = gate.graph.get('subcircuit');
                 if (subcir == null) return; // not in a subcircuit
-                console.assert(subcir instanceof cells.Subcircuit);
+                console.assert(subcir instanceof circuit._cells.Subcircuit);
                 subcir.set('outputSignals', _.chain(subcir.get('outputSignals'))
                     .clone().set(gate.get('net'), sigs.in).value());
             } else this.enqueue(gate);
@@ -113,10 +115,10 @@ export class HeadlessCircuit {
             gate.set('inputSignals', _.chain(gate.get('inputSignals'))
                 .clone().set(end.port, sig).value());
             // forward the input change to a subcircuit
-            if (gate instanceof cells.Subcircuit) {
+            if (gate instanceof circuit._cells.Subcircuit) {
                 const iomap = gate.get('circuitIOmap');
                 const input = gate.get('graph').getCell(iomap[end.port]);
-                console.assert(input instanceof cells.Input);
+                console.assert(input instanceof circuit._cells.Input);
                 input.set('outputSignals', { out: sig });
             }
         }
@@ -155,17 +157,17 @@ export class HeadlessCircuit {
         for (const devid in data.devices) {
             const dev = data.devices[devid];
             if (dev.position) laid_out = true;
-            const cellType = (dev.type in cells) ? cells[dev.type] : getCellType(dev.celltype);
+            const cellType = (dev.type in this._cells) ? this._cells[dev.type] : getCellType(dev.celltype);
             const cellArgs = _.clone(dev);
             cellArgs.id = devid;
-            if (cellType == cells.Subcircuit)
+            if (cellType == this._cells.Subcircuit)
                 cellArgs.graph = this.makeGraph(subcircuits[dev.celltype], subcircuits);
             const cell = new cellType(cellArgs);
             graph.addCell(cell);
             this.enqueue(cell);
         }
         for (const conn of data.connectors) {
-            graph.addCell(new cells.Wire({
+            graph.addCell(new this._cells.Wire({
                 source: {id: conn.from.id, port: conn.from.port},
                 target: {id: conn.to.id, port: conn.to.port},
                 netname: conn.name,
@@ -197,9 +199,9 @@ export class HeadlessCircuit {
         while (q.size) {
             const [gate, args] = q.entries().next().value;
             q.delete(gate);
-            if (gate instanceof cells.Subcircuit) continue;
-            if (gate instanceof cells.Input) continue;
-            if (gate instanceof cells.Output) continue;
+            if (gate instanceof this._cells.Subcircuit) continue;
+            if (gate instanceof this._cells.Input) continue;
+            if (gate instanceof this._cells.Output) continue;
             const graph = gate.graph;
             if (!graph) continue;
             gate.set('outputSignals', gate.operation(args));
@@ -247,7 +249,7 @@ export class HeadlessCircuit {
                 if (!elem.has('label')) continue;
                 const label = elem.get('label');
                 ret.gates[label] = elem;
-                if (elem instanceof cells.Subcircuit)
+                if (elem instanceof this._cells.Subcircuit)
                     ret.subcircuits[label] = fromGraph(elem.get('graph'));
             }
             for (const elem of graph.getLinks()) {
@@ -260,6 +262,7 @@ export class HeadlessCircuit {
     }
     toJSON() {
         const subcircuits = {};
+        const circuit = this;
         function fromGraph(graph) {
             const ret = {
                 devices: {},
@@ -269,7 +272,7 @@ export class HeadlessCircuit {
             for (const elem of graph.getElements()) {
                 const args = ret.devices[elem.get('id')] = elem.getGateParams();
                 if (!laid_out) delete args.position;
-                if (elem instanceof cells.Subcircuit && !subcircuits[elem.get('celltype')]) {
+                if (elem instanceof circuit._cells.Subcircuit && !subcircuits[elem.get('celltype')]) {
                     subcircuits[elem.get('celltype')] = fromGraph(elem.get('graph'));
                 }
             }
