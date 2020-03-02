@@ -11,7 +11,7 @@ Yosys output files to DigitalJS. It is also intended to be a teaching tool,
 therefore readability and ease of inspection is one of top concerns for
 the project.
 
-You can [try it out online](http://digitaljs.tilk.eu/). The web app is
+You can [try it out online](https://digitaljs.tilk.eu/). The web app is
 [a separate Github project](https://github.com/tilk/digitaljs_online/).
 
 # Usage
@@ -177,6 +177,7 @@ instance.
 
 Some ideas for further developing the simulator.
 
+ * Use JointJS elementTools for configuring/removing gates.
  * RAM/ROM import/export for Verilog format and Intel HEX.
  * Scripting language for writing testbenches. (Maybe Lua?)
  * Framebuffer element with character/bitmap display.
