@@ -1,7 +1,7 @@
 {
   "devices": {
     "dev0": {
-      "celltype": "$clock",
+      "type": "Clock",
       "label": "clk",
       "net": "clk",
       "order": 0,
@@ -9,28 +9,28 @@
       "propagation": 100
     },
     "dev1": {
-      "celltype": "$numentry",
+      "type": "NumEntry",
       "label": "addr",
       "net": "addr",
       "order": 1,
       "bits": 4
     },
     "dev2": {
-      "celltype": "$numdisplay",
+      "type": "NumDisplay",
       "label": "data",
       "net": "data",
       "order": 2,
       "bits": 4
     },
     "dev3": {
-      "celltype": "$numentry",
+      "type": "NumEntry",
       "label": "wraddr",
       "net": "wraddr",
       "order": 3,
       "bits": 4
     },
     "dev4": {
-      "celltype": "$numentry",
+      "type": "NumEntry",
       "label": "wrdata",
       "net": "wrdata",
       "order": 4,
@@ -38,7 +38,7 @@
     },
     "dev5": {
       "label": "mem",
-      "celltype": "$mem",
+      "type": "Memory",
       "bits": 4,
       "abits": 4,
       "words": 16,

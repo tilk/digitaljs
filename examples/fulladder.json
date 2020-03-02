@@ -1,50 +1,52 @@
 {
   "devices": {
     "dev0": {
-      "celltype": "$button",
+      "type": "Button",
       "label": "a",
       "net": "a",
       "order": 0,
       "bits": 1
     },
     "dev1": {
-      "celltype": "$button",
+      "type": "Button",
       "label": "b",
       "net": "b",
       "order": 1,
       "bits": 1
     },
     "dev2": {
-      "celltype": "$button",
+      "type": "Button",
       "label": "d",
       "net": "d",
       "order": 2,
       "bits": 1
     },
     "dev3": {
-      "celltype": "$lamp",
+      "type": "Lamp",
       "label": "o",
       "net": "o",
       "order": 3,
       "bits": 1
     },
     "dev4": {
-      "celltype": "$lamp",
+      "type": "Lamp",
       "label": "c",
       "net": "c",
       "order": 4,
       "bits": 1
     },
     "dev5": {
+      "type": "Or",
       "label": "$or$tests/fulladder.sv:28$3",
-      "celltype": "$or",
       "bits": 1
     },
     "dev6": {
+      "type": "Subcircuit",
       "label": "ha1",
       "celltype": "halfadder"
     },
     "dev7": {
+      "type": "Subcircuit",
       "label": "ha2",
       "celltype": "halfadder"
     }
@@ -143,28 +145,28 @@
     "halfadder": {
       "devices": {
         "dev0": {
-          "celltype": "$input",
+          "type": "Input",
           "label": "a",
           "net": "a",
           "order": 0,
           "bits": 1
         },
         "dev1": {
-          "celltype": "$input",
+          "type": "Input",
           "label": "b",
           "net": "b",
           "order": 1,
           "bits": 1
         },
         "dev2": {
-          "celltype": "$output",
+          "type": "Output",
           "label": "o",
           "net": "o",
           "order": 2,
           "bits": 1
         },
         "dev3": {
-          "celltype": "$output",
+          "type": "Output",
           "label": "c",
           "net": "c",
           "order": 3,
@@ -172,12 +174,12 @@
         },
         "dev4": {
           "label": "$and$tests/fulladder.sv:10$2",
-          "celltype": "$and",
+          "type": "And",
           "bits": 1
         },
         "dev5": {
           "label": "$xor$tests/fulladder.sv:9$1",
-          "celltype": "$xor",
+          "type": "Xor",
           "bits": 1
         }
       },

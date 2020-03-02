@@ -1,7 +1,7 @@
 {
   "devices": {
     "dev0": {
-      "celltype": "$clock",
+      "type": "Clock",
       "label": "clk",
       "net": "clk",
       "order": 0,
@@ -9,28 +9,28 @@
       "propagation": 100
     },
     "dev1": {
-      "celltype": "$button",
+      "type": "Button",
       "label": "rst",
       "net": "rst",
       "order": 1,
       "bits": 1
     },
     "dev2": {
-      "celltype": "$button",
+      "type": "Button",
       "label": "en",
       "net": "en",
       "order": 2,
       "bits": 1
     },
     "dev3": {
-      "celltype": "$numentry",
+      "type": "NumEntry",
       "label": "A",
       "net": "A",
       "order": 3,
       "bits": 4
     },
     "dev4": {
-      "celltype": "$numdisplay",
+      "type": "NumDisplay",
       "label": "O",
       "net": "O",
       "order": 4,
@@ -38,7 +38,7 @@
     },
     "dev5": {
       "label": "$add$tests/cycleadder.sv:13$2",
-      "celltype": "$add",
+      "type": "Addition",
       "bits": {
         "in1": 4,
         "in2": 4,
@@ -51,7 +51,7 @@
     },
     "dev6": {
       "label": "$procdff$9",
-      "celltype": "$dff",
+      "type": "Dff",
       "bits": 4,
       "polarity": {
         "clock": true
@@ -59,7 +59,7 @@
     },
     "dev7": {
       "label": "$procmux$4",
-      "celltype": "$mux",
+      "type": "Mux",
       "bits": {
         "in": 4,
         "sel": 1
@@ -67,14 +67,14 @@
     },
     "dev8": {
       "label": "$procmux$7",
-      "celltype": "$mux",
+      "type": "Mux",
       "bits": {
         "in": 4,
         "sel": 1
       }
     },
     "dev9": {
-      "celltype": "$constant",
+      "type": "Constant",
       "constant": "0000"
     }
   },

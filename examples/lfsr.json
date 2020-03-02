@@ -1,14 +1,14 @@
 {
   "devices": {
     "dev0": {
-      "celltype": "$numdisplay",
+      "type": "NumDisplay",
       "label": "out",
       "net": "out",
       "order": 0,
       "bits": 8
     },
     "dev1": {
-      "celltype": "$clock",
+      "type": "Clock",
       "label": "clk",
       "net": "clk",
       "order": 1,
@@ -16,7 +16,7 @@
       "propagation": 100
     },
     "dev2": {
-      "celltype": "$button",
+      "type": "Button",
       "label": "reset",
       "net": "reset",
       "order": 2,
@@ -24,7 +24,7 @@
     },
     "dev4": {
       "label": "$procdff$4",
-      "celltype": "$dff",
+      "type": "Dff",
       "bits": 8,
       "polarity": {
         "clock": true,
@@ -34,18 +34,18 @@
     },
     "dev5": {
       "label": "$xor$tests/lfsr.sv:10$1",
-      "celltype": "$xnor",
+      "type": "Xnor",
       "bits": 1
     },
     "dev6": {
-      "celltype": "$busgroup",
+      "type": "BusGroup",
       "groups": [
         1,
         7
       ]
     },
     "dev7": {
-      "celltype": "$busslice",
+      "type": "BusSlice",
       "slice": {
         "first": 7,
         "count": 1,
@@ -53,7 +53,7 @@
       }
     },
     "dev8": {
-      "celltype": "$busslice",
+      "type": "BusSlice",
       "slice": {
         "first": 3,
         "count": 1,
@@ -61,7 +61,7 @@
       }
     },
     "dev9": {
-      "celltype": "$busslice",
+      "type": "BusSlice",
       "slice": {
         "first": 0,
         "count": 7,

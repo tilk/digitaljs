@@ -43,12 +43,12 @@ Circuits are represented using JSON. The top-level object has three keys, `devic
 `connectors` and `subcircuits`. Under `devices` is a list of all devices forming
 the circuit, represented as an object, where keys are (unique and internal) device
 names. Each device has a number of properties, which are represented by an object.
-A mandatory property is `celltype`, which specifies the type of the device. Example
+A mandatory property is `type`, which specifies the type of the device. Example
 device:
 
 ```javascript
 "dev1": {
-    "celltype": "$and",
+    "type": "And",
     "label": "AND1"
 }
 ```
@@ -74,98 +74,104 @@ an input port, and the bitwidth of both ports must be equal. Example connection:
 
 Under `subcircuits` is a list of subcircuit definitions, represented as an object,
 where keys are unique subcircuit names. A subcircuit name can be used as
-a device `celltype`; this instantiates the subcircuit. A subcircuit definition
+a `celltype` for a device of type `Subcircuit`; this instantiates the subcircuit. 
+A subcircuit definition
 follows the representation of whole circuits, with the exception that subcircuits
 cannot (currently) define their own subcircuits. A subcircuit can include
-`$input` and `$output` devices, these are mapped to ports on a subcircuit
+`Input` and `Output` devices, these are mapped to ports on a subcircuit
 instance.
 
 ## Device types
 
- * Unary gates: `$not`, `$repeater`
+ * Unary gates: `Not`, `Repeater`
     * Attributes: `bits` (natural number)
     * Inputs: `in` (`bits`-bit)
     * Outputs: `out` (`bits`-bit)
- * Binary gates: `$and`, `$nand`, `$or`, `$nor`, `$xor`, `$xnor`
+ * Binary gates: `And`, `Nand`, `Or`, `Nor`, `Xor`, `Xnor`
     * Attributes: `bits` (natural number)
     * Inputs: `in1`, `in2` (`bits`-bit)
     * Outputs: `out` (`bits`-bit)
- * Reducing gates: `$reduce_and`, `$reduce_nand`, `$reduce_or`, `$reduce_nor`, `$reduce_xor`, `$reduce_xnor`
+ * Reducing gates: `AndReduce`, `NandReduce`, `OrReduce`, `NorReduce`, `XorReduce`, `XnorReduce`
     * Attributes: `bits` (natural number)
     * Inputs: `in` (`bits`-bit)
     * Outputs: `out` (1-bit)
- * Bit shifts: `$shl`, `$shr`
+ * Bit shifts: `ShiftLeft`, `ShiftRight`
     * Attributes: `bits.in1`, `bits.in2` and `bits.out` (natural number), `signed.in1`, `signed.in2`, `signed.out` and `fillx` (boolean)
     * Inputs: `in1` (`bits.in1`-bit), `in2` (`bits.in2`-bit)
     * Outputs: `out` (`bits.out`-bit)
- * Comparisons: `$eq`, `$ne`, `$lt`, `$le`, `$gt`, `$ge`
+ * Comparisons: `Eq`, `Ne`, `Lt`, `Le`, `Gt`, `Ge`
     * Attributes: `bits.in1` and `bits.in2` (natural number), `signed.in1` and `signed.in2` (boolean)
     * Inputs: `in1` (`bits.in1`-bit), `in2` (`bits.in2`-bit)
     * Outputs: `out` (1-bit)
- * Number constant: `$constant`
+ * Number constant: `Constant`
     * Attributes: `constant` (binary string)
     * Outputs: `out` (`constant.length`-bit)
- * Unary arithmetic: `$neg`, `$pos`
+ * Unary arithmetic: `Negation`, `UnaryPlus`
     * Attributes: `bits.in` and `bits.out` (natural number), `signed` (boolean)
     * Inputs: `in` (`bits.in`-bit)
     * Outputs: `out` (`bits.out`-bit)
- * Binary arithmetic: `$add`, `$sub`, `$mul`, `$div`, `$mod`, `$pow`
+ * Binary arithmetic: `Addition`, `Subtraction`, `Multiplication`, `Division`, `Modulo`, `Power`
     * Attributes: `bits.in1`, `bits.in2` and `bits.out` (natural number), `signed.in1` and `signed.in2` (boolean)
     * Inputs: `in1` (`bits.in1`-bit), `in2` (`bits.in2`-bit)
     * Outputs: `out` (`bits.out`-bit)
- * Multiplexer: `$mux`
+ * Multiplexer: `Mux`
     * Attributes: `bits.in`, `bits.sel` (natural number)
     * Inputs: `in0` ... `inN` (`bits.in`-bit, `N` = 2**`bits.sel`-1), `sel` (`bits.sel`-bit)
     * Outputs: `out` (`bits.in`-bit)
- * One-hot multiplexer: `$pmux`
+ * One-hot multiplexer: `Mux1Hot`
     * Attributes: `bits.in`, `bits.sel` (natural number)
     * Inputs: `in0` ... `inN` (`bits.in`-bit, `N` = `bits.sel`), `sel` (`bits.sel`-bit)
     * Outputs: `out` (`bits.in`-bit)
- * D flip-flop: `$dff`
+ * D flip-flop: `Dff`
     * Attributes: `bits` (natural number), `polarity.clock`, `polarity.arst`, `polarity.enable` (optional booleans), `initial` (optional binary string)
     * Inptus: `in` (`bits`-bit), `clk` (1-bit, if `polarity.clock` is present), `arst` (1-bit, if `polarity.arst` is present), `en` (1-bit, if `polarity.enable` is present)
     * Outputs: `out` (`bits`-bit)
- * Memory: `$mem`
+ * Memory: `Memory`
     * Attributes: `bits`, `abits`, `words`, `offset` (natural number), `rdports` (array of read port descriptors), `wrports` (array of write port descriptors), `memdata` (memory contents description)
     * Read port descriptor attributes: `enable_polarity`, `clock_polarity`, `transparent` (optional booleans)
     * Write port descriptor attributes: `enable_polarity`, `clock_polarity` (optional booleans)
     * Inputs (per read port): `rdKaddr` (`abits`-bit), `rdKen` (1-bit, if `enable_polarity` is present), `rdKclk` (1-bit, if `clock_polarity` is present)
     * Outputs (per read port): `rdKdata` (`bits`-bit)
     * Inputs (per write port): `wrKaddr` (`abits`-bit), `wrKdata` (`bits`-bit), `wrKen` (1-bit, if `enable_polarity` is present), `wrKclk` (1-bit, if `clock_polarity` is present)
- * Clock source: `$clock` 
+ * Clock source: `Clock` 
     * Outputs: `out` (1-bit)
- * Button input: `$button`
+ * Button input: `Button`
     * Outputs: `out` (1-bit)
- * Lamp output: `$lamp`
+ * Lamp output: `Lamp`
     * Inputs: `in` (1-bit)
- * Number input: `$numentry`
+ * Number input: `NumEntry`
     * Attributes: `bits` (natural number), `numbase` (string)
     * Outputs: `out` (`bits`-bit)
- * Number output: `$numdisplay`
+ * Number output: `NumDisplay`
     * Attributes: `bits` (natural number), `numbase` (string)
     * Inputs: `in` (`bits`-bit)
- * Subcircuit input: `$input`
+ * Subcircuit input: `Input`
     * Attributes: `bits` (natural number)
     * Outputs: `out` (`bits`-bit)
- * Subcircuit output: `$output`
+ * Subcircuit output: `Output`
     * Attributes: `bits` (natural number)
     * Inputs: `in` (`bits`-bit)
- * Bus grouping: `$busgroup`
+ * Bus grouping: `BusGroup`
     * Attributes: `groups` (array of natural numbers)
     * Inputs: `in0` (`groups[0]`-bit) ... `inN` (`groups[N]`-bit)
     * Outputs: `out` (sum-of-`groups`-bit)
- * Bus ungrouping: `$busungroup`
+ * Bus ungrouping: `BusUngroup`
     * Attributes: `groups` (array of natural numbers)
     * Inputs: `in` (sum-of-`groups`-bit)
     * Outputs: `out0` (`groups[0]`-bit) ... `outN` (`groups[N]`-bit)
- * Bus slicing: `$busslice`
+ * Bus slicing: `BusSlice`
     * Attributes: `slice.first`, `slice.count`, `slice.total` (natural number)
     * Inputs: `in` (`slice.total`-bit)
     * Outputs: `out` (`slice.count`-bit)
- * Zero- and sign-extension: `$zeroextend`, `$signextend`
+ * Zero- and sign-extension: `ZeroExtend`, `SignExtend`
     * Attributes: `extend.input`, `extend.output` (natural number)
     * Inputs: `in` (`extend.input`-bit)
     * Outputs: `out` (`extend.output`-bit)
+ * Finite state machines: `FSM`
+    * Attributes: `bits.in`, `bits.out`, `states`, `init_state`, `current_state` (natural number), `trans_table` (array of transition descriptors)
+    * Transition descriptor attributes: `ctrl_in`, `ctrl_out` (binary strings), `state_in`, `state_out` (natural numbers)
+    * Inputs: `clk` (1-bit), `arst` (1-bit), `in` (`bits.in`-bit)
+    * Outputs: `out` (`bits.out`-bit)
 
 # TODO
 

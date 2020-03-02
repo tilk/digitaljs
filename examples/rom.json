@@ -1,14 +1,14 @@
 {
   "devices": {
     "dev0": {
-      "celltype": "$numentry",
+      "type": "NumEntry",
       "label": "addr",
       "net": "addr",
       "order": 0,
       "bits": 4
     },
     "dev1": {
-      "celltype": "$numdisplay",
+      "type": "NumDisplay",
       "label": "data",
       "net": "data",
       "order": 1,
@@ -16,7 +16,7 @@
     },
     "dev2": {
       "label": "mem",
-      "celltype": "$mem",
+      "type": "Memory",
       "bits": 4,
       "abits": 4,
       "words": 16,

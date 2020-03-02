@@ -1,21 +1,21 @@
 {
   "devices": {
     "dev0": {
-      "celltype": "$numentry",
+      "type": "NumEntry",
       "label": "a",
       "net": "a",
       "order": 0,
       "bits": 4
     },
     "dev1": {
-      "celltype": "$numentry",
+      "type": "NumEntry",
       "label": "b",
       "net": "b",
       "order": 1,
       "bits": 4
     },
     "dev2": {
-      "celltype": "$numdisplay",
+      "type": "NumDisplay",
       "label": "o",
       "net": "o",
       "order": 2,
@@ -23,22 +23,26 @@
     },
     "dev3": {
       "label": "$genblock$tests/serialadder.sv:47$4[0].\\fa",
+      "type": "Subcircuit",
       "celltype": "fulladder"
     },
     "dev4": {
       "label": "$genblock$tests/serialadder.sv:47$5[1].\\fa",
+      "type": "Subcircuit",
       "celltype": "fulladder"
     },
     "dev5": {
       "label": "$genblock$tests/serialadder.sv:47$6[2].\\fa",
+      "type": "Subcircuit",
       "celltype": "fulladder"
     },
     "dev6": {
       "label": "$genblock$tests/serialadder.sv:47$7[3].\\fa",
+      "type": "Subcircuit",
       "celltype": "fulladder"
     },
     "dev7": {
-      "celltype": "$busgroup",
+      "type": "BusGroup",
       "groups": [
         1,
         1,
@@ -48,11 +52,11 @@
       ]
     },
     "dev8": {
-      "celltype": "$constant",
+      "type": "Constant",
       "constant": "0"
     },
     "dev9": {
-      "celltype": "$busslice",
+      "type": "BusSlice",
       "slice": {
         "first": 0,
         "count": 1,
@@ -60,7 +64,7 @@
       }
     },
     "dev10": {
-      "celltype": "$busslice",
+      "type": "BusSlice",
       "slice": {
         "first": 0,
         "count": 1,
@@ -68,7 +72,7 @@
       }
     },
     "dev11": {
-      "celltype": "$busslice",
+      "type": "BusSlice",
       "slice": {
         "first": 1,
         "count": 1,
@@ -76,7 +80,7 @@
       }
     },
     "dev12": {
-      "celltype": "$busslice",
+      "type": "BusSlice",
       "slice": {
         "first": 1,
         "count": 1,
@@ -84,7 +88,7 @@
       }
     },
     "dev13": {
-      "celltype": "$busslice",
+      "type": "BusSlice",
       "slice": {
         "first": 2,
         "count": 1,
@@ -92,7 +96,7 @@
       }
     },
     "dev14": {
-      "celltype": "$busslice",
+      "type": "BusSlice",
       "slice": {
         "first": 2,
         "count": 1,
@@ -100,7 +104,7 @@
       }
     },
     "dev15": {
-      "celltype": "$busslice",
+      "type": "BusSlice",
       "slice": {
         "first": 3,
         "count": 1,
@@ -108,7 +112,7 @@
       }
     },
     "dev16": {
-      "celltype": "$busslice",
+      "type": "BusSlice",
       "slice": {
         "first": 3,
         "count": 1,
@@ -391,28 +395,28 @@
     "halfadder": {
       "devices": {
         "dev0": {
-          "celltype": "$input",
+          "type": "Input",
           "label": "a",
           "net": "a",
           "order": 0,
           "bits": 1
         },
         "dev1": {
-          "celltype": "$input",
+          "type": "Input",
           "label": "b",
           "net": "b",
           "order": 1,
           "bits": 1
         },
         "dev2": {
-          "celltype": "$output",
+          "type": "Output",
           "label": "o",
           "net": "o",
           "order": 2,
           "bits": 1
         },
         "dev3": {
-          "celltype": "$output",
+          "type": "Output",
           "label": "c",
           "net": "c",
           "order": 3,
@@ -420,12 +424,12 @@
         },
         "dev4": {
           "label": "$and$tests/serialadder.sv:10$2",
-          "celltype": "$and",
+          "type": "And",
           "bits": 1
         },
         "dev5": {
           "label": "$xor$tests/serialadder.sv:9$1",
-          "celltype": "$xor",
+          "type": "Xor",
           "bits": 1
         }
       },
@@ -501,35 +505,35 @@
     "fulladder": {
       "devices": {
         "dev0": {
-          "celltype": "$input",
+          "type": "Input",
           "label": "a",
           "net": "a",
           "order": 0,
           "bits": 1
         },
         "dev1": {
-          "celltype": "$input",
+          "type": "Input",
           "label": "b",
           "net": "b",
           "order": 1,
           "bits": 1
         },
         "dev2": {
-          "celltype": "$input",
+          "type": "Input",
           "label": "d",
           "net": "d",
           "order": 2,
           "bits": 1
         },
         "dev3": {
-          "celltype": "$output",
+          "type": "Output",
           "label": "o",
           "net": "o",
           "order": 3,
           "bits": 1
         },
         "dev4": {
-          "celltype": "$output",
+          "type": "Output",
           "label": "c",
           "net": "c",
           "order": 4,
@@ -537,15 +541,17 @@
         },
         "dev5": {
           "label": "$or$tests/serialadder.sv:28$3",
-          "celltype": "$or",
+          "type": "Or",
           "bits": 1
         },
         "dev6": {
           "label": "ha1",
+          "type": "Subcircuit",
           "celltype": "halfadder"
         },
         "dev7": {
           "label": "ha2",
+          "type": "Subcircuit",
           "celltype": "halfadder"
         }
       },
