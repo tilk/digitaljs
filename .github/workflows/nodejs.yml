@@ -22,3 +22,8 @@ jobs:
     - run: npm test
       env:
         CI: true
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: webpack
+        path: dist
