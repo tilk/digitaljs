@@ -173,6 +173,13 @@
     stroke: #4B4F6A;
 }
 
+.djs.fixed .joint-link {
+    pointer-events: none;
+}
+.djs.fixed .joint-element {
+    cursor: default;
+}
+
 
 
 /* .viewport is a <g> node wrapping all diagram elements in the paper */
@@ -205,10 +212,10 @@ path:not([d]) {
 
 
 /* magnet is an element that can be either source or a target of a link */
-[magnet=true]:not(.joint-element) {
+.djs:not(.fixed) [magnet=true]:not(.joint-element) {
    cursor: crosshair;
 }
-[magnet=true]:not(.joint-element):hover {
+.djs:not(.fixed) [magnet=true]:not(.joint-element):hover {
    opacity: .7;
 }
 

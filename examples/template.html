@@ -8,6 +8,7 @@
     <div id="paper">
     </div>
     <div>
+        <input name="fixed" type="checkbox">Fixed Mode</input>
         <button name="json" type="button">Serialize and Reload</button>
     </div>
     <div>
@@ -16,12 +17,25 @@
     <div id="monitor">
     </div>
     <script>
-      var circuit, monitor, monitorview;
+      var circuit, monitor, monitorview, paper;
+      var subpapers = {};
+      const fixed = function (fixed) {
+        paper.fixed(fixed);
+        Object.values(subpapers).forEach(p => p.fixed(fixed));
+      }
       const loadCircuit = function (json) {
         circuit = new digitaljs.Circuit(json);
         monitor = new digitaljs.Monitor(circuit);
         monitorview = new digitaljs.MonitorView({model: monitor, el: $('#monitor') });
-        circuit.displayOn($('#paper'));
+        paper = circuit.displayOn($('#paper'));
+        fixed($('input[name=fixed]').prop('checked'));
+        circuit.on('new:paper', function(subpaper) {
+          subpaper.fixed($('input[name=fixed]').prop('checked'));
+          subpapers[subpaper.cid] = subpaper;
+        });
+        circuit.on('remove:paper', function(subpaper) {
+          delete subpapers[subpaper.cid];
+        });
         circuit.start();
       }
       $('button[name=json]').on('click', (e) => {
@@ -31,12 +45,15 @@
         console.log(json);
         loadCircuit(json);
       });
+      $('input[name=fixed]').change(function () {
+        fixed($(this).prop('checked'));
+      });
       $('button[name=ppt_up]').on('click', (e) => { monitorview.pixelsPerTick *= 2; });
       $('button[name=ppt_down]').on('click', (e) => { monitorview.pixelsPerTick /= 2; });
       $('button[name=left]').on('click', (e) => { monitorview.live = false; monitorview.start -= monitorview._width / monitorview.pixelsPerTick / 4; });
       $('button[name=right]').on('click', (e) => { monitorview.live = false; monitorview.start += monitorview._width / monitorview.pixelsPerTick / 4; });
       $('button[name=live]').on('click', (e) => { monitorview.live = true; });
-      loadCircuit(<%= htmlWebpackPlugin.options.test %>);
+      $(window).ready(function () { loadCircuit(<%= htmlWebpackPlugin.options.test %>) });
     </script>
   </body>
 </html>
