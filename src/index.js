@@ -75,7 +75,7 @@ export class Circuit extends HeadlessCircuit {
             height: 'auto',
             maxWidth: $(window).width() * 0.9,
             maxHeight: $(window).height() * 0.9,
-            resizable: type === "Subcircuit",
+            resizable: type !== "Memory",
             close: closingCallback
         });
     }
@@ -151,6 +151,9 @@ export class Circuit extends HeadlessCircuit {
         });
         this.listenTo(paper, 'open:memorycontent', function(div, closeCallback) {
             circuit._windowCallback('Memory', div, closeCallback);
+        });
+        this.listenTo(paper, 'open:fsm', function(div, closeCallback) {
+            circuit._windowCallback('FSM', div, closeCallback);
         });
         paper.fixed = function(fixed) {
             this.setInteractivity(!fixed);

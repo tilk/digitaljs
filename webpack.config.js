@@ -12,7 +12,8 @@ const tests = [
     {name: 'lfsr', title: 'Linear Feedback Shift Register'},
     {name: 'sextium', title: 'Sextium III Processor'},
     {name: 'rom', title: 'Async ROM'},
-    {name: 'ram', title: 'Simple RAM'}
+    {name: 'ram', title: 'Simple RAM'},
+    {name: 'fsm', title: 'Finite State Machine'}
 ];
 
 module.exports = {
