@@ -122,7 +122,8 @@ export const FSM = Box.define('FSM', {
         this.set('next_trans', trans.id);
         if (!trans) return { out: Vector3vl.xes(bits.out) };
         else return { out: trans.get('ctrlOut') };
-    }
+    },
+    gateParams: Box.prototype.gateParams.concat(['bits', 'polarity', 'wirename', 'states', 'init_state', 'trans_table'])
 });
 
 export const FSMView = BoxView.extend({
@@ -157,15 +158,9 @@ export const FSMView = BoxView.extend({
             paper.fitToContent({ padding: 30, allowNewOrigin: 'any' });
         });
         paper.fitToContent({ padding: 30, allowNewOrigin: 'any' });
-        const maxWidth = $(window).width() * 0.9;
-        const maxHeight = $(window).height() * 0.9;
-        div.dialog({
-            width: Math.min(maxWidth, pdiv.outerWidth() + 60), 
-            height: Math.min(maxHeight, pdiv.outerHeight() + 60),
-            close: () => {
-                paper.remove();
-                div.remove();
-            }
+        this.paper.trigger('open:fsm', div, () => {
+            paper.remove();
+            div.remove();
         });
         return false;
     }

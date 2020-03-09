@@ -84,8 +84,7 @@ export const SubcircuitView = BoxView.extend({
     },
     zoomInCircuit: function(evt) {
         evt.stopPropagation();
-        // TODO separate event type?
-        this.paper.trigger('cell:pointerdblclick', this, evt);
+        this.paper.trigger('open:subcircuit', this.model);
         return false;
     }
 });

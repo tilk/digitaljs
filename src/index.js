@@ -18,8 +18,9 @@ import './style.css';
 export { HeadlessCircuit, getCellType, MonitorView, Monitor };
 
 export class Circuit extends HeadlessCircuit {
-    constructor(data) {
+    constructor(data, windowCallback) {
         super(data);
+        this._windowCallback = windowCallback || this._defaultWindowCallback;
         this._interval_ms = 10;
         this._interval = null;
         this._idle = null;
@@ -67,6 +68,16 @@ export class Circuit extends HeadlessCircuit {
     shutdown() {
         super.shutdown();
         this.stop();
+    }
+    _defaultWindowCallback(type, div, closingCallback) {
+        div.dialog({
+            width: 'auto',
+            height: 'auto',
+            maxWidth: $(window).width() * 0.9,
+            maxHeight: $(window).height() * 0.9,
+            resizable: type !== "Memory",
+            close: closingCallback
+        });
     }
     displayOn(elem) {
         return this.makePaper(elem, this._graph);
@@ -119,37 +130,30 @@ export class Circuit extends HeadlessCircuit {
             });
             graph.set('laid_out', true);
         }
-        paper.unfreeze({
-            progress(done, processed, total) {
-                if (done) {
-                    paper.fitToContent({ padding: 30, allowNewOrigin: 'any' });
-                    if (opts.onDone) opts.onDone();
-                }
-            }
+        this.listenTo(paper, 'render:done', function() {
+            paper.fitToContent({ padding: 30, allowNewOrigin: 'any' });
         });
+        paper.unfreeze();
         // subcircuit display
-        this.listenTo(paper, 'cell:pointerdblclick', function(view, evt) {
-            if (!(view.model instanceof cells.Subcircuit)) return;
+        this.listenTo(paper, 'open:subcircuit', function(model) {
             const div = $('<div>', { 
-                title: view.model.get('celltype') + ' ' + view.model.get('label') 
+                title: model.get('celltype') + ' ' + model.get('label')
             }).appendTo('html > body');
             const pdiv = $('<div>').appendTo(div);
-            const graph = view.model.get('graph');
-            var didResize = false;
-            const paper = this.makePaper(pdiv, graph, {
-                onDone() {
-                    if (didResize) return;
-                    didResize = true;
-                    const maxWidth = $(window).width() * 0.9;
-                    const maxHeight = $(window).height() * 0.9;
-                    div.dialog({ width: Math.min(maxWidth, pdiv.outerWidth() + 60), height: Math.min(maxHeight, pdiv.outerHeight() + 60) });
-                    div.on('dialogclose', function(evt) {
-                        paper.remove();
-                        div.remove();
-                        circuit.trigger('remove:paper', paper);
-                    });
-                }
+            const graph = model.get('graph');
+            const paper = this.makePaper(pdiv, graph);
+            paper.once('render:done', function() {
+                circuit._windowCallback('Subcircuit', div, () => {
+                    paper.remove();
+                    div.remove();
+                });
             });
+        });
+        this.listenTo(paper, 'open:memorycontent', function(div, closeCallback) {
+            circuit._windowCallback('Memory', div, closeCallback);
+        });
+        this.listenTo(paper, 'open:fsm', function(div, closeCallback) {
+            circuit._windowCallback('FSM', div, closeCallback);
         });
         paper.fixed = function(fixed) {
             this.setInteractivity(!fixed);
