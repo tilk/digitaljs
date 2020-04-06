@@ -58,27 +58,27 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
         _.set(args, ['attrs', 'path.wire.port_' + port.id], wire_args);
         _.set(args, ['attrs', 'circle.port_' + port.id], circle_args);
         let markup = '<path class="wire port_' + port.id + '"/><circle class="port ' + port.dir + ' port_' + port.id + '"/>';
-        if (port.bits > 1) {
-            markup += '<text class="bits port_' + port.id + '"/>';
-            const bits_args = {
-                text: port.bits,
-                ref: 'circle.port_' + port.id
-            };
-            if (vert) {
-                // TODO
-            } else {
-                bits_args['ref-y'] = -3;
-                bits_args['text-anchor'] = 'middle';
-            }
-            if (side == 'left') {
-                bits_args['ref-dx'] = 6;
-            } else if (side == 'right') {
-                bits_args['ref-x'] = -6;
-            } else if (side == 'top') {
-                bits_args['ref-y'] = 6;
-            } else console.assert(false);
-            _.set(args, ['attrs', 'text.bits.port_' + port.id], bits_args);
+
+        markup += '<text class="bits port_' + port.id + '"/>';
+        const bits_args = {
+            text: port.bits > 1 ? port.bits : "",
+            ref: 'circle.port_' + port.id
+        };
+        if (vert) {
+            // TODO
+        } else {
+            bits_args['ref-y'] = -3;
+            bits_args['text-anchor'] = 'middle';
         }
+        if (side == 'left') {
+            bits_args['ref-dx'] = 6;
+        } else if (side == 'right') {
+            bits_args['ref-x'] = -6;
+        } else if (side == 'top') {
+            bits_args['ref-y'] = 6;
+        } else console.assert(false);
+        _.set(args, ['attrs', 'text.bits.port_' + port.id], bits_args);
+
         const signame = port.dir == 'in' ? 'inputSignals' : 'outputSignals';
         if (_.get(args, [signame, port.id]) === undefined) {
             _.set(args, [signame, port.id], Vector3vl.xes(port.bits));
