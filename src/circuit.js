@@ -260,7 +260,7 @@ export class HeadlessCircuit {
         }
         return fromGraph(this._graph);
     }
-    toJSON() {
+    toJSON(layout = true) {
         const subcircuits = {};
         const circuit = this;
         function fromGraph(graph) {
@@ -270,14 +270,14 @@ export class HeadlessCircuit {
             };
             const laid_out = graph.get('laid_out');
             for (const elem of graph.getElements()) {
-                const args = ret.devices[elem.get('id')] = elem.getGateParams();
+                const args = ret.devices[elem.get('id')] = elem.getGateParams(layout);
                 if (!laid_out) delete args.position;
                 if (elem instanceof circuit._cells.Subcircuit && !subcircuits[elem.get('celltype')]) {
                     subcircuits[elem.get('celltype')] = fromGraph(elem.get('graph'));
                 }
             }
             for (const elem of graph.getLinks()) {
-                ret.connectors.push(elem.getWireParams());
+                ret.connectors.push(elem.getWireParams(layout));
             }
             return ret;
         }

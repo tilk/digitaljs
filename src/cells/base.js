@@ -85,10 +85,11 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
         }
         return '<g>' + markup + '</g>';
     },
-    getGateParams: function() {
-        return _.cloneDeep(_.pick(this.attributes, this.gateParams))
+    getGateParams: function(layout) {
+        return _.cloneDeep(_.pick(this.attributes, this.gateParams.concat(layout ? this.gateLayoutParams : [])));
     },
-    gateParams: ['label', 'position', 'type', 'propagation']
+    gateParams: ['label', 'type', 'propagation'],
+    gateLayoutParams: ['position']
 });
 
 export const GateView = joint.dia.ElementView.extend({
@@ -208,7 +209,7 @@ export const Wire = joint.dia.Link.define('Wire', {
             });
         }
     },
-    getWireParams: function() {
+    getWireParams: function(layout) {
         const connector = {
             from: {
                 id: this.get('source').id,
@@ -221,7 +222,7 @@ export const Wire = joint.dia.Link.define('Wire', {
         };
         if (this.has('netname'))
             connector.name = this.get('netname');
-        if (this.has('vertices'))
+        if (layout && this.has('vertices') && this.get('vertices').length > 0)
             connector.vertices = _.cloneDeep(this.get('vertices'));
         return connector;
     }
