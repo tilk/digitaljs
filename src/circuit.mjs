@@ -229,12 +229,12 @@ export class HeadlessCircuit {
     }
     setInput(name, sig) {
         const cell = this._graph.getCell(name);
-        console.assert(cell.get('celltype') == '$input');
+        console.assert(cell instanceof this._cells.Input);
         cell.set('outputSignals', { out: sig });
     }
     getOutput(name) {
         const cell = this._graph.getCell(name);
-        console.assert(cell.get('celltype') == '$output');
+        console.assert(cell instanceof this._cells.Output);
         return cell.get('inputSignals').in;
     }
     makeLabelIndex() {
