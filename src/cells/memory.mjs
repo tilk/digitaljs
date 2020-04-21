@@ -5,7 +5,7 @@ import _ from 'lodash';
 import * as joint from 'jointjs';
 import { Box, BoxView } from './base';
 import bigInt from 'big-integer';
-import * as help from '../help.js';
+import * as help from '../help.mjs';
 import { Vector3vl, Mem3vl } from '3vl';
 
 // Memory cell

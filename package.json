@@ -2,7 +2,7 @@
   "name": "digitaljs",
   "version": "0.5.2",
   "description": "Digital logic simulator",
-  "main": "src/index.js",
+  "main": "src/index.mjs",
   "scripts": {
     "prepare": "npm run prod",
     "dev": "webpack --mode development",
@@ -29,7 +29,7 @@
     "jest": "^24.9.0",
     "style-loader": "^0.23.1",
     "webpack": "^4.42.0",
-    "webpack-cli": "^3.3.11"
+    "webpack-cli": "^4.0.0-beta.8"
   },
   "dependencies": {
     "3vl": "^0.2.3",

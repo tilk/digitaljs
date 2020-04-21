@@ -4,7 +4,7 @@ import * as joint from 'jointjs';
 import _ from 'lodash';
 import Backbone from 'backbone';
 import { Vector3vl } from '3vl';
-import * as cells from './cells.js';
+import * as cells from './cells.mjs';
 import FastPriorityQueue from 'fastpriorityqueue';
     
 export function getCellType(tp) {

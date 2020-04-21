@@ -4,7 +4,7 @@ import * as joint from 'jointjs';
 import { Gate, Box, BoxView } from './base';
 import { IO, Input, Output } from './io';
 import bigInt from 'big-integer';
-import * as help from '../help.js';
+import * as help from '../help.mjs';
 
 // Subcircuit model -- embeds a circuit graph in an element
 export const Subcircuit = Box.define('Subcircuit', {

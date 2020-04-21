@@ -5,7 +5,7 @@ import { Gate, GateView } from './base';
 import _ from 'lodash';
 import $ from 'jquery';
 import bigInt from 'big-integer';
-import * as help from '../help.js';
+import * as help from '../help.mjs';
 import { Vector3vl } from '3vl';
 
 // Things with numbers
