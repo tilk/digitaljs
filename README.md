@@ -1,6 +1,5 @@
 ![][digitaljs-logo]
 
-[![Build Status](https://travis-ci.org/tilk/digitaljs.svg?branch=master)](https://travis-ci.org/tilk/digitaljs)
 # DigitalJS
 
 This project is a digital circuit simulator implemented in Javascript.
