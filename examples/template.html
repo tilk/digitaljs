@@ -10,6 +10,7 @@
     <div>
         <input name="fixed" type="checkbox">Fixed Mode</input>
         <button name="json" type="button">Serialize and Reload</button>
+        <input name="layout" type="checkbox">Include layout information</button>
     </div>
     <div>
         <button name="ppt_up" type="button">+</button><button name="ppt_down">-</button><button name="left">&lt;</button><button name="right">&gt;</button><button name="live">live</button>
@@ -41,7 +42,7 @@
       $('button[name=json]').on('click', (e) => {
         monitorview.shutdown();
         circuit.stop();
-        const json = circuit.toJSON();
+        const json = circuit.toJSON($('input[name=layout]').prop('checked'));
         console.log(json);
         loadCircuit(json);
       });
