@@ -7,10 +7,54 @@
   <body>
     <div id="paper">
     </div>
+    <div>
+        <input name="fixed" type="checkbox">Fixed Mode</input>
+        <button name="json" type="button">Serialize and Reload</button>
+        <input name="layout" type="checkbox">Include layout information</button>
+    </div>
+    <div>
+        <button name="ppt_up" type="button">+</button><button name="ppt_down">-</button><button name="left">&lt;</button><button name="right">&gt;</button><button name="live">live</button>
+    </div>
+    <div id="monitor">
+    </div>
     <script>
-      const circuit = new digitaljs.Circuit({"devices":{"dev0":{"celltype":"$clock","label":"clk","net":"clk","order":0,"bits":1,"propagation":100},"dev1":{"celltype":"$button","label":"rst","net":"rst","order":1,"bits":1},"dev2":{"celltype":"$button","label":"en","net":"en","order":2,"bits":1},"dev3":{"celltype":"$numentry","label":"A","net":"A","order":3,"bits":4},"dev4":{"celltype":"$numdisplay","label":"O","net":"O","order":4,"bits":4},"dev5":{"label":"$add$tests/cycleadder.sv:13$2","celltype":"$add","bits":{"in1":4,"in2":4,"out":4},"signed":{"in1":false,"in2":false}},"dev6":{"label":"$procdff$9","celltype":"$dff","bits":4,"polarity":{"clock":true}},"dev7":{"label":"$procmux$4","celltype":"$mux","bits":{"in":4,"sel":1}},"dev8":{"label":"$procmux$7","celltype":"$mux","bits":{"in":4,"sel":1}},"dev9":{"celltype":"$constant","constant":"0000"}},"connectors":[{"to":{"id":"dev6","port":"clk"},"from":{"id":"dev0","port":"out"},"name":"clk"},{"to":{"id":"dev8","port":"sel"},"from":{"id":"dev1","port":"out"},"name":"rst"},{"to":{"id":"dev7","port":"sel"},"from":{"id":"dev2","port":"out"},"name":"en"},{"to":{"id":"dev5","port":"in2"},"from":{"id":"dev3","port":"out"},"name":"A"},{"to":{"id":"dev4","port":"in"},"from":{"id":"dev6","port":"out"},"name":"O"},{"to":{"id":"dev5","port":"in1"},"from":{"id":"dev6","port":"out"},"name":"O"},{"to":{"id":"dev7","port":"in0"},"from":{"id":"dev6","port":"out"},"name":"O"},{"to":{"id":"dev7","port":"in1"},"from":{"id":"dev5","port":"out"}},{"to":{"id":"dev6","port":"in"},"from":{"id":"dev8","port":"out"}},{"to":{"id":"dev8","port":"in0"},"from":{"id":"dev7","port":"out"}},{"to":{"id":"dev8","port":"in1"},"from":{"id":"dev9","port":"out"}}],"subcircuits":{}});
-      const paper = circuit.displayOn($('#paper'));
-      circuit.start();
+      var circuit, monitor, monitorview, paper;
+      var subpapers = {};
+      const fixed = function (fixed) {
+        paper.fixed(fixed);
+        Object.values(subpapers).forEach(p => p.fixed(fixed));
+      }
+      const loadCircuit = function (json) {
+        circuit = new digitaljs.Circuit(json);
+        monitor = new digitaljs.Monitor(circuit);
+        monitorview = new digitaljs.MonitorView({model: monitor, el: $('#monitor') });
+        paper = circuit.displayOn($('#paper'));
+        fixed($('input[name=fixed]').prop('checked'));
+        circuit.on('new:paper', function(subpaper) {
+          subpaper.fixed($('input[name=fixed]').prop('checked'));
+          subpapers[subpaper.cid] = subpaper;
+        });
+        circuit.on('remove:paper', function(subpaper) {
+          delete subpapers[subpaper.cid];
+        });
+        circuit.start();
+      }
+      $('button[name=json]').on('click', (e) => {
+        monitorview.shutdown();
+        circuit.stop();
+        const json = circuit.toJSON($('input[name=layout]').prop('checked'));
+        console.log(json);
+        loadCircuit(json);
+      });
+      $('input[name=fixed]').change(function () {
+        fixed($(this).prop('checked'));
+      });
+      $('button[name=ppt_up]').on('click', (e) => { monitorview.pixelsPerTick *= 2; });
+      $('button[name=ppt_down]').on('click', (e) => { monitorview.pixelsPerTick /= 2; });
+      $('button[name=left]').on('click', (e) => { monitorview.live = false; monitorview.start -= monitorview._width / monitorview.pixelsPerTick / 4; });
+      $('button[name=right]').on('click', (e) => { monitorview.live = false; monitorview.start += monitorview._width / monitorview.pixelsPerTick / 4; });
+      $('button[name=live]').on('click', (e) => { monitorview.live = true; });
+      $(window).ready(function () { loadCircuit({"devices":{"dev0":{"type":"Clock","label":"clk","net":"clk","order":0,"bits":1,"propagation":100},"dev1":{"type":"Button","label":"rst","net":"rst","order":1,"bits":1},"dev2":{"type":"Button","label":"en","net":"en","order":2,"bits":1},"dev3":{"type":"NumEntry","label":"A","net":"A","order":3,"bits":4},"dev4":{"type":"NumDisplay","label":"O","net":"O","order":4,"bits":4},"dev5":{"label":"$add$tests/cycleadder.sv:13$2","type":"Addition","bits":{"in1":4,"in2":4,"out":4},"signed":{"in1":false,"in2":false}},"dev6":{"label":"$procdff$9","type":"Dff","bits":4,"polarity":{"clock":true}},"dev7":{"label":"$procmux$4","type":"Mux","bits":{"in":4,"sel":1}},"dev8":{"label":"$procmux$7","type":"Mux","bits":{"in":4,"sel":1}},"dev9":{"type":"Constant","constant":"0000"}},"connectors":[{"to":{"id":"dev6","port":"clk"},"from":{"id":"dev0","port":"out"},"name":"clk"},{"to":{"id":"dev8","port":"sel"},"from":{"id":"dev1","port":"out"},"name":"rst"},{"to":{"id":"dev7","port":"sel"},"from":{"id":"dev2","port":"out"},"name":"en"},{"to":{"id":"dev5","port":"in2"},"from":{"id":"dev3","port":"out"},"name":"A"},{"to":{"id":"dev4","port":"in"},"from":{"id":"dev6","port":"out"},"name":"O"},{"to":{"id":"dev5","port":"in1"},"from":{"id":"dev6","port":"out"},"name":"O"},{"to":{"id":"dev7","port":"in0"},"from":{"id":"dev6","port":"out"},"name":"O"},{"to":{"id":"dev7","port":"in1"},"from":{"id":"dev5","port":"out"}},{"to":{"id":"dev6","port":"in"},"from":{"id":"dev8","port":"out"}},{"to":{"id":"dev8","port":"in0"},"from":{"id":"dev7","port":"out"}},{"to":{"id":"dev8","port":"in1"},"from":{"id":"dev9","port":"out"}}],"subcircuits":{}}) });
     </script>
   </body>
 </html>
