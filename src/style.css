@@ -100,45 +100,26 @@
     cursor: crosshair;
 }
 
-.joint-element .body {
-    fill: white;
-    stroke: black;
-    transition: all 0.2s;
-}
-
-.djs .joint-element circle {
-    fill: #fff;
-    stroke: #7f8c8d;
-    stroke-opacity: 0.5;
-    stroke-width: 2px;
-}
-
-.djs .joint-element circle.live {
+.djs .joint-port-body.defined.live circle.port {
     stroke: #03c03c;
 }
 
-.djs .joint-element circle.low {
+.djs .joint-port-body.defined.low circle.port {
     stroke: #fc7c68;
 }
 
-.djs .joint-element circle.defined {
+.djs .joint-port-body.defined circle.port {
     stroke: #779ecb;
 }
 
 .djs .joint-element circle.led.live {
     fill: #03c03c;
+    stroke-width: 0;
 }
 
 .djs .joint-element circle.led.low {
     fill: #fc7c68;
-}
-
-.joint-element text {
-    font-size: 8pt;
-}
-
-.joint-element text.bits {
-    font-size: 7pt;
+    stroke-width: 0;
 }
 
 .joint-link.live > .connection {
@@ -629,10 +610,6 @@ g:hover > foreignObject.tooltip {
     box-sizing: border-box;
     background: white;
     padding: 5px;
-}
-
-.joint-element foreignObject.tooltip a.zoom {
-    cursor: pointer;
 }
 
 div.wire_hover {

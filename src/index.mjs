@@ -90,24 +90,27 @@ export class Circuit extends HeadlessCircuit {
             el: elem,
             model: graph,
             width: 100, height: 100, gridSize: 5,
+            magnetThreshold: 'onleave',
             snapLinks: true,
             linkPinning: false,
+            markAvailable: true,
             defaultLink: new this._cells.Wire,
             cellViewNamespace: this._cells,
             validateConnection: function(vs, ms, vt, mt, e, vl) {
                 if (e === 'target') {
                     if (!mt) return false;
-                    const pt = vt.model.ports[mt.getAttribute('port')];
+                    const pt = vt.model.getPort(vt.findAttribute('port', mt));
                     if (typeof pt !== 'object' || pt.dir !== 'in' || pt.bits !== vl.model.get('bits'))
                         return false;
                     const link = this.model.getConnectedLinks(vt.model).find((l) =>
                         l.id !== vl.model.id &&
                         l.get('target').id === vt.model.id &&
-                        l.get('target').port === mt.getAttribute('port')
+                        l.get('target').port === vt.findAttribute('port', mt)
                     );
                     return !link;
                 } else if (e === 'source') { 
-                    const ps = vs.model.ports[ms.getAttribute('port')];
+                    if (!ms) return false;
+                    const ps = vs.model.getPort(vs.findAttribute('port', ms));
                     if (typeof ps !== 'object' || ps.dir !== 'out' || ps.bits !== vl.model.get('bits'))
                         return false;
                     return true;
@@ -125,6 +128,12 @@ export class Circuit extends HeadlessCircuit {
                 edgeSep: 0,
                 rankSep: 110,
                 rankDir: "LR",
+                setPosition: function(element, position) {
+                    element.setLayoutPosition(position);
+                },
+                exportElement: function(element) {
+                    return element.getLayoutSize();
+                },
                 dagre: dagre,
                 graphlib: graphlib
             });

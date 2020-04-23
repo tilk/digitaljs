@@ -1,56 +1,84 @@
 "use strict";
 
 import * as joint from 'jointjs';
-import { Gate, GateView } from './base';
+import { Gate, GateView, portGroupAttrs } from './base';
 import bigInt from 'big-integer';
 import * as help from '../help.mjs';
 import { Vector3vl } from '3vl';
 
 // Multiplexers
 export const GenMux = Gate.define('GenMux', {
-    attrs: {
-        "rect.wtf": {
-            y: -4, width: 40, height: 1, visibility: 'hidden'
-        },
-        "text.arrow": {
-            text: '✔', 'y-alignment': 'middle', fill: 'black',
-            visibility: 'hidden'
+    /* default properties */
+    bits: { in: 1, sel: 1 },
+    
+    size: { width: 40, height: undefined },
+    ports: {
+        groups: {
+            'in2': {
+                position: { name: 'top', args: { y: 5 } },
+                attrs: _.merge({}, portGroupAttrs, {
+                    'line.wire': { x2: 0, y2: -20 },
+                    'circle.port': { magnet: 'passive', refY: -20 },
+                    'text.bits': { refDx: -5, refDy: 2, textAnchor: 'start' }
+                }),
+                z: -1
+            }
         }
     }
 }, {
-    constructor: function(args) {
-        if (!args.bits) args.bits = { in: 1, sel: 1 };
-        const n_ins = this.muxNumInputs(args.bits.sel);
-        const size = { width: 40, height: n_ins*16+8 };
-        _.set(args, ['attrs', '.body', 'points'], 
-            [[0,0],[40,10],[40,size.height-10],[0,size.height]]
+    initialize: function() {
+        Gate.prototype.initialize.apply(this, arguments);
+        
+        const bits = this.prop('bits');
+        
+        this.addPorts([
+            { id: 'sel', group: 'in2', dir: 'in', bits: bits.sel },
+            { id: 'out', group: 'out', dir: 'out', bits: bits.in }
+        ]);
+        
+        this.on('change:size', (_, size) => {
+            this.attr(['polygon.body', 'points'], 
+            [[0,0],[size.width,10],[size.width,size.height-10],[0,size.height]]
                 .map(x => x.join(',')).join(' '));
-        args.size = size;
-        const markup = [];
+        });
+        const n_ins = this.muxNumInputs(bits.sel);
+        this.prop('size/height', n_ins*16+8);
+        
+        const vpath = [
+            [2, 0],
+            [5, 5],
+            [11, -5]
+        ];
+        const path = 'M' + vpath.map(l => l.join(' ')).join(' L');
+        
         for (const num of Array(n_ins).keys()) {
-            const y = num*16+12;
-            markup.push(this.addWire(args, 'left', y, { id: 'in' + num, dir: 'in', bits: args.bits.in }));
+            this.addPort({ id: 'in' + num, group: 'in', dir: 'in', bits: bits.in, decor: path });
         }
-        markup.push(this.addWire(args, 'top', 0.5, { id: 'sel', dir: 'in', bits: args.bits.sel }));
-        markup.push(this.addWire(args, 'right', (size.height)/2, { id: 'out', dir: 'out', bits: args.bits.in }));
-        markup.push('<polygon class="body"/><rect class="wtf"/><text class="label"/>');
-        for (const num of Array(n_ins).keys()) {
-            const y = num*16+12;
-            markup.push('<text class="arrow arrow_in' + num + '" />');
-            args.attrs['text.arrow_in' + num] = {
-                'ref-x': 2,
-                'ref-y': y,
-            };
-        }
-        this.markup = markup.join('');
-        Gate.prototype.constructor.apply(this, arguments);
     },
     operation: function(data) {
         const i = this.muxInput(data.sel);
         if (i === undefined) return { out: Vector3vl.xes(this.get('bits').in) };
         return { out: data['in' + i] };
     },
-    gateParams: Gate.prototype.gateParams.concat(['bits'])
+    //add offset of 20pt to account for the top selection port at layout time
+    getLayoutSize: function() {
+        const size = this.size();
+        size.height += 20;
+        return size;
+    },
+    setLayoutPosition: function(position) {
+        this.set('position', {
+            x: position.x - position.width / 2,
+            y: position.y - position.height / 2 + 20
+        });
+    },
+    markup: Gate.prototype.markup.concat([{
+            tagName: 'polygon',
+            className: 'body'
+        }
+    ]),
+    gateParams: Gate.prototype.gateParams.concat(['bits']),
+    unsupportedPropChanges: Gate.prototype.unsupportedPropChanges.concat(['bits'])
 });
 export const GenMuxView = GateView.extend({
     initialize() {
@@ -70,7 +98,7 @@ export const GenMuxView = GateView.extend({
     updateMux(data) {
         const i = this.model.muxInput(data.sel);
         for (const num of Array(this.n_ins).keys()) {
-            this.$('text.arrow_in' + num).css('visibility', i == num ? 'visible' : 'hidden');
+            this.$('[port=in' + num + '] path.decor').css('visibility', i == num ? 'visible' : 'hidden');
         }
     }
 });

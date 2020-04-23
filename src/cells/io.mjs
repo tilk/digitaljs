@@ -1,7 +1,7 @@
 "use strict";
 
 import * as joint from 'jointjs';
-import { Gate, GateView } from './base';
+import { Box, BoxView } from './base';
 import _ from 'lodash';
 import $ from 'jquery';
 import bigInt from 'big-integer';
@@ -9,35 +9,45 @@ import * as help from '../help.mjs';
 import { Vector3vl } from '3vl';
 
 // Things with numbers
-export const NumBase = Gate.define('NumBase', {
-    numbase: 'hex',
-    attrs: {
-        '.tooltip': {
-            'ref-x': 0, 'ref-y': -30,
-            width: 80, height: 30
-        },
-    }
+export const NumBase = Box.define('NumBase', {
+    /* default properties */
+    numbase: 'hex'
 }, {
-    initialize: function(args) {
-        this.listenTo(this, 'change:size', (x, size) => {
-            this.attr('.tooltip/width', Math.max(size.width, 50))
-        });
-        Gate.prototype.initialize.apply(this, arguments);
-    },
-    numbaseMarkup: [
-        // requiredExtensions="http://www.w3.org/1999/xhtml" not supported by Chrome
-        '<foreignObject class="tooltip">',
-        '<body xmlns="http://www.w3.org/1999/xhtml">',
-        '<select class="numbase">',
-        '<option value="hex">hex</option>',
-        '<option value="dec">dec</option>',
-        '<option value="oct">oct</option>',
-        '<option value="bin">bin</option>',
-        '</select>',
-        '</body></foreignObject>'].join(''),
-    gateParams: Gate.prototype.gateParams.concat(['numbase'])
+    tooltipMinWidth: 55,
+    markup: Box.prototype.markup.concat([{
+            tagName: 'foreignObject',
+            className: 'tooltip',
+            children: [{
+                tagName: 'body',
+                namespaceURI: 'http://www.w3.org/1999/xhtml',
+                children: [{
+                    tagName: 'select',
+                    className: 'numbase',
+                    children: [{
+                        tagName: 'option',
+                        attributes: { value: 'hex' },
+                        textContent: 'hex'
+                    }, {
+                        tagName: 'option',
+                        attributes: { value: 'dec' },
+                        textContent: 'dec'
+                    }, {
+                        tagName: 'option',
+                        attributes: { value: 'oct' },
+                        textContent: 'oct'
+                    }, {
+                        tagName: 'option',
+                        attributes: { value: 'bin' },
+                        textContent: 'bin'
+                    }]
+                }]
+            }]
+        }
+    ]),
+    gateParams: Box.prototype.gateParams.concat(['numbase'])
 });
-export const NumBaseView = GateView.extend({
+export const NumBaseView = BoxView.extend({
+    autoResizeBox: true,
     events: {
         "click select.numbase": "stopprop",
         "mousedown select.numbase": "stopprop",
@@ -46,94 +56,99 @@ export const NumBaseView = GateView.extend({
     changeNumbase: function(evt) {
         this.model.set('numbase', evt.target.value || 'bin');
     },
-    render: function() {
-        GateView.prototype.render.apply(this, arguments);
-        if (this.model.get('box_resized')) return;
-        this.model.set('box_resized', true);
+    calculateBoxWidth: function() {
         const testtext = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         $(testtext).text(Array(this.model.get('bits')).fill('0').join(''))
             .attr('class', 'numvalue')
             .appendTo(this.$el);
         const width = testtext.getBBox().width + 20;
         testtext.remove();
-        this.model.set('size', _.set(_.clone(this.model.get('size')), 'width', width));
+        return width;
     }
 });
 
 // Numeric display -- displays a number
 export const NumDisplay = NumBase.define('NumDisplay', {
+    /* default properties */
     bits: 1,
     propagation: 0,
+    
     attrs: {
-        '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
         'text.value': { 
-            text: '',
-            'ref-x': .5, 'ref-y': .5,
-            'dominant-baseline': 'ideographic',
+            refX: .5, refY: .5,
+            textVerticalAnchor: 'middle'
         },
     }
 }, {
-    constructor: function(args) {
-        if (!args.bits) args.bits = 1;
-        this.markup = [
-            this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: args.bits }),
-            '<rect class="body"/>',
-            this.numbaseMarkup,
-            '<text class="value numvalue"/>',
-            '<text class="label"/>',
-        ].join('');
-        NumBase.prototype.constructor.apply(this, arguments);
-    },
     initialize: function(args) {
         NumBase.prototype.initialize.apply(this, arguments);
-        const settext = () => {
-            this.attr('text.value/text', help.sig2base(this.get('inputSignals').in, this.get('numbase')));
-        }
+        
+        const bits = this.prop('bits');
+        
+        this.addPort({ id: 'in', group: 'in', dir: 'in', bits: bits });
+        
+        this.on('change:bits', (_, bits) => {
+            this.setPortBits('in', bits);
+        });
+
+        const settext = () => this.attr('text.value/text', help.sig2base(this.get('inputSignals').in, this.get('numbase')));
         settext();
-        this.listenTo(this, 'change:inputSignals', settext);
-        this.listenTo(this, 'change:numbase', settext);
+        
+        this.on('change:inputSignals change:numbase', settext);
     },
+    markup: NumBase.prototype.markup.concat([{
+            tagName: 'text',
+            className: 'value numvalue'
+        }
+    ]),
     gateParams: NumBase.prototype.gateParams.concat(['bits'])
 });
 export const NumDisplayView = NumBaseView;
 
 // Numeric entry -- parses a number from a text box
 export const NumEntry = NumBase.define('NumEntry', {
+    /* default properties */
     bits: 1,
     propagation: 0,
     buttonState: Vector3vl.xes(1),
+    
     attrs: {
-        '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
         'foreignObject.valinput': {
-            'ref-x': 5, 'ref-y': 0,
-            width: 60, height: 30
+            refX: .5, refY: .5,
+            refWidth: -10, refHeight: -10,
+            xAlignment: 'middle', yAlignment: 'middle',
         }
     }
 }, {
     initialize: function(args) {
-        this.listenTo(this, 'change:size', (x, size) => {
-            this.attr('foreignObject.valinput/width', size.width - 10)
-        });
         NumBase.prototype.initialize.apply(this, arguments);
-    },
-    constructor: function(args) {
-        if (!args.bits) args.bits = 1;
-        this.markup = [
-            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits }),
-            '<rect class="body"/>',
-            this.numbaseMarkup,
-            '<text class="label"/>',
-            '<foreignObject class="valinput">',
-            '<body xmlns="http://www.w3.org/1999/xhtml">',
-            '<input type="text" class="numvalue" />',
-            '</body></foreignObject>',
-        ].join('');
-        args.buttonState = args.outputSignals.out;
-        NumBase.prototype.constructor.apply(this, arguments);
+        
+        const bits = this.prop('bits');
+        
+        this.addPort({ id: 'out', group: 'out', dir: 'out', bits: bits });
+        
+        this.on('change:bits', (_, bits) => {
+            this.setPortBits('out', bits);
+        });
+        
+        this.prop('buttonState', this.prop('outputSignals/out'));
     },
     operation: function() {
         return { out: this.get('buttonState') };
     },
+    markup: NumBase.prototype.markup.concat([{
+            tagName: 'foreignObject',
+            className: 'valinput',
+            children: [{
+                tagName: 'body',
+                namespaceURI: 'http://www.w3.org/1999/xhtml',
+                children: [{
+                    tagName: 'input',
+                    attributes: { type: 'text' }
+                }]
+            }]
+        }
+    ]),
     gateParams: NumBase.prototype.gateParams.concat(['bits'])
 });
 export const NumEntryView = NumBaseView.extend({
@@ -170,29 +185,29 @@ export const NumEntryView = NumBaseView.extend({
 });
 
 // Lamp model -- displays a single-bit input
-export const Lamp = Gate.define('Lamp', {
+export const Lamp = Box.define('Lamp', {
     size: { width: 30, height: 30 },
     attrs: {
-        'rect.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 30, height: 30 },
         '.led': {
-            'ref-x': .5, 'ref-y': .5,
-            r: 10
+            refX: .5, refY: .5,
+            refR: .35,
+            stroke: 'black'
         }
     }
 }, {
-    constructor: function(args) {
-        this.markup = [
-            this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: 1 }),
-            '<rect class="body"/>',
-            '<circle class="led"/>',
-            '<text class="label"/>',
-        ].join('')
-        Gate.prototype.constructor.apply(this, arguments);
-    }
+    initialize: function(args) {
+        Box.prototype.initialize.apply(this, arguments);
+        this.addPort({ id: 'in', group: 'in', dir: 'in', bits: 1 });
+    },
+    markup: Box.prototype.markup.concat([{
+            tagName: 'circle',
+            className: 'led'
+        }
+    ])
 });
-export const LampView = GateView.extend({
+export const LampView = BoxView.extend({
     confirmUpdate(flags) {
-        GateView.prototype.confirmUpdate.apply(this, arguments);
+        BoxView.prototype.confirmUpdate.apply(this, arguments);
         if (this.hasFlag(flags, 'flag:inputSignals')) {
             this.updateLamp(this.model.get('inputSignals'));
         };
@@ -202,48 +217,50 @@ export const LampView = GateView.extend({
         this.$(".led").toggleClass('low', signal.in.isLow);
     },
     render() {
-        GateView.prototype.render.apply(this, arguments);
+        BoxView.prototype.render.apply(this, arguments);
         this.updateLamp(this.model.get('inputSignals'));
     }
 });
 
 // Button model -- single-bit clickable input
-export const Button = Gate.define('Button', {
-    size: { width: 30, height: 30 },
+export const Button = Box.define('Button', {
+    /* default properties */
     buttonState: false,
     propagation: 0,
+    
+    size: { width: 30, height: 30 },
     attrs: {
-        'rect.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 30, height: 30 },
         '.btnface': { 
-            stroke: 'black', 'stroke-width': 2,
-            'ref-height': .6, 'ref-width': .6, 'ref-x': .2, 'ref-y': .2,
+            stroke: 'black', strokeWidth: 2,
+            refX: .2, refY: .2,
+            refHeight: .6, refWidth: .6,
             cursor: 'pointer'
         }
     }
 }, {
-    constructor: function(args) {
-        this.markup = [
-            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: 1 }),
-            '<rect class="body"/>',
-            '<rect class="btnface"/>',
-            '<text class="label"/>',
-        ].join('');
-        Gate.prototype.constructor.apply(this, arguments);
+    initialize: function(args) {
+        Box.prototype.initialize.apply(this, arguments);
+        this.addPort({ id: 'out', group: 'out', dir: 'out', bits: 1 });
     },
     operation: function() {
         return { out: this.get('buttonState') ? Vector3vl.ones(1) : Vector3vl.zeros(1) };
-    }
+    },
+    markup: Box.prototype.markup.concat([{
+            tagName: 'rect',
+            className: 'btnface'
+        }
+    ])
 });
-export const ButtonView = GateView.extend({
-    presentationAttributes: GateView.addPresentationAttributes({
+export const ButtonView = BoxView.extend({
+    presentationAttributes: BoxView.addPresentationAttributes({
         buttonState: 'flag:buttonState',
     }),
     initialize: function() {
-        GateView.prototype.initialize.apply(this, arguments);
+        BoxView.prototype.initialize.apply(this, arguments);
         this.$(".btnface").toggleClass('live', this.model.get('buttonState'));
     },
     confirmUpdate(flags) {
-        GateView.prototype.confirmUpdate.apply(this, arguments);
+        BoxView.prototype.confirmUpdate.apply(this, arguments);
         if (this.hasFlag(flags, 'flag:buttonState')) {
             this.$(".btnface").toggleClass('live', this.model.get('buttonState'));
         }
@@ -258,40 +275,46 @@ export const ButtonView = GateView.extend({
 });
 
 // Input/output model
-export const IO = Gate.define('IO', {
+export const IO = Box.define('IO', {
+    /* default properties */
     bits: 1,
+    net: '',
     propagation: 0,
+    
     attrs: {
-        '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
-        text: {
-            fill: 'black',
-            'ref-x': .5, 'ref-y': .5, 'dominant-baseline': 'ideographic',
-            'text-anchor': 'middle',
-            'font-weight': 'bold',
-            'font-size': '14px'
+        'text.ioname': {
+            refX: .5, refY: .5,
+            textAnchor: 'middle', textVerticalAnchor: 'middle',
+            fontWeight: 'bold',
+            fontSize: '10pt'
         }
     }
 }, {
-    constructor: function(args) {
-        if (!args.bits) args.bits = 1;
-        this.markup = [
-            this.addWire(args, this.io_dir == 'out' ? 'right' : 'left', 0.5, { id: this.io_dir, dir: this.io_dir, bits: args.bits }),
-            '<rect class="body"/>',
-            '<text class="ioname"/>',
-        ].join('');
-        if ('bits' in args) _.set(args, ['attrs', 'circle', 'port', 'bits'], args.bits);
-        _.set(args, ['attrs', 'text', 'text'], args.net);
-        Gate.prototype.constructor.apply(this, arguments);
+    initialize: function(args) {
+        Box.prototype.initialize.apply(this, arguments);
+        
+        const bits = this.prop('bits');
+        
+        this.addPort({ id: this.io_dir, group: this.io_dir, dir: this.io_dir, bits: bits });
+        
+        this.on('change:bits', (_, bits) => {
+            this.setPortBits(this.io_dir, bits);
+        });
+        this.bindAttrToProp('text.ioname/text', 'net');
     },
-    gateParams: Gate.prototype.gateParams.concat(['bits','net'])
+    markup: Box.prototype.markup.concat([{
+            tagName: 'text',
+            className: 'ioname'
+        }
+    ]),
+    gateParams: Box.prototype.gateParams.concat(['bits','net'])
 });
-export const IOView = GateView.extend({
-    render: function() {
-        GateView.prototype.render.apply(this, arguments);
-        if (this.model.get('box_resized')) return;
-        this.model.set('box_resized', true);
-        const width = this.el.querySelector('text.ioname').getBBox().width + 10;
-        this.model.set('size', _.set(_.clone(this.model.get('size')), 'width', width));
+export const IOView = BoxView.extend({
+    autoResizeBox: true,
+    calculateBoxWidth: function() {
+        const text = this.el.querySelector('text.ioname');
+        if (text.getAttribute('display') !== 'none') return text.getBBox().width + 10;
+        return 20;
     }
 });
 
@@ -311,77 +334,89 @@ export const OutputView = IOView;
 
 // Constant
 export const Constant = NumBase.define('Constant', {
+    /* default properties */
+    constant: '0',
     propagation: 0,
+    
     attrs: {
-        '.body': { fill: 'white', stroke: 'black', 'stroke-width': 2 },
-        'text.value': { 
-            text: '',
-            'ref-x': .5, 'ref-y': .5,
-            'dominant-baseline': 'ideographic',
+        'text.value': {
+            refX: .5, refY: .5,
+            textVerticalAnchor: 'middle'
         }
     }
 }, {
-    constructor: function(args) {
-        args.constantCache = Vector3vl.fromBin(args.constant, args.constant.length);
-        args.bits = args.constant.length;
-        args.outputSignals = { out: args.constantCache };
-        this.markup = [
-            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.constant.length }),
-            '<rect class="body"/>',
-            this.numbaseMarkup,
-            '<text class="label" />',
-            '<text class="value numvalue" />',
-        ].join('');
-        NumBase.prototype.constructor.apply(this, arguments);
-    },
     initialize: function(args) {
         NumBase.prototype.initialize.apply(this, arguments);
-        const settext = () => {
-            this.attr('text.value/text', help.sig2base(this.get('constantCache'), this.get('numbase')));
-        }
+        
+        const constant = this.prop('constant');
+        this.prop('bits', constant.length);
+        this.prop('constantCache', Vector3vl.fromBin(constant, constant.length));
+        
+        this.addPort({ id: 'out', group: 'out', dir: 'out', bits: constant.length });
+        
+        const settext = () => this.attr('text.value/text', help.sig2base(this.get('constantCache'), this.get('numbase')));
         settext();
-        this.listenTo(this, 'change:numbase', settext);
+        
+        this.on('change:constant', (_, constant) => {
+            this.setPortBits('out', constant.length);
+            this.prop('bits', constant.length);
+            this.prop('constantCache', Vector3vl.fromBin(constant, constant.length));
+            settext();
+        });
+        this.on('change:numbase', settext);
     },
     operation: function() {
         return { out: this.get('constantCache') };
     },
+    markup: NumBase.prototype.markup.concat([{
+            tagName: 'text',
+            className: 'value numvalue'
+        }
+    ]),
     gateParams: NumBase.prototype.gateParams.concat(['constant'])
 });
 export const ConstantView = NumBaseView;
 
 // Clock
-export const Clock = Gate.define('Clock', {
-    size: { width: 30, height: 30 },
-    attrs: {
-        'rect.body': { fill: 'white', stroke: 'black', 'stroke-width': 2, width: 30, height: 30 },
-        'path.decor': { stroke: 'black' },
-        '.tooltip': {
-            'ref-x': 0, 'ref-y': -30,
-            width: 80, height: 30
-        },
-    }
+export const Clock = Box.define('Clock', {
+    /* default properties */
+    propagation: 100,
+    
+    size: { width: 30, height: 30 }
 }, {
-    constructor: function(args) {
-        args.outputSignals = { out: Vector3vl.zeros(1) };
-        this.markup = [
-            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: 1 }),
-            '<rect class="body"/>',
-            '<path class="decor" d="M7.5 7.5 L7.5 22.5 L15 22.5 L15 7.5 L22.5 7.5 L22.5 22.5" />',
-            '<text class="label" />',
-            '<foreignObject class="tooltip">',
-            '<body xmlns="http://www.w3.org/1999/xhtml">',
-            '<input type="number" min="1" step="1" />',
-            '</body></foreignObject>'
-        ].join('');
-        Gate.prototype.constructor.apply(this, arguments);
+    initialize: function(args) {
+        Box.prototype.initialize.apply(this, arguments);
+        
+        this.addPort({ id: 'out', group: 'out', dir: 'out', bits: 1 });
+        
+        this.prop('outputSignals/out', Vector3vl.zeros(1));
     },
     operation: function() {
+        // trigger next clock edge
         this.trigger("change:inputSignals", this, {});
         return { out: this.get('outputSignals').out.not() };
-    }
+    },
+    tooltipMinWidth: 55,
+    markup: Box.prototype.markup.concat([{
+            tagName: 'path',
+            className: 'decor',
+            attributes: { d: 'M7.5 7.5 L7.5 22.5 L15 22.5 L15 7.5 L22.5 7.5 L22.5 22.5', stroke: 'black' }
+        }, {
+            tagName: 'foreignObject',
+            className: 'tooltip',
+            children: [{
+                tagName: 'body',
+                namespaceURI: 'http://www.w3.org/1999/xhtml',
+                children: [{
+                    tagName: 'input',
+                    attributes: { type: 'number', min: 1, step: 1 }
+                }]
+            }]
+        }
+    ])
 });
-export const ClockView = GateView.extend({
-    presentationAttributes: GateView.addPresentationAttributes({
+export const ClockView = BoxView.extend({
+    presentationAttributes: BoxView.addPresentationAttributes({
         propagation: 'flag:propagation'
     }),
     events: {
@@ -391,11 +426,11 @@ export const ClockView = GateView.extend({
         "input input": "changePropagation"
     },
     render(args) {
-        GateView.prototype.render.apply(this, arguments);
+        BoxView.prototype.render.apply(this, arguments);
         this.updatePropagation();
     },
     confirmUpdate(flags) {
-        GateView.prototype.confirmUpdate.apply(this, arguments);
+        BoxView.prototype.confirmUpdate.apply(this, arguments);
         if (this.hasFlag(flags, 'flag:propagation')) this.updatePropagation();
     },
     changePropagation(evt) {

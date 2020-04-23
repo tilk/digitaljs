@@ -6,30 +6,56 @@ import bigInt from 'big-integer';
 import * as help from '../help.mjs';
 import { Vector3vl } from '3vl';
 
-// Unary arithmetic operations
-export const Arith11 = Gate.define('Arith11', {
+// base class for arithmetic operations displayed with a circle
+export const Arith = Gate.define('Arith', {
     size: { width: 40, height: 40 },
     attrs: {
-        'circle.body': { r: 20, cx: 20, cy: 20 },
+        'circle.body': { refR: 0.5, refCx: 0.5, refCy: 0.5 },
         'text.oper': {
-            fill: 'black',
-            'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
-            'text-anchor': 'middle',
-            'font-size': '14px'
+            refX: .5, refY: .5,
+            textAnchor: 'middle', textVerticalAnchor: 'middle',
+            fontSize: '12pt'
+        }
+    },
+    ports: {
+        groups: {
+            'in': { position: { name: 'left', args: { dx: 10 } }, attrs: { 'line.wire': { x2: -35 }, 'circle.port': { refX: -35 } }, z: -1 },
+            'out': { position: { name: 'right', args: { dx: -10 } }, attrs: { 'line.wire': { x2: 35 }, 'circle.port': { refX: 35 } }, z: -1 }
         }
     }
 }, {
-    constructor: function(args) {
-        if (!args.bits) args.bits = { in: 1, out: 1 };
-        if (!args.signed) args.signed = false;
-        this.markup = [
-            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits.out }),
-            this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: args.bits.in }),
-            '<circle class="body"/>',
-            '<text class="label"/>',
-            '<text class="oper"/>',
-        ].join('');
-        Gate.prototype.constructor.apply(this, arguments);
+    markup: Gate.prototype.markup.concat([{
+            tagName: 'circle',
+            className: 'body'
+        }, {
+            tagName: 'text',
+            className: 'oper'
+        }
+    ]),
+    gateParams: Gate.prototype.gateParams.concat(['bits', 'signed']),
+    unsupportedPropChanges: Gate.prototype.unsupportedPropChanges.concat(['signed'])
+});
+
+// Unary arithmetic operations
+export const Arith11 = Arith.define('Arith11', {
+    /* default properties */
+    bits: { in: 1, out: 1 },
+    signed: false
+}, {
+    initialize: function() {
+        Arith.prototype.initialize.apply(this, arguments);
+        
+        const bits = this.prop('bits');
+        
+        this.addPorts([
+            { id: 'in', group: 'in', dir: 'in', bits: bits.in },
+            { id: 'out', group: 'out', dir: 'out', bits: bits.out }
+        ]);
+        
+        this.on('change:bits', (_,bits) => {
+            this.setPortBits('in', bits.in);
+            this.setPortBits('out', bits.out);
+        });
     },
     operation: function(data) {
         const bits = this.get('bits');
@@ -38,35 +64,31 @@ export const Arith11 = Gate.define('Arith11', {
         return {
             out: help.bigint2sig(this.arithop(help.sig2bigint(data.in, this.get('signed'))), bits.out)
         };
-    },
-    gateParams: Gate.prototype.gateParams.concat(['bits', 'signed'])
+    }
 });
 
 // Binary arithmetic operations
-export const Arith21 = Gate.define('Arith21', {
-    size: { width: 40, height: 40 },
-    attrs: {
-        'circle.body': { r: 20, cx: 20, cy: 20 },
-        'text.oper': {
-            fill: 'black',
-            'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
-            'text-anchor': 'middle',
-            'font-size': '14px'
-        }
-    }
+export const Arith21 = Arith.define('Arith21', {
+    /* default properties */
+    bits: { in1: 1, in2: 1, out: 1 },
+    signed: { in1: false, in2: false }
 }, {
-    constructor: function(args) {
-        if (!args.bits) args.bits = { in1: 1, in2: 1, out: 1 };
-        if (!args.signed) args.signed = { in1: false, in2: false };
-        this.markup = [
-            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits.out }),
-            this.addWire(args, 'left', 0.3, { id: 'in1', dir: 'in', bits: args.bits.in1 }),
-            this.addWire(args, 'left', 0.7, { id: 'in2', dir: 'in', bits: args.bits.in2 }),
-            '<circle class="body"/>',
-            '<text class="label"/>',
-            '<text class="oper"/>',
-        ].join('');
-        Gate.prototype.constructor.apply(this, arguments);
+    initialize: function() {
+        Arith.prototype.initialize.apply(this, arguments);
+        
+        const bits = this.prop('bits');
+        
+        this.addPorts([
+            { id: 'in1', group: 'in', dir: 'in', bits: bits.in1 },
+            { id: 'in2', group: 'in', dir: 'in', bits: bits.in2 },
+            { id: 'out', group: 'out', dir: 'out', bits: bits.out }
+        ]);
+        
+        this.on('change:bits', (_, bits) => {
+            this.setPortBits('in1', bits.in1);
+            this.setPortBits('in2', bits.in2);
+            this.setPortBits('out', bits.out);
+        });
     },
     operation: function(data) {
         const bits = this.get('bits');
@@ -78,36 +100,32 @@ export const Arith21 = Gate.define('Arith21', {
                     help.sig2bigint(data.in1, sgn.in1 && sgn.in2),
                     help.sig2bigint(data.in2, sgn.in1 && sgn.in2)), bits.out)
         };
-    },
-    gateParams: Gate.prototype.gateParams.concat(['bits', 'signed'])
+    }
 });
 
 // Bit shift operations
-export const Shift = Gate.define('Shift', {
-    size: { width: 40, height: 40 },
-    attrs: {
-        'circle.body': { r: 20, cx: 20, cy: 20 },
-        'text.oper': {
-            fill: 'black',
-            'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
-            'text-anchor': 'middle',
-            'font-size': '14px'
-        }
-    }
+export const Shift = Arith.define('Shift', {
+    /* default properties */
+    bits: { in1: 1, in2: 1, out: 1 },
+    signed: { in1: false, in2: false, out: false },
+    fillx: false
 }, {
-    constructor: function(args) {
-        if (!args.bits) args.bits = { in1: 1, in2: 1, out: 1 };
-        if (!args.signed) args.signed = { in1: false, in2: false, out: false };
-        if (!args.fillx) args.fillx = false;
-        this.markup = [
-            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits.out }),
-            this.addWire(args, 'left', 0.3, { id: 'in1', dir: 'in', bits: args.bits.in1 }),
-            this.addWire(args, 'left', 0.7, { id: 'in2', dir: 'in', bits: args.bits.in2 }),
-            '<circle class="body"/>',
-            '<text class="label"/>',
-            '<text class="oper"/>',
-        ].join('');
-        Gate.prototype.constructor.apply(this, arguments);
+    initialize: function() {
+        Arith.prototype.initialize.apply(this, arguments);
+        
+        const bits = this.prop('bits');
+        
+        this.addPorts([
+            { id: 'in1', group: 'in', dir: 'in', bits: bits.in1 },
+            { id: 'in2', group: 'in', dir: 'in', bits: bits.in2 },
+            { id: 'out', group: 'out', dir: 'out', bits: bits.out }
+        ]);
+        
+        this.on('change:bits', (_, bits) => {
+            this.setPortBits('in1', bits.in1);
+            this.setPortBits('in2', bits.in2);
+            this.setPortBits('out', bits.out);
+        });
     },
     operation: function(data) {
         const bits = this.get('bits');
@@ -125,34 +143,31 @@ export const Shift = Gate.define('Shift', {
             : my_in.slice(am).concat(Vector3vl.make(am, fillx ? 0 : sgn.out ? my_in.get(my_in.bits-1) : -1));
         return { out: out.slice(0, bits.out) };
     },
-    gateParams: Gate.prototype.gateParams.concat(['bits', 'signed', 'fillx'])
+    gateParams: Arith.prototype.gateParams.concat(['fillx']),
+    unsupportedPropChanges: Arith.prototype.unsupportedPropChanges.concat(['fillx'])
 });
 
 // Comparison operations
-export const Compare = Gate.define('Compare', {
-    size: { width: 40, height: 40 },
-    attrs: {
-        'circle.body': { r: 20, cx: 20, cy: 20 },
-        'text.oper': {
-            fill: 'black',
-            'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
-            'text-anchor': 'middle',
-            'font-size': '14px'
-        }
-    }
+export const Compare = Arith.define('Compare', {
+    /* default properties */
+    bits: { in1: 1, in2: 1 },
+    signed: { in1: false, in2: false }
 }, {
-    constructor: function(args) {
-        if (!args.bits) args.bits = { in1: 1, in2: 1 };
-        if (!args.signed) args.signed = { in1: false, in2: false };
-        this.markup = [
-            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: 1 }),
-            this.addWire(args, 'left', 0.3, { id: 'in1', dir: 'in', bits: args.bits.in1 }),
-            this.addWire(args, 'left', 0.7, { id: 'in2', dir: 'in', bits: args.bits.in2 }),
-            '<circle class="body"/>',
-            '<text class="label"/>',
-            '<text class="oper"/>',
-        ].join('');
-        Gate.prototype.constructor.apply(this, arguments);
+    initialize: function() {
+        Arith.prototype.initialize.apply(this, arguments);
+        
+        const bits = this.prop('bits');
+        
+        this.addPorts([
+            { id: 'in1', group: 'in', dir: 'in', bits: bits.in1 },
+            { id: 'in2', group: 'in', dir: 'in', bits: bits.in2 },
+            { id: 'out', group: 'out', dir: 'out', bits: 1 }
+        ]);
+        
+        this.on('change:bits', (_, bits) => {
+            this.setPortBits('in1', bits.in1);
+            this.setPortBits('in2', bits.in2);
+        });
     },
     operation: function(data) {
         const bits = this.get('bits');
@@ -164,35 +179,11 @@ export const Compare = Gate.define('Compare', {
                     help.sig2bigint(data.in1, sgn.in1 && sgn.in2),
                     help.sig2bigint(data.in2, sgn.in1 && sgn.in2)))
         };
-    },
-    gateParams: Gate.prototype.gateParams.concat(['bits', 'signed'])
+    }
 });
 
-export const EqCompare = Gate.define('EqCompare', {
-    size: { width: 40, height: 40 },
-    attrs: {
-        'circle.body': { r: 20, cx: 20, cy: 20 },
-        'text.oper': {
-            fill: 'black',
-            'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
-            'text-anchor': 'middle',
-            'font-size': '14px'
-        }
-    }
-}, {
-    constructor: function(args) {
-        if (!args.bits) args.bits = { in1: 1, in2: 1 };
-        if (!args.signed) args.signed = { in1: false, in2: false };
-        this.markup = [
-            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: 1 }),
-            this.addWire(args, 'left', 0.3, { id: 'in1', dir: 'in', bits: args.bits.in1 }),
-            this.addWire(args, 'left', 0.7, { id: 'in2', dir: 'in', bits: args.bits.in2 }),
-            '<circle class="body"/>',
-            '<text class="label"/>',
-            '<text class="oper"/>',
-        ].join('');
-        Gate.prototype.constructor.apply(this, arguments);
-    },
+// Equality operations
+export const EqCompare = Compare.define('EqCompare', {}, {
     operation: function(data) {
         const bits = this.get('bits');
         const sgn = this.get('signed');
@@ -203,8 +194,7 @@ export const EqCompare = Gate.define('EqCompare', {
         return {
             out: this.bincomp(in1, in2)
         };
-    },
-    gateParams: Gate.prototype.gateParams.concat(['bits', 'signed'])
+    }
 });
 
 // Negation

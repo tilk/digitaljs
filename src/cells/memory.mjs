@@ -10,84 +10,110 @@ import { Vector3vl, Mem3vl } from '3vl';
 
 // Memory cell
 export const Memory = Box.define('Memory', {
+    /* default properties */
+    bits: 1,
+    abits: 1,
+    rdports: [],
+    wrports: [],
+    words: undefined,
+    offset: 0,
+    
     attrs: {
-        'line.portsplit': {
-            stroke: 'black', x1: 0, x2: 40
-        },
-        '.tooltip': {
-            'ref-x': 0, 'ref-y': -30,
-            width: 80, height: 30
-        },
+        'path.portsplit': {
+            stroke: 'black', d: undefined
+        }
+    },
+    ports: {
+        groups: {
+            'in': {
+                position: Box.prototype.getStackedPosition({ side: 'left' })
+            },
+            'out': {
+                position: Box.prototype.getStackedPosition({ side: 'right' })
+            }
+        }
     }
 }, {
     initialize: function() {
-        this.listenTo(this, 'change:size', (model, size) => {
-            this.attr('line.portsplit/x2', size.width);
-            this.attr('.tooltip/width', size.width)
-        });
         Box.prototype.initialize.apply(this, arguments);
-    },
-    constructor: function(args) {
-        if (!args.bits) args.bits = 1;
-        if (!args.abits) args.abits = 1;
-        if (!args.rdports) args.rdports = [];
-        if (!args.wrports) args.wrports = [];
-        if (!args.words) args.words = 1 << args.abits;
-        if (!args.offset) args.offset = 0;
-        if (args.memdata)
-            this.memdata = Mem3vl.fromJSON(args.bits, args.memdata);
+        
+        const bits = this.prop('bits');
+        const abits = this.prop('abits');
+        const rdports = this.prop('rdports');
+        const wrports = this.prop('wrports');
+        var words = this.prop('words');
+        const memdata = this.prop('memdata');
+        
+        if (!words) {
+            words = 1 << abits;
+            this.prop('words', words, { init: true });
+        }
+        if (memdata)
+            this.memdata = Mem3vl.fromJSON(bits, memdata);
         else
-            this.memdata = new Mem3vl(args.bits, args.words);
-        delete args.memdata; // performance hack
-        console.assert(this.memdata.words == args.words);
+            this.memdata = new Mem3vl(bits, words);
+        console.assert(this.memdata.words == words);
+        this.removeProp('memdata'); // performance hack
+        
         this.last_clk = {};
-        const markup = [];
-        const lblmarkup = [];
         let num = 0;
+        let idxOffset = 0;
         const portsplits = [];
-        function num_y(num) { return num * 16 + 12; }
-        for (const [pnum, port] of args.rdports.entries()) {
+        for (const [pnum, port] of rdports.entries()) {
             const portname = "rd" + pnum;
-            markup.push(this.addLabelledWire(args, lblmarkup, 'right', num_y(num), { id: portname + 'data', dir: 'out', bits: args.bits, label: 'data' }));
-            markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'addr', dir: 'in', bits: args.abits, label: 'addr' }));
-            if ('enable_polarity' in port)
-                markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'en', dir: 'in', bits: 1, label: 'en', polarity: port.enable_polarity }));
+            this.addPorts([
+                { id: portname + 'addr', group: 'in', dir: 'in', bits: bits, portlabel: 'addr' },
+                { id: portname + 'data', group: 'out', dir: 'out', bits: bits, portlabel: 'data', args: { idxOffset: idxOffset } }
+            ], { labelled: true });
+            num += 1;
+            if ('enable_polarity' in port) {
+                num++;
+                idxOffset++;
+                this.addPort({ id: portname + 'en', group: 'in', dir: 'in', bits: 1, portlabel: 'en', polarity: port.enable_polarity }, { labelled: true });
+            }
             if ('clock_polarity' in port) {
-                markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'clk', dir: 'in', bits: 1, label: 'clk', polarity: port.clock_polarity, clock: true }));
+                num++;
+                idxOffset++;
+                this.addPort({ id: portname + 'clk', group: 'in', dir: 'in', bits: 1, portlabel: 'clk', polarity: port.clock_polarity, decor: Box.prototype.decorClock }, { labelled: true });
                 this.last_clk[portname + 'clk'] = 0;
             } else {
                 port.transparent = true;
             }
             portsplits.push(num);
         }
-        for (const [pnum, port] of args.wrports.entries()) {
+        for (const [pnum, port] of wrports.entries()) {
             const portname = "wr" + pnum;
-            markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'data', dir: 'in', bits: args.bits, label: 'data' }));
-            markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'addr', dir: 'in', bits: args.abits, label: 'addr' }));
-            if ('enable_polarity' in port)
-                markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'en', dir: 'in', bits: args.bits, label: 'en', polarity: port.enable_polarity }));
+            num += 2;
+            this.addPorts([
+                { id: portname + 'data', group: 'in', dir: 'in', bits: bits, portlabel: 'data' },
+                { id: portname + 'addr', group: 'in', dir: 'in', bits: bits, portlabel: 'addr' }
+            ], { labelled: true });
+            if ('enable_polarity' in port) {
+                num++;
+                this.addPort({ id: portname + 'en', group: 'in', dir: 'in', bits: 1, portlabel: 'en', polarity: port.enable_polarity }, { labelled: true });
+            }
             if ('clock_polarity' in port) {
-                markup.push(this.addLabelledWire(args, lblmarkup, 'left', num_y(num++), { id: portname + 'clk', dir: 'in', bits: 1, label: 'clk', polarity: port.clock_polarity, clock: true }));
+                num++;
+                this.addPort({ id: portname + 'clk', group: 'in', dir: 'in', bits: 1, portlabel: 'clk', polarity: port.clock_polarity, decor: Box.prototype.decorClock }, { labelled: true });
                 this.last_clk[portname + 'clk'] = 0;
             }
             portsplits.push(num);
         }
-        const size = { width: 80, height: num*16+8 };
-        args.size = size;
         portsplits.pop();
-        markup.push('<rect class="body"/>');
-        for (const num of portsplits) {
-            const yline = num_y(num) - 8;
-            markup.push('<line class="portsplit" y1="' + yline + '" y2="' + yline + '" />');
-        }
-        markup.push('<text class="label"/>');
-        markup.push(lblmarkup.join(''));
-        markup.push(['<foreignObject class="tooltip">',
-            '<body xmlns="http://www.w3.org/1999/xhtml">',
-            '<a class="zoom">🔍</a>',
-            '</body></foreignObject>'].join(''));
-        this.markup = markup.join('');
-        Box.prototype.constructor.apply(this, arguments);
+        
+        this.on('change:size', (_, size) => {
+            // only adapting to changed width
+            const path = [];
+            for (const num of portsplits) {
+                path.push([
+                    [0, 16*num + 4],
+                    [size.width, 16*num + 4]
+                ].map(p => p.join(' ')).join(' L '));
+            }
+            this.attr('path.portsplit/d', 'M ' + path.join(' M '));
+        });
+        const height = num*16+8;
+        this.prop('size/height', height);
     },
     operation: function(data) {
         const out = {};
@@ -165,15 +191,21 @@ export const Memory = Box.define('Memory', {
         }
         if (changed) this.set('outputSignals', sigs);
     },
+    markup: Box.prototype.markup.concat([{
+            tagName: 'path',
+            className: 'portsplit'
+        }], Box.prototype.markupZoom),
     getGateParams: function() { 
         // hack to get memdata back
         const params = Box.prototype.getGateParams.apply(this, arguments);
         params.memdata = this.memdata.toJSON();
         return params;
     },
-    gateParams: Box.prototype.gateParams.concat(['bits', 'abits', 'rdports', 'wrports', 'words', 'offset'])
+    gateParams: Box.prototype.gateParams.concat(['bits', 'abits', 'rdports', 'wrports', 'words', 'offset']),
+    unsupportedPropChanges: Box.prototype.unsupportedPropChanges.concat(['bits', 'abits', 'rdports', 'wrports', 'words', 'offset'])
 });
 export const MemoryView = BoxView.extend({
+    autoResizeBox: true,
     events: {
         "click foreignObject.tooltip": "stopprop",
         "mousedown foreignObject.tooltip": "stopprop",
