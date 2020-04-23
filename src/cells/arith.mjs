@@ -75,8 +75,8 @@ export const Arith21 = Gate.define('Arith21', {
             return { out: Vector3vl.xes(bits.out) };
         return {
             out: help.bigint2sig(this.arithop(
-                    help.sig2bigint(data.in1, sgn.in1),
-                    help.sig2bigint(data.in2, sgn.in2)), bits.out)
+                    help.sig2bigint(data.in1, sgn.in1 && sgn.in2),
+                    help.sig2bigint(data.in2, sgn.in1 && sgn.in2)), bits.out)
         };
     },
     gateParams: Gate.prototype.gateParams.concat(['bits', 'signed'])
@@ -161,8 +161,47 @@ export const Compare = Gate.define('Compare', {
             return { out: Vector3vl.xes(1) };
         return {
             out: Vector3vl.fromBool(this.arithcomp(
-                    help.sig2bigint(data.in1, sgn.in1),
-                    help.sig2bigint(data.in2, sgn.in2)))
+                    help.sig2bigint(data.in1, sgn.in1 && sgn.in2),
+                    help.sig2bigint(data.in2, sgn.in1 && sgn.in2)))
+        };
+    },
+    gateParams: Gate.prototype.gateParams.concat(['bits', 'signed'])
+});
+
+export const EqCompare = Gate.define('EqCompare', {
+    size: { width: 40, height: 40 },
+    attrs: {
+        'circle.body': { r: 20, cx: 20, cy: 20 },
+        'text.oper': {
+            fill: 'black',
+            'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
+            'text-anchor': 'middle',
+            'font-size': '14px'
+        }
+    }
+}, {
+    constructor: function(args) {
+        if (!args.bits) args.bits = { in1: 1, in2: 1 };
+        if (!args.signed) args.signed = { in1: false, in2: false };
+        this.markup = [
+            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: 1 }),
+            this.addWire(args, 'left', 0.3, { id: 'in1', dir: 'in', bits: args.bits.in1 }),
+            this.addWire(args, 'left', 0.7, { id: 'in2', dir: 'in', bits: args.bits.in2 }),
+            '<circle class="body"/>',
+            '<text class="label"/>',
+            '<text class="oper"/>',
+        ].join('');
+        Gate.prototype.constructor.apply(this, arguments);
+    },
+    operation: function(data) {
+        const bits = this.get('bits');
+        const sgn = this.get('signed');
+        const in1 = bits.in1 >= bits.in2 ? data.in1 : 
+            data.in1.concat(Vector3vl.make(bits.in2 - bits.in1, sgn.in1 && sgn.in2 ? data.in1.msb : -1));
+        const in2 = bits.in2 >= bits.in1 ? data.in2 : 
+            data.in2.concat(Vector3vl.make(bits.in1 - bits.in2, sgn.in1 && sgn.in2 ? data.in2.msb : -1));
+        return {
+            out: this.bincomp(in1, in2)
         };
     },
     gateParams: Gate.prototype.gateParams.concat(['bits', 'signed'])
@@ -309,22 +348,22 @@ export const Ge = Compare.define('Ge', {
 export const GeView = GateView;
 
 // Equality operator
-export const Eq = Compare.define('Eq', {
+export const Eq = EqCompare.define('Eq', {
     attrs: {
         'text.oper': { text: '=' }
     }
 }, {
-    arithcomp: (i, j) => i.eq(j)
+    bincomp: (i, j) => i.xnor(j).reduceAnd()
 });
 export const EqView = GateView;
 
 // Nonequality operator
-export const Ne = Compare.define('Ne', {
+export const Ne = EqCompare.define('Ne', {
     attrs: {
         'text.oper': { text: '≠' }
     }
 }, {
-    arithcomp: (i, j) => i.neq(j)
+    bincomp: (i, j) => i.xor(j).reduceOr()
 });
 export const NeView = GateView;
 

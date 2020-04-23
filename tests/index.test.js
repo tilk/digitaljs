@@ -77,14 +77,15 @@ class SingleCellTestFixture {
             }
         });
     }
-    testFunComplete(fun) {
+    testFunComplete(fun, opts) {
         const me = this;
+        const set = opts.no_random_x ? [-1, 1] : [-1, 0, 1];
         function bitgen(n) {
             const bits = [];
             function* rec() {
                 if (bits.length == n) yield bits;
                 else {
-                    for (const bit of [-1, 0, 1]) {
+                    for (const bit of set) {
                         bits.push(bit);
                         yield* rec();
                         bits.pop();
@@ -205,9 +206,9 @@ const parseIntSign = (x, sgn) => parseInt(x, 2) - (sgn && x[0] == '1' ? (2 ** x.
 
 const intToStringSign = (x, bits) => !isFinite(x) ? Array(bits).fill('x').join('') : x >= 0 ? (Array(bits).fill('0').join('') + x.toString(2)).slice(-bits) : (2 ** 50 + x).toString(2).slice(-bits);
 
-const comparefun = f => (sgn1, sgn2) => s => ({ out: s.in1.isFullyDefined && s.in2.isFullyDefined ? Vector3vl.fromBool(f(parseIntSign(s.in1.toBin(), sgn1), parseIntSign(s.in2.toBin(), sgn2))) : Vector3vl.x });
+const comparefun = f => (sgn1, sgn2) => s => ({ out: s.in1.isFullyDefined && s.in2.isFullyDefined ? Vector3vl.fromBool(f(parseIntSign(s.in1.toBin(), sgn1 && sgn2), parseIntSign(s.in2.toBin(), sgn1 && sgn2))) : Vector3vl.x });
 
-const arithfun = f => (sgn1, sgn2, bits) => s => ({ out: s.in1.isFullyDefined && s.in2.isFullyDefined ? Vector3vl.fromBin(intToStringSign(f(parseIntSign(s.in1.toBin(), sgn1), parseIntSign(s.in2.toBin(), sgn2)), bits)) : Vector3vl.xes(bits) });
+const arithfun = f => (sgn1, sgn2, bits) => s => ({ out: s.in1.isFullyDefined && s.in2.isFullyDefined ? Vector3vl.fromBin(intToStringSign(f(parseIntSign(s.in1.toBin(), sgn1 && sgn2), parseIntSign(s.in2.toBin(), sgn1 && sgn2)), bits)) : Vector3vl.xes(bits) });
 
 const arithfun1 = f => (sgn, bits) => s => ({ out: s.in.isFullyDefined ? Vector3vl.fromBin(intToStringSign(f(parseIntSign(s.in.toBin(), sgn)), bits)) : Vector3vl.xes(bits) });
 
