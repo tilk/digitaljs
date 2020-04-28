@@ -119,9 +119,13 @@ export const FSM = Box.define('FSM', {
             }
         }
         const trans = next_trans();
-        this.set('next_trans', trans.id);
-        if (!trans) return { out: Vector3vl.xes(bits.out) };
-        else return { out: trans.get('ctrlOut') };
+        if (!trans) {
+            this.set('next_trans', undefined);
+            return { out: Vector3vl.xes(bits.out) };
+        } else {
+            this.set('next_trans', trans.id);
+            return { out: trans.get('ctrlOut') };
+        }
     },
     gateParams: Box.prototype.gateParams.concat(['bits', 'polarity', 'wirename', 'states', 'init_state', 'trans_table'])
 });
