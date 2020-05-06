@@ -93,12 +93,15 @@ export const Memory = Box.define('Memory', {
         const out = {};
         const check_enabled = (portname, port) => {
             const pol = what => port[what + '_polarity'] ? 1 : -1;
+            const clkname = portname + 'clk';
+            let last_clk;
+            if ('clock_polarity' in port) {
+                last_clk = this.last_clk[clkname];
+                this.last_clk[clkname] = data[clkname].get(0);
+            }
             if ('enable_polarity' in port && !data[portname + 'en'].toArray().some(x => x == pol('enable')))
                 return false;
             if ('clock_polarity' in port) {
-                const clkname = portname + 'clk';
-                const last_clk = this.last_clk[clkname];
-                this.last_clk[clkname] = data[clkname].get(0);
                 return (data[clkname].get(0) == pol('clock') && last_clk == -pol('clock'));
             }
             return true;

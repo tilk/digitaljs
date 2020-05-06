@@ -39,13 +39,16 @@ export const Dff = Box.define('Dff', {
     operation: function(data) {
         const polarity = this.get('polarity');
         const pol = what => polarity[what] ? 1 : -1
+        let last_clk;
+        if ('clock' in polarity) {
+            last_clk = this.last_clk;
+            this.last_clk = data.clk.get(0);
+        };
         if ('enable' in polarity && data.en.get(0) != pol('enable'))
             return this.get('outputSignals');
         if ('arst' in polarity && data.arst.get(0) == pol('arst'))
             return { out: Vector3vl.fromBin(this.get('arst_value'), this.get('bits')) };
         if ('clock' in polarity) {
-            const last_clk = this.last_clk;
-            this.last_clk = data.clk.get(0);
             if (data.clk.get(0) == pol('clock') && last_clk == -pol('clock'))
                 return { out: data.in };
             else
