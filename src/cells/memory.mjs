@@ -277,6 +277,7 @@ export const MemoryView = BoxView.extend({
                 const val = help.base2sig(evt.target.value, this.model.get('bits'), numbase);
                 memdata.set(addr, val);
                 this.model.updateOutputs(addr);
+                target.removeClass('invalid');
             } else {
                 target.addClass('invalid');
             }
