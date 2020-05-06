@@ -224,7 +224,7 @@ export const MemoryView = BoxView.extend({
                 col.text('0'.repeat(ahex - addrs.length) + addrs)
                 col = col.next();
                 for (let c = 0; c < columns; c++, col = col.next()) {
-                    if (address + r * columns + c > words) break;
+                    if (address + r * columns + c >= words) break;
                     col.find('input').val(help.sig2base(memdata.get(address + r * columns + c), numbase))
                                      .removeClass('invalid');
                 }
@@ -244,7 +244,7 @@ export const MemoryView = BoxView.extend({
                 const row = $('<tr>');
                 $('<td>').appendTo(row);
                 for (let c = 0; c < columns; c++) {
-                    if (address + r * columns + c > words) break;
+                    if (address + r * columns + c >= words) break;
                     const col = $('<td>');
                     $('<input type="text">')
                         .attr('size', ds)
