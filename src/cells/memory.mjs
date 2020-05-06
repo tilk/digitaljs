@@ -235,7 +235,7 @@ export const MemoryView = BoxView.extend({
             const bpd = help.bitsPerDigit(numbase);
             const ptrn = help.basePattern(numbase);
             const ds = Math.ceil(this.model.get('bits')/bpd);
-            columns = Math.min(16, Math.ceil(32/ds));
+            columns = Math.min(words, 16, Math.ceil(32/ds));
             address = Math.max(0, Math.min(words - rows * columns, address));
             const table = div.find('table');
             table.empty();
