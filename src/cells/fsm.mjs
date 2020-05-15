@@ -11,18 +11,75 @@ import dagre from 'dagre';
 import graphlib from 'graphlib';
 
 export const FSM = Box.define('FSM', {
+    /* default properties */
+    bits: { in: 1, out: 1},
+    polarity: { clock: true },
+    init_state: 0,
+    states: 1,
+    trans_table: [],
+    
     size: { width: 80, height: 3*16+8 },
-    attrs: {
-        '.tooltip': {
-            'ref-x': 0, 'ref-y': -30,
-            width: 80, height: 30
-        },
+    ports: {
+        groups: {
+            'in': {
+                position: Box.prototype.getStackedPosition({ side: 'left' })
+            },
+            'out': {
+                position: Box.prototype.getStackedPosition({ side: 'right' })
+            }
+        }
     }
 }, {
     initialize: function() {
-        this.listenTo(this, 'change:size', (model, size) => {
-            this.attr('.tooltip/width', size.width)
-        });
+        Box.prototype.initialize.apply(this, arguments);
+        
+        const bits = this.prop('bits');
+        const polarity = this.prop('polarity');
+        
+        const init_state = this.prop('init_state');
+        var current_state = this.prop('current_state');
+        if (current_state === undefined) {
+            current_state = init_state;
+            this.prop('current_state', current_state);
+        }
+        const states = this.prop('states');
+        const trans_table = this.prop('trans_table');
+        
+        this.addPorts([
+            { id: 'in', group: 'in', dir: 'in', bits: bits.in },
+            { id: 'clk', group: 'in', dir: 'in', bits: 1, polarity: polarity.clock, decor: Box.prototype.decorClock },
+            { id: 'arst', group: 'in', dir: 'in', bits: 1, polarity: polarity.arst },
+            { id: 'out', group: 'out', dir: 'out', bits: bits.out },
+        ], { labelled: true });
+        
+        this.fsmgraph = new joint.dia.Graph;
+        const statenodes = [];
+        for (let n = 0; n < states; n++) {
+            const node = new joint.shapes.standard.Circle({stateNo: n, id: 'state' + n, isInit: n == init_state});
+            node.attr('label/text', String(n));
+            node.resize(100,50);
+            node.addTo(this.fsmgraph);
+            statenodes.push(node);
+        }
+        for (const tr of trans_table) {
+            const trans = new joint.shapes.standard.Link({
+                ctrlIn: Vector3vl.fromBin(tr.ctrl_in, bits.in),
+                ctrlOut: Vector3vl.fromBin(tr.ctrl_out, bits.out)
+            });
+            trans.appendLabel({
+                attrs: {
+                    text: {
+                        text: trans.get('ctrlIn').toBin() + '/' + trans.get('ctrlOut').toBin()
+                    }
+                }
+            });
+            trans.source({ id: 'state' + tr.state_in });
+            trans.target({ id: 'state' + tr.state_out });
+            trans.addTo(this.fsmgraph);
+        }
+        
+        this.last_clk = 0;
+        
         this.listenTo(this, 'change:current_state', (model, state) => {
             const pstate = model.previous('current_state');
             this.fsmgraph.getCell('state' + pstate).removeAttr('body/class');
@@ -46,52 +103,6 @@ export const FSM = Box.define('FSM', {
                 });
             }
         });
-        Box.prototype.initialize.apply(this, arguments);
-    },
-    constructor: function(args) {
-        if (!args.init_state) args.init_state = 0;
-        if (!('current_state' in args)) args.current_state = args.init_state;
-        args.next_trans = undefined;
-        const markup = [];
-        const lblmarkup = [];
-        markup.push(this.addLabelledWire(args, lblmarkup, 'left', 16+12, { id: 'clk', dir: 'in', bits: 1, polarity: args.polarity.clock, clock: true }));
-        markup.push(this.addLabelledWire(args, lblmarkup, 'left', 2*16+12, { id: 'arst', dir: 'in', bits: 1, polarity: args.polarity.arst }));
-        markup.push(this.addLabelledWire(args, lblmarkup, 'left', 12, { id: 'in', dir: 'in', bits: args.bits.in }));
-        markup.push(this.addLabelledWire(args, lblmarkup, 'right', 12, { id: 'out', dir: 'out', bits: args.bits.out }));
-        markup.push('<rect class="body"/><text class="label"/>');
-        markup.push(lblmarkup.join(''));
-        markup.push(['<foreignObject class="tooltip">',
-            '<body xmlns="http://www.w3.org/1999/xhtml">',
-            '<a class="zoom">🔍</a>',
-            '</body></foreignObject>'].join(''));
-        this.markup = markup.join('');
-        this.fsmgraph = new joint.dia.Graph;
-        const statenodes = [];
-        for (let n = 0; n < args.states; n++) {
-            const node = new joint.shapes.standard.Circle({stateNo: n, id: 'state' + n, isInit: n == args.init_state});
-            node.attr('label/text', String(n));
-            node.resize(100,50);
-            node.addTo(this.fsmgraph);
-            statenodes.push(node);
-        }
-        for (const tr of args.trans_table) {
-            const trans = new joint.shapes.standard.Link({
-                ctrlIn: Vector3vl.fromBin(tr.ctrl_in, args.bits.in),
-                ctrlOut: Vector3vl.fromBin(tr.ctrl_out, args.bits.out)
-            });
-            trans.appendLabel({
-                attrs: {
-                    text: {
-                        text: trans.get('ctrlIn').toBin() + '/' + trans.get('ctrlOut').toBin()
-                    }
-                }
-            });
-            trans.source({ id: 'state' + tr.state_in });
-            trans.target({ id: 'state' + tr.state_out });
-            trans.addTo(this.fsmgraph);
-        }
-        Box.prototype.constructor.apply(this, arguments);
-        this.last_clk = 0;
     },
     operation: function(data) {
         const bits = this.get('bits');
@@ -127,10 +138,13 @@ export const FSM = Box.define('FSM', {
             return { out: trans.get('ctrlOut') };
         }
     },
-    gateParams: Box.prototype.gateParams.concat(['bits', 'polarity', 'wirename', 'states', 'init_state', 'trans_table'])
+    markup: Box.prototype.markup.concat(Box.prototype.markupZoom),
+    gateParams: Box.prototype.gateParams.concat(['bits', 'polarity', 'states', 'init_state', 'trans_table']),
+    unsupportedPropChanges: Box.prototype.unsupportedPropChanges.concat(['bits', 'polarity', 'states', 'init_state', 'trans_table'])
 });
 
 export const FSMView = BoxView.extend({
+    autoResizeBox: true,
     events: {
         "click foreignObject.tooltip": "stopprop",
         "mousedown foreignObject.tooltip": "stopprop",

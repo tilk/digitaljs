@@ -6,64 +6,84 @@ import bigInt from 'big-integer';
 import * as help from '../help.mjs';
 import { Vector3vl } from '3vl';
 
-// Single-input gate model
-export const Gate11 = Gate.define('Gate11', {
+// base class for gates displayed using an external svg image
+export const GateSVG = Gate.define('GateSVG', {
+    /* default properties */
+    bits: 1,
+    
     size: { width: 60, height: 40 },
     attrs: {
-        '.body': { width: 60, height: 40 }
+        'image.body': { refWidth: 1, refHeight: 1 }
+    },
+    ports: {
+        groups: {
+            'in': { position: { name: 'left', args: { dx: 20 } }, attrs: { 'line.wire': { x2: -40 }, 'circle.port': { refX: -40 } }, z: -1 },
+            'out': { position: { name: 'right', args: { dx: -20 } }, attrs: { 'line.wire': { x2: 40 }, 'circle.port': { refX: 40 } }, z: -1 }
+        }
     }
 }, {
-    constructor: function(args) {
-        if (!args.bits) args.bits = 1;
-        this.markup = [
-            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits }),
-            this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: args.bits }),
-            '<image class="body"/>',
-            '<text class="label"/>',
-        ].join('');
-        Gate.prototype.constructor.apply(this, arguments);
-    },
+    markup: Gate.prototype.markup.concat([{
+            tagName: 'image',
+            className: 'body'
+        }
+    ]),
     gateParams: Gate.prototype.gateParams.concat(['bits'])
+});
+
+// Single-input gate model
+export const Gate11 = GateSVG.define('Gate11', {}, {
+    initialize: function() {
+        GateSVG.prototype.initialize.apply(this, arguments);
+        
+        const bits = this.prop('bits');
+        
+        this.addPorts([
+            { id: 'in', group: 'in', dir: 'in', bits: bits },
+            { id: 'out', group: 'out', dir: 'out', bits: bits }
+        ]);
+        
+        this.on('change:bits', (_, bits) => {
+            this.setPortBits('in', bits);
+            this.setPortBits('out', bits);
+        });
+    }
 });
 
 // Two-input gate model
-export const Gate21 = Gate.define('Gate21', {
-    size: { width: 60, height: 40 },
-    attrs: {
-        '.body': { width: 60, height: 40 }
+export const Gate21 = GateSVG.define('Gate21', {}, {
+    initialize: function() {
+        GateSVG.prototype.initialize.apply(this, arguments);
+        
+        const bits = this.prop('bits');
+        this.addPorts([
+            { id: 'in1', group: 'in', dir: 'in', bits: bits },
+            { id: 'in2', group: 'in', dir: 'in', bits: bits },
+            { id: 'out', group: 'out', dir: 'out', bits: bits }
+        ]);
+        
+        this.on('change:bits', (_, bits) => {
+            this.setPortBits('in1', bits);
+            this.setPortBits('in2', bits);
+            this.setPortBits('out', bits);
+        });
     }
-}, {
-    constructor: function(args) {
-        if (!args.bits) args.bits = 1;
-        this.markup = [
-            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.bits }),
-            this.addWire(args, 'left', 0.3, { id: 'in1', dir: 'in', bits: args.bits }),
-            this.addWire(args, 'left', 0.7, { id: 'in2', dir: 'in', bits: args.bits }),
-            '<image class="body"/>',
-            '<text class="label"/>',
-        ].join('');
-        Gate.prototype.constructor.apply(this, arguments);
-    },
-    gateParams: Gate.prototype.gateParams.concat(['bits'])
 });
 
 // Reducing gate model
-export const GateReduce = Gate.define('GateReduce', {
-    size: { width: 60, height: 40 },
-    attrs: {
-        '.body': { width: 60, height: 40 }
+export const GateReduce = GateSVG.define('GateReduce', {}, {
+    initialize: function() {
+        GateSVG.prototype.initialize.apply(this, arguments);
+        const bits = this.prop('bits');
+        
+        this.addPorts([
+            { id: 'in', group: 'in', dir: 'in', bits: bits },
+            { id: 'out', group: 'out', dir: 'out', bits: 1 }
+        ]);
+        
+        this.on('change:bits', (_, bits) => {
+            this.setPortBits('in', bits);
+        });
     }
-}, {
-    constructor: function(args) {
-        if (!args.bits) args.bits = 1;
-        this.markup = [
-            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: 1 }),
-            this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: args.bits }),
-            '<image class="body"/>',
-            '<text class="label"/>',
-        ].join('');
-        Gate.prototype.constructor.apply(this, arguments);
-    },
 });
 
 // Repeater (buffer) gate model

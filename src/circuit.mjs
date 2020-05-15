@@ -122,7 +122,8 @@ export class HeadlessCircuit {
             }
         }
         function clearInput(end, gate) {
-            setInput(Vector3vl.xes(gate.ports[end.port].bits), end, gate);
+            var bits = gate.getPort(end.port).bits;
+            setInput(Vector3vl.xes(bits), end, gate);
         }
         this.listenTo(graph, 'change:target', function(wire, end) {
             const gate = graph.getCell(end.id);
@@ -149,7 +150,7 @@ export class HeadlessCircuit {
             const sgate = graph.getCell(strt.id);
             if (sgate && 'port' in strt) {
                 cell.set('signal', sgate.get('outputSignals')[strt.port]);
-                cell.set('bits', sgate.ports[strt.port].bits);
+                cell.set('bits', sgate.getPort(strt.port).bits);
             }
         });
         let laid_out = false;
@@ -167,8 +168,8 @@ export class HeadlessCircuit {
         }
         for (const conn of data.connectors) {
             graph.addCell(new this._cells.Wire({
-                source: {id: conn.from.id, port: conn.from.port},
-                target: {id: conn.to.id, port: conn.to.port},
+                source: {id: conn.from.id, port: conn.from.port, magnet: '.port'},
+                target: {id: conn.to.id, port: conn.to.port, magnet: '.port'},
                 netname: conn.name,
                 vertices: conn.vertices || []
             }));

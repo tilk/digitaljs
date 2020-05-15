@@ -1,40 +1,59 @@
 "use strict";
 
 import * as joint from 'jointjs';
-import { Gate, GateView, Box, BoxView } from './base';
+import { Box, BoxView } from './base';
 import bigInt from 'big-integer';
 import * as help from '../help.mjs';
 import { Vector3vl } from '3vl';
 
 // Bit extending
-export const BitExtend = Gate.define('BitExtend', {
+export const BitExtend = Box.define('BitExtend', {
+    /* default properties */
+    extend: { input: 1, output: 1 },
     propagation: 0,
+    
     attrs: {
         "text.value": {
-            fill: 'black',
-            'ref-x': .5, 'ref-y': .5, 'y-alignment': 'middle',
-            'text-anchor': 'middle',
-            'font-size': '14px'
+            refX: .5, refY: .5,
+            textAnchor: 'middle', textVerticalAnchor: 'middle'
         }
     }
 }, {
-    constructor: function(args) {
-        console.assert(args.extend.input <= args.extend.output);
-        this.markup = [
-            this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: args.extend.input}),
-            this.addWire(args, 'right', 0.5, { id: 'out', dir: 'out', bits: args.extend.output}),
-            '<rect class="body"/><text class="label"/>',
-            '<text class="value"/>',
-        ].join('');
-        Gate.prototype.constructor.apply(this, arguments);
+    initialize: function() {
+        Box.prototype.initialize.apply(this, arguments);
+        
+        const extend = this.prop('extend');
+        
+        console.assert(extend.input <= extend.output);
+        
+        this.addPorts([
+            { id: 'in', group: 'in', dir: 'in', bits: extend.input },
+            { id: 'out', group: 'out', dir: 'out', bits: extend.output }
+        ]);
+        
+        this.on('change:extend', (_, extend) => {
+            this.setPortBits('in', extend.input);
+            this.setPortBits('out', extend.output);
+        });
     },
     operation: function(data) {
         const ex = this.get('extend');
         return { out: data.in.concat(Vector3vl.make(ex.output - ex.input, this.extbit(data.in))) };
     },
-    gateParams: Gate.prototype.gateParams.concat(['extend'])
+    markup: Box.prototype.markup.concat([{
+            tagName: 'text',
+            className: 'value'
+        }
+    ]),
+    gateParams: Box.prototype.gateParams.concat(['extend'])
 });
-export const BitExtendView = GateView;
+export const BitExtendView = BoxView.extend({
+    autoResizeBox: true,
+    calculateBoxWidth: function() {
+        const text = this.el.querySelector('text.value');
+        return text.getBBox().width + 10;
+    }
+});
 
 export const ZeroExtend = BitExtend.define('ZeroExtend', {
     attrs: {
@@ -60,59 +79,64 @@ export const SignExtendView = BitExtendView;
 
 // Bus slicing
 export const BusSlice = Box.define('BusSlice', {
+    /* default properties */
+    slice: { first: 0, count: 1, total: 2 },
     propagation: 0,
-    size: { width: 40, height: 24 },
+    
+    size: { width: 40, height: 24 }
 }, {
-    constructor: function(args) {
-        const lblmarkup = [];
-        const markup = [];
-        args.bits = 0;
-        const val = args.slice.count == 1 ? args.slice.first : 
-            args.slice.first + "-" + (args.slice.first + args.slice.count - 1);
-        this.markup = [
-            this.addWire(args, 'left', 0.5, { id: 'in', dir: 'in', bits: args.slice.total}),
-            this.addLabelledWire(args, lblmarkup, 'right', 0.5, { id: 'out', dir: 'out', bits: args.slice.count, label: val}),
-            '<rect class="body"/><text class="label"/>',
-            lblmarkup.join(''),
-        ].join('');
-        Gate.prototype.constructor.apply(this, arguments);
+    initialize: function() {
+        Box.prototype.initialize.apply(this, arguments);
+        
+        const slice = this.prop('slice');
+        
+        const val = slice.count == 1 ? slice.first : 
+            slice.first + "-" + (slice.first + slice.count - 1);
+        
+        this.addPort({ id: 'in', group: 'in', dir: 'in', bits: slice.total });
+        this.addPort({ id: 'out', group: 'out', dir: 'out', bits: slice.count, portlabel: val }, { labelled: true });
     },
     operation: function(data) {
         const s = this.get('slice');
         return { out: data.in.slice(s.first, s.first + s.count) };
     },
-    gateParams: Gate.prototype.gateParams.concat(['slice'])
+    gateParams: Box.prototype.gateParams.concat(['slice'])
 });
-export const BusSliceView = BoxView;
+export const BusSliceView = BoxView.extend({
+    autoResizeBox: true
+});
 
 // Bus grouping
 export const BusRegroup = Box.define('BusRegroup', {
-    propagation: 0,
+    /* default properties */
+    groups: [1],
+    propagation: 0
 }, {
-    constructor: function(args) {
-        const markup = [];
-        const lblmarkup = [];
-        args.bits = 0;
-        const size = { width: 40, height: args.groups.length*16+8 };
-        args.size = size;
-        for (const [num, gbits] of args.groups.entries()) {
-            const y = num*16+12;
-            const lbl = args.bits + (gbits > 1 ? '-' + (args.bits + gbits - 1) : '');
-            args.bits += gbits;
-            markup.push(this.addLabelledWire(args, lblmarkup, this.group_dir == 'out' ? 'right' : 'left', y,
-                { id: this.group_dir + num, dir: this.group_dir, bits: gbits, label: lbl }));
+    initialize: function() {
+        Box.prototype.initialize.apply(this, arguments);
+        
+        var bits = 0;
+        const groups = this.prop('groups');
+        
+        const size = { width: 40, height: groups.length*16+8 };
+        this.prop('size', size);
+        
+        for (const [num, gbits] of groups.entries()) {
+            const lbl = bits + (gbits > 1 ? '-' + (bits + gbits - 1) : '');
+            bits += gbits;
+            this.addPort({ id: this.group_dir + num, group: this.group_dir, dir: this.group_dir, bits: gbits, portlabel: lbl }, { labelled: true });
         }
+        this.prop('bits', bits);
+        
         const contra = this.group_dir == 'out' ? 'in' : 'out';
-        markup.push(this.addWire(args, this.group_dir == 'out' ? 'left' : 'right', 0.5,
-            { id: contra, dir: contra, bits: args.bits }));
-        markup.push('<rect class="body"/><text class="label"/>');
-        markup.push(lblmarkup.join(''));
-        this.markup = markup.join('');
-        Gate.prototype.constructor.apply(this, arguments);
+        this.addPort({ id: contra, group: contra, dir: contra, bits: bits });
     },
-    gateParams: Gate.prototype.gateParams.concat(['groups'])
+    gateParams: Box.prototype.gateParams.concat(['groups']),
+    unsupportedPropChanges: Box.prototype.unsupportedPropChanges.concat(['groups'])
 });
-export const BusRegroupView = BoxView;
+export const BusRegroupView = BoxView.extend({
+    autoResizeBox: true
+});
 
 export const BusGroup = BusRegroup.define('BusGroup', {
 }, {

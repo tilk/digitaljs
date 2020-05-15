@@ -13,7 +13,8 @@ const tests = [
     {name: 'sextium', title: 'Sextium III Processor'},
     {name: 'rom', title: 'Async ROM'},
     {name: 'ram', title: 'Simple RAM'},
-    {name: 'fsm', title: 'Finite State Machine'}
+    {name: 'fsm', title: 'Finite State Machine'},
+    {name: 'gates', title: 'All available gates'}
 ];
 
 module.exports = {
