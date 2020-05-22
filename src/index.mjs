@@ -70,13 +70,25 @@ export class Circuit extends HeadlessCircuit {
         this.stop();
     }
     _defaultWindowCallback(type, div, closingCallback) {
+        const maxWidth = () => $(window).width() * 0.9;
+        const maxHeight = () => $(window).height() * 0.9;
+        function fixSize() {
+            if (div.width() > maxWidth())
+                div.dialog("option", "width", maxWidth());
+            if (div.height() > maxHeight())
+                div.dialog("option", "height", maxHeight());
+        }
+        const observer = new ResizeObserver(fixSize).observe(div.get(0));
         div.dialog({
             width: 'auto',
             height: 'auto',
             maxWidth: $(window).width() * 0.9,
             maxHeight: $(window).height() * 0.9,
             resizable: type !== "Memory",
-            close: closingCallback
+            close: () => {
+                closingCallback();
+                observer.disconnect();
+            }
         });
     }
     displayOn(elem) {
