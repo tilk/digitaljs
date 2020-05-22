@@ -185,7 +185,8 @@ Some ideas for further developing the simulator.
  * Saving and loading circuits, including layout and state.
  * Generic handling of negation for unary/binary gates (negation on inputs/outputs) for better clarity.
  * N-ary gates as generalization of binary gates.
- * Better algorithm for graph layout.
+ * Better algorithm for graph layout. (Idea: use elkjs)
+ * Arithmetic ops with constants for nicer UI.
  * Zooming in/out on schematics.
  * SVG export.
  * Verilog export.
