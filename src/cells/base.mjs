@@ -228,6 +228,7 @@ export const GateView = joint.dia.ElementView.extend({
         for (const port of this.model.getPorts()) {
             if (port.dir !== dir) continue;
             const portel = this.el.querySelector('[port='+port.id+']');
+            if (portel === null) continue; // workaround for a race condition
             portel.classList.toggle('live', signal[port.id].isHigh);
             portel.classList.toggle('low', signal[port.id].isLow);
             portel.classList.toggle('defined', signal[port.id].isDefined);
