@@ -18,7 +18,7 @@ export const GenMux = Gate.define('GenMux', {
                 position: { name: 'top', args: { y: 5 } },
                 attrs: _.merge({}, portGroupAttrs, {
                     'line.wire': { x2: 0, y2: -20 },
-                    'circle.port': { magnet: 'passive', refY: -20 },
+                    port: { magnet: 'passive', refY: -20 },
                     'text.bits': { refDx: -5, refDy: 2, textAnchor: 'start' }
                 }),
                 z: -1

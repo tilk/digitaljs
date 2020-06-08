@@ -105,6 +105,7 @@ export class Circuit extends HeadlessCircuit {
         opts = opts || {};
         const paper = new joint.dia.Paper({
             async: true,
+            sorting: joint.dia.Paper.sorting.APPROX, //needed for async paper, see https://github.com/clientIO/joint/issues/1320
             el: elem,
             model: graph,
             width: 100, height: 100, gridSize: 5,
@@ -113,6 +114,19 @@ export class Circuit extends HeadlessCircuit {
             linkPinning: false,
             markAvailable: true,
             defaultLink: new this._cells.Wire,
+            defaultConnectionPoint: { name: 'anchor' },
+            defaultRouter: {
+                name: 'metro',
+                args: {
+                    startDirections: ['right'],
+                    endDirections: ['left'],
+                    maximumLoops: 200
+                }
+            },
+            defaultConnector: {
+                name: 'rounded',
+                args: { radius: 10 }
+            },
             cellViewNamespace: this._cells,
             validateConnection: function(vs, ms, vt, mt, e, vl) {
                 if (e === 'target') {
