@@ -54,6 +54,18 @@ export const Subcircuit = Box.define('Subcircuit', {
         this.prop('size', size);
         this.prop('circuitIOmap', iomap);
     },
+    //add offset of 10pt to account for the top label at layout time
+    getLayoutSize: function() {
+        const size = this.size();
+        size.height += 10;
+        return size;
+    },
+    setLayoutPosition: function(position) {
+        this.set('position', {
+            x: position.x - position.width / 2,
+            y: position.y - position.height / 2 + 10
+        });
+    },
     markup: Box.prototype.markup.concat([{
             tagName: 'text',
             className: 'type'
