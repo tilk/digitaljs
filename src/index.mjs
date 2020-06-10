@@ -15,6 +15,11 @@ import { HeadlessCircuit, getCellType } from './circuit.mjs';
 import { MonitorView, Monitor } from './monitor.mjs';
 import './style.css';
 
+// polyfill ResizeObserver for e.g. Firefox ESR 68.8
+// this line and the node-module might be removed as soon as ResizeObserver is widely supported
+// see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#Browser_compatibility
+import ResizeObserver from 'resize-observer-polyfill';
+
 export { HeadlessCircuit, getCellType, cells, MonitorView, Monitor };
 
 export class Circuit extends HeadlessCircuit {
@@ -78,7 +83,8 @@ export class Circuit extends HeadlessCircuit {
             if (div.height() > maxHeight())
                 div.dialog("option", "height", maxHeight());
         }
-        const observer = new ResizeObserver(fixSize).observe(div.get(0));
+        const observer = new ResizeObserver(fixSize);
+        observer.observe(div.get(0));
         div.dialog({
             width: 'auto',
             height: 'auto',
