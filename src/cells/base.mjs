@@ -11,17 +11,16 @@ export const portGroupAttrs = {
         x1: 0, y1: 0,
         x2: undefined, y2: 0
     },
-    'circle.port': {
+    port: {
         magnet: undefined,
         r: 7,
         stroke: 'black',
         fill: 'white',
         strokeWidth: 2,
-        strokeOpacity: 0.5,
-        jointSelector: '.port'
+        strokeOpacity: 0.5
     },
     'text.bits': {
-        ref: 'circle.port',
+        ref: 'port',
         fill: 'black',
         fontSize: '7pt'
     },
@@ -64,7 +63,7 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
                 position: 'left',
                 attrs: _.merge({}, portGroupAttrs, {
                     'line.wire': { x2: -25 },
-                    'circle.port': { magnet: 'passive', refX: -25 },
+                    port: { magnet: 'passive', refX: -25 },
                     'text.bits': { refDx: 1, refY: -3, textAnchor: 'start' },
                     'text.iolabel': { refX: 5, textAnchor: 'start' }
                 })
@@ -73,13 +72,15 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
                 position: 'right',
                 attrs: _.merge({}, portGroupAttrs, {
                     'line.wire': { x2: 25 },
-                    'circle.port': { magnet: true, refX: 25 },
+                    port: { magnet: true, refX: 25 },
                     'text.bits': { refX: -1, refY: -3, textAnchor: 'end' },
                     'text.iolabel': { refX: -5, textAnchor: 'end' }
                 })
             }
         }
-    }
+    },
+
+    z: 1
 }, {
     operation: function() {
         return {};
@@ -183,7 +184,8 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
         className: 'wire'
     }, {
         tagName: 'circle',
-        className: 'port'
+        className: 'port',
+        selector: 'port'
     }, {
         tagName: 'text',
         className: 'bits'
@@ -242,68 +244,22 @@ export const GateView = joint.dia.ElementView.extend({
 });
 
 // Connecting wire model
-export const Wire = joint.dia.Link.define('Wire', {
+export const Wire = joint.shapes.standard.Link.define('Wire', {
     attrs: {
-        '.connection': { 'stroke-width': 2 },
-        '.marker-vertex': { r: 7 }
+        line: {
+            class: 'connection',
+            targetMarker: null
+        }
     },
+
     signal: Vector3vl.xes(1),
     bits: 1,
 
-    router: { name: 'orthogonal' },
-    connector: { name: 'rounded', args: { radius: 10 }}
+    // show behind gates
+    z: 0
 }, {
-    markup: [
-        '<path class="connection" stroke="black" d="M 0 0 0 0"/>',
-//        '<path class="marker-source" fill="black" stroke="black" d="M 0 0 0 0"/>',
-//        '<path class="marker-target" fill="black" stroke="black" d="M 0 0 0 0"/>',
-        '<path class="connection-wrap" d="M 0 0 0 0"/>',
-        '<g class="labels"/>',
-        '<g class="marker-vertices"/>',
-        '<g class="marker-arrowheads"/>',
-        '<g class="link-tools"/>'
-    ].join(''),
-
-    toolMarkup: [
-        '<g class="link-tool">',
-        '<g class="tool-remove" event="remove">',
-        '<circle r="11" />',
-        '<path transform="scale(.8) translate(-16, -16)" d="M24.778,21.419 19.276,15.917 24.777,10.415 21.949,7.585 16.447,13.087 10.945,7.585 8.117,10.415 13.618,15.917 8.116,21.419 10.946,24.248 16.447,18.746 21.948,24.248z" />',
-        '<title>Remove link.</title>',
-        '</g>',
-        '<g class="tool-monitor" event="link:monitor">',
-        '<circle r="11" transform="translate(25)"/>',
-        '<path fill="white" transform="scale(.025) translate(750, -250)" d="m280,278a153,153 0 1,0-2,2l170,170m-91-117 110,110-26,26-110-110"/>',
-        '<title>Monitor link.</title>',
-        '</g>',
-        '</g>'
-    ].join(''),
-
-    arrowheadMarkup: [
-        '<g class="marker-arrowhead-group marker-arrowhead-group-<%= end %>">',
-        '<circle class="marker-arrowhead" end="<%= end %>" r="7"/>',
-        '</g>'
-    ].join(''),
-
-    vertexMarkup: [
-        '<g class="marker-vertex-group" transform="translate(<%= x %>, <%= y %>)">',
-        '<circle class="marker-vertex" idx="<%= idx %>" r="10" />',
-        '<g class="marker-vertex-remove-group">',
-        '<path class="marker-vertex-remove-area" idx="<%= idx %>" d="M16,5.333c-7.732,0-14,4.701-14,10.5c0,1.982,0.741,3.833,2.016,5.414L2,25.667l5.613-1.441c2.339,1.317,5.237,2.107,8.387,2.107c7.732,0,14-4.701,14-10.5C30,10.034,23.732,5.333,16,5.333z" transform="translate(5, -33)"/>',
-        '<path class="marker-vertex-remove" idx="<%= idx %>" transform="scale(.8) translate(9.5, -37)" d="M24.778,21.419 19.276,15.917 24.777,10.415 21.949,7.585 16.447,13.087 10.945,7.585 8.117,10.415 13.618,15.917 8.116,21.419 10.946,24.248 16.447,18.746 21.948,24.248z">',
-        '<title>Remove vertex.</title>',
-        '</path>',
-        '</g>',
-        '</g>'
-    ].join(''),
-
     initialize: function(args) {
-        joint.dia.Link.prototype.initialize.apply(this, arguments);
-        this.router('metro', {
-            startDirections: ['right'],
-            endDirections: ['left'],
-            maximumLoops: 200
-        });
+        joint.shapes.standard.Link.prototype.initialize.apply(this, arguments);
         if (this.has('netname')) {
             this.label(0, {
                 markup: [
@@ -343,25 +299,75 @@ export const Wire = joint.dia.Link.define('Wire', {
     }
 });
 
-export const WireView = joint.dia.LinkView.extend({
-    events: {
-        'mouseenter': 'hover_mouseover',
-        'mouseleave': 'hover_mouseout',
-        'mousedown': 'hover_mouseout',
+const circleArrowhead = {
+    tagName: 'circle',
+    attributes: {
+        'r': 7,
+        'fill': 'black',
+        'fill-opacity': 0.3,
+        'stroke': 'black',
+        'stroke-width': 2,
+        'cursor': 'move'
+    }
+};
+const CircleSourceArrowhead = joint.linkTools.SourceArrowhead.extend(_.merge({}, circleArrowhead));
+const CircleTargetArrowhead = joint.linkTools.TargetArrowhead.extend(_.merge({}, circleArrowhead));
+
+const DoublyButton = joint.linkTools.Button.extend({
+    update: function() {
+        if (this.relatedView.isShortWire())
+            this.options.distance = this.options.distanceShort || this.options.distance;
+        else
+            this.options.distance = this.options.distanceLong || this.options.distance;
+        return joint.linkTools.Button.prototype.update.apply(this, arguments);
     },
+    show: function() {
+        if (this.options.secondary && this.relatedView.isShortWire()) return;
+        joint.linkTools.Button.prototype.show.apply(this, arguments);
+    }
+});
+const RemoveButton = DoublyButton.extend({
+    name: 'remove',
+    children: joint.linkTools.Remove.prototype.children,
+    options: joint.linkTools.Remove.prototype.options
+});
+const MonitorButton = DoublyButton.extend({
+    name: 'monitor',
+    children: [{
+        tagName: 'circle',
+        selector: 'button',
+        attributes: {
+            'r': 7,
+            'fill': '#001DFF',
+            'cursor': 'pointer'
+        }
+    }, {
+        tagName: 'path',
+        selector: 'icon',
+        attributes: {
+            'd': 'm -2.5,-0.5 a 2,2 0 1 0 4,0 2,2 0 1 0 -4,0 M 1,1 3,3',
+            'fill': 'none',
+            'stroke': '#FFFFFF',
+            'stroke-width': 2,
+            'pointer-events': 'none'
+        }
+    }],
+    options: {
+        action: function(evt) {
+            this.notify('link:monitor');
+        }
+    }
+});
+
+export const WireView = joint.dia.LinkView.extend({
+    initFlag: joint.dia.LinkView.prototype.initFlag.concat(['INIT']),
+
+    longWireLength: 400,
+
     presentationAttributes: joint.dia.LinkView.addPresentationAttributes({
         signal: 'flag:signal',
         bits: 'flag:bits'
     }),
-
-    _translateAndAutoOrientArrows(sourceArrow, targetArrow) {
-        if (sourceArrow) {
-            sourceArrow.translate(this.sourcePoint.x, this.sourcePoint.y, {absolute: true});
-        }
-        if (targetArrow) {
-            targetArrow.translate(this.targetPoint.x, this.targetPoint.y, {absolute: true});
-        }
-    },
 
     initialize() {
         joint.dia.LinkView.prototype.initialize.apply(this, arguments);
@@ -369,7 +375,7 @@ export const WireView = joint.dia.LinkView.extend({
         this.$el.toggleClass('bus', this.model.get('bits') > 1);
         this.prevModels = { source: null, target: null };
     },
-    
+
     confirmUpdate(flags) {
         joint.dia.LinkView.prototype.confirmUpdate.apply(this, arguments);
         if (this.hasFlag(flags, 'flag:signal')) {
@@ -378,6 +384,37 @@ export const WireView = joint.dia.LinkView.extend({
         if (this.hasFlag(flags, 'flag:bits')) {
             this.$el.toggleClass('bus', this.model.get('bits') > 1);
         };
+        if (this.hasFlag(flags, 'INIT')) {
+            if (this.hasTools()) return;
+
+            const verticesTool = new joint.linkTools.Vertices({ focusOpacity: 0.5 });
+            //const segmentsTool = new joint.linkTools.Segments({ focusOpacity: 0.5 }); //todo: problem with signal reset ??
+            const sourceCircle = new CircleSourceArrowhead();
+            const targetCircle = new CircleTargetArrowhead();
+            const removeButton1 = new RemoveButton({ distanceShort: '75%', distanceLong: '50' });
+            const removeButton2 = new RemoveButton({ distance: '-50', secondary: true });
+            const monitorButton1 = new MonitorButton({ distanceShort: '25%', distanceLong: '30' });
+            const monitorButton2 = new MonitorButton({ distance: '-30', secondary: true });
+
+            const toolsView = new joint.dia.ToolsView({
+                tools: [
+                    verticesTool,
+                    //segmentsTool,
+                    sourceCircle,
+                    targetCircle,
+                    removeButton1,
+                    removeButton2,
+                    monitorButton1,
+                    monitorButton2
+                ]
+            });
+            this.addTools(toolsView);
+            this.hideTools();
+        }
+    },
+
+    isShortWire() {
+        return this.getConnectionLength() < this.longWireLength;
     },
 
     updateColor(sig) {
@@ -387,9 +424,11 @@ export const WireView = joint.dia.LinkView.extend({
         this.$el.toggleClass('defined', !h && !l && sig.isDefined);
     },
 
-    hover_mouseover(evt) {
+    mouseenter: function(evt) {
+        joint.dia.LinkView.prototype.mouseenter.apply(this, arguments);
+        this.showTools();
+
         if (this.model.get('bits') == 1) return;
-        if (this.wire_hover) this.hover_mouseout();
         this.wire_hover = $('<div class="wire_hover">')
             .css('left', evt.clientX + 5)
             .css('top', evt.clientY + 5)
@@ -398,7 +437,10 @@ export const WireView = joint.dia.LinkView.extend({
         this.listenTo(this.model, 'change:signal', this.hover_gentext);
     },
 
-    hover_mouseout() {
+    mouseleave: function(evt) {
+        joint.dia.LinkView.prototype.mouseleave.apply(this, arguments);
+        this.hideTools();
+
         if (this.wire_hover) {
             this.wire_hover.remove();
             this.wire_hover = null;
@@ -417,11 +459,6 @@ export const WireView = joint.dia.LinkView.extend({
         ].join('');
         this.wire_hover.html(hovertext);
     },
-
-    // custom options:
-    options: joint.util.defaults({
-        doubleLinkTools: true,
-    }, joint.dia.LinkView.prototype.options),
 
     // Quick-and-dirty performance fix
     onEndModelChange(endType, endModel, opt) {

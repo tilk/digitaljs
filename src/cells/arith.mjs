@@ -19,8 +19,8 @@ export const Arith = Gate.define('Arith', {
     },
     ports: {
         groups: {
-            'in': { position: { name: 'left', args: { dx: 10 } }, attrs: { 'line.wire': { x2: -35 }, 'circle.port': { refX: -35 } }, z: -1 },
-            'out': { position: { name: 'right', args: { dx: -10 } }, attrs: { 'line.wire': { x2: 35 }, 'circle.port': { refX: 35 } }, z: -1 }
+            'in': { position: { name: 'left', args: { dx: 10 } }, attrs: { 'line.wire': { x2: -35 }, port: { refX: -35 } }, z: -1 },
+            'out': { position: { name: 'right', args: { dx: -10 } }, attrs: { 'line.wire': { x2: 35 }, port: { refX: 35 } }, z: -1 }
         }
     }
 }, {

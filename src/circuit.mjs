@@ -168,8 +168,8 @@ export class HeadlessCircuit {
         }
         for (const conn of data.connectors) {
             graph.addCell(new this._cells.Wire({
-                source: {id: conn.from.id, port: conn.from.port, magnet: '.port'},
-                target: {id: conn.to.id, port: conn.to.port, magnet: '.port'},
+                source: {id: conn.from.id, port: conn.from.port, magnet: 'port' },
+                target: {id: conn.to.id, port: conn.to.port, magnet: 'port'},
                 netname: conn.name,
                 vertices: conn.vertices || []
             }));
