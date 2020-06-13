@@ -15,6 +15,11 @@ import { HeadlessCircuit, getCellType } from './circuit.mjs';
 import { MonitorView, Monitor } from './monitor.mjs';
 import './style.css';
 
+// polyfill ResizeObserver for e.g. Firefox ESR 68.8
+// this line and the node-module might be removed as soon as ResizeObserver is widely supported
+// see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#Browser_compatibility
+import ResizeObserver from 'resize-observer-polyfill';
+
 export { HeadlessCircuit, getCellType, cells, MonitorView, Monitor };
 
 export class Circuit extends HeadlessCircuit {
@@ -78,7 +83,8 @@ export class Circuit extends HeadlessCircuit {
             if (div.height() > maxHeight())
                 div.dialog("option", "height", maxHeight());
         }
-        const observer = new ResizeObserver(fixSize).observe(div.get(0));
+        const observer = new ResizeObserver(fixSize);
+        observer.observe(div.get(0));
         div.dialog({
             width: 'auto',
             height: 'auto',
@@ -99,6 +105,7 @@ export class Circuit extends HeadlessCircuit {
         opts = opts || {};
         const paper = new joint.dia.Paper({
             async: true,
+            sorting: joint.dia.Paper.sorting.APPROX, //needed for async paper, see https://github.com/clientIO/joint/issues/1320
             el: elem,
             model: graph,
             width: 100, height: 100, gridSize: 5,
@@ -107,6 +114,19 @@ export class Circuit extends HeadlessCircuit {
             linkPinning: false,
             markAvailable: true,
             defaultLink: new this._cells.Wire,
+            defaultConnectionPoint: { name: 'anchor' },
+            defaultRouter: {
+                name: 'metro',
+                args: {
+                    startDirections: ['right'],
+                    endDirections: ['left'],
+                    maximumLoops: 200
+                }
+            },
+            defaultConnector: {
+                name: 'rounded',
+                args: { radius: 10 }
+            },
             cellViewNamespace: this._cells,
             validateConnection: function(vs, ms, vt, mt, e, vl) {
                 if (e === 'target') {

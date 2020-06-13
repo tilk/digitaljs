@@ -17,8 +17,8 @@ export const GateSVG = Gate.define('GateSVG', {
     },
     ports: {
         groups: {
-            'in': { position: { name: 'left', args: { dx: 20 } }, attrs: { 'line.wire': { x2: -40 }, 'circle.port': { refX: -40 } }, z: -1 },
-            'out': { position: { name: 'right', args: { dx: -20 } }, attrs: { 'line.wire': { x2: 40 }, 'circle.port': { refX: 40 } }, z: -1 }
+            'in': { position: { name: 'left', args: { dx: 20 } }, attrs: { 'line.wire': { x2: -40 }, port: { refX: -40 } }, z: -1 },
+            'out': { position: { name: 'right', args: { dx: -20 } }, attrs: { 'line.wire': { x2: 40 }, port: { refX: 40 } }, z: -1 }
         }
     }
 }, {
