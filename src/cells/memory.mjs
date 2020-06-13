@@ -6,6 +6,7 @@ import * as joint from 'jointjs';
 import { Box, BoxView } from './base';
 import bigInt from 'big-integer';
 import * as help from '../help.mjs';
+import { display3vl } from '../help.mjs';
 import { Vector3vl, Mem3vl } from '3vl';
 
 // Memory cell
@@ -227,12 +228,7 @@ export const MemoryView = BoxView.extend({
 //            '<button type="button" class="btn btn-secondary" title="Save contents">Save</button>' +
 //            '</div>' + 
             '<div class="input-group">' +
-            '<select name="numbase">' + 
-            '<option value="hex">hex</option>' +
-            '<option value="dec">dec</option>' +
-            '<option value="oct">oct</option>' +
-            '<option value="bin">bin</option>' +
-            '</select>' +
+            help.baseSelectMarkupHTML(this.model.get('bits'), 'hex') +
             '</div>' +
             '</div>' +
             '<table class="memeditor">' +
@@ -242,7 +238,7 @@ export const MemoryView = BoxView.extend({
         const ahex = Math.ceil(this.model.get('abits')/4);
         const rows = 8;
         let columns, address = 0;
-        const get_numbase = () => div.find('select[name=numbase]').val();
+        const get_numbase = () => div.find('select[name=base]').val();
         const updateStuff = () => {
             const numbase = get_numbase();
             div.find('button[name=prev]').prop('disabled', address <= 0);
@@ -257,16 +253,15 @@ export const MemoryView = BoxView.extend({
                 col = col.next();
                 for (let c = 0; c < columns; c++, col = col.next()) {
                     if (address + r * columns + c >= words) break;
-                    col.find('input').val(help.sig2base(memdata.get(address + r * columns + c), numbase))
+                    col.find('input').val(display3vl.show(numbase, memdata.get(address + r * columns + c)))
                                      .removeClass('invalid');
                 }
             }
         };
         const redraw = () => {
             const numbase = get_numbase();
-            const bpd = help.bitsPerDigit(numbase);
-            const ptrn = help.basePattern(numbase);
-            const ds = Math.ceil(this.model.get('bits')/bpd);
+            const ptrn = display3vl.pattern(numbase);
+            const ds = display3vl.size(numbase, this.model.get('bits')); 
             columns = Math.min(words, 16, Math.ceil(32/ds));
             address = Math.max(0, Math.min(words - rows * columns, address));
             const table = div.find('table');
@@ -290,7 +285,7 @@ export const MemoryView = BoxView.extend({
             updateStuff();
         };
         redraw();
-        div.find("select[name=numbase]").on('change', redraw);
+        div.find("select[name=base]").on('change', redraw);
         div.find("button[name=prev]").on('click', () => {
             address = Math.max(0, address - rows * columns);
             updateStuff();
@@ -305,8 +300,8 @@ export const MemoryView = BoxView.extend({
             const c = target.closest('td').index() - 1;
             const r = target.closest('tr').index();
             const addr = address + r * columns + c;
-            if (help.validNumber(evt.target.value, numbase)) {
-                const val = help.base2sig(evt.target.value, this.model.get('bits'), numbase);
+            if (display3vl.validate(numbase, evt.target.value)) {
+                const val = display3vl.read(numbase, evt.target.value, this.model.get('bits'));
                 memdata.set(addr, val);
                 this.model.updateOutputs(addr);
                 target.removeClass('invalid');
@@ -320,7 +315,7 @@ export const MemoryView = BoxView.extend({
             const r = Math.floor((addr - address) / columns);
             const c = addr - address - r * columns;
             const z = div.find('table tr:nth-child('+(r+1)+') td:nth-child('+(c+2)+') input')
-                .val(help.sig2base(memdata.get(address + r * columns + c), numbase))
+                .val(display3vl.show(numbase, memdata.get(address + r * columns + c)))
                 .removeClass('invalid')
                 .removeClass('flash');
             setTimeout(() => { z.addClass('flash') }, 10);

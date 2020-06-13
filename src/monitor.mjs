@@ -5,6 +5,7 @@ import _ from 'lodash';
 import $ from 'jquery';
 import Backbone from 'backbone';
 import * as help from './help.mjs';
+import { display3vl } from './help.mjs';
 import { Vector3vl } from '3vl';
 import { Waveform, drawWaveform, defaultSettings, extendSettings, calcGridStep } from 'wavecanvas';
 import { ResizeSensor } from 'css-element-queries';
@@ -114,7 +115,7 @@ export class MonitorView extends Backbone.View {
         this._autoredraw = false;
         this._idle = null;
         this._removeButtonMarkup = args.removeButtonMarkup || '<button type="button" name="remove">✖</button>';
-        this._baseSelectorMarkup = args.baseSelectorMarkup || '<select name="base"><option value="hex">hex</option><option value="oct">oct</option><option value="bin">bin</option></select>';
+        this._baseSelectorMarkup = args.baseSelectorMarkup || help.baseSelectMarkupHTML;
         this._bitTriggerMarkup = args.bitTriggerMarkup || '<select name="trigger" title="Trigger"><option value="none"></option><option value="rising">↑</option><option value="falling">↓</option><option value="risefall">↕</option><option value="undef">x</option></select>';
         this._busTriggerMarkup = args.busTriggerMarkup || '<input type="text" name="trigger" title="Trigger" placeholder="trigger" pattern="[0-9a-fx]*">';
         this.listenTo(this.model, 'add', this._handleAdd);
@@ -139,9 +140,9 @@ export class MonitorView extends Backbone.View {
             settings.base = base;
             const row = $(e.target).closest('tr');
             const trig = row.find('input[name=trigger]');
-            trig.attr('pattern', help.basePattern(base));
+            trig.attr('pattern', display3vl.pattern(base));
             if (settings.trigger)
-                trig.val(help.sig2base(settings.trigger, base));
+                trig.val(display3vl.show(base, settings.trigger));
             this.trigger('change');
         });
         this.$el.on('input', 'select[name=trigger]', (e) => {
@@ -152,10 +153,10 @@ export class MonitorView extends Backbone.View {
             const base = settings.base;
             if (e.target.value == "") {
                 settings.trigger = "";
-            } else if (help.validNumber(e.target.value, base)) {
+            } else if (display3vl.validate(base, e.target.value)) {
                 const bits = this.model._wires.get(evt_wireid(e)).waveform.bits;
-                settings.trigger = help.base2sig(e.target.value, bits, base);
-                e.target.value = help.sig2base(settings.trigger, base);
+                settings.trigger = display3vl.read(base, e.target.value, bits);
+                e.target.value = display3vl.show(base, settings.trigger);
             } else {
                 settings.trigger = null;
             }
@@ -261,7 +262,7 @@ export class MonitorView extends Backbone.View {
     _draw(wireid) {
         const canvas = this.$('tr[wireid="'+wireid+'"]').find('canvas');
         const waveform = this.model._wires.get(wireid).waveform;
-        drawWaveform(waveform, canvas[0].getContext('2d'), this._settingsFor.get(wireid));
+        drawWaveform(waveform, canvas[0].getContext('2d'), this._settingsFor.get(wireid), display3vl);
     }
     _handleAdd(wire) {
         const wireid = getWireId(wire);
@@ -300,7 +301,10 @@ export class MonitorView extends Backbone.View {
     }
     _createRow(wire) {
         const wireid = getWireId(wire);
-        const base_sel = wire.get('bits') > 1 ? this._baseSelectorMarkup : '';
+        const settings = this._settingsFor.get(wireid);
+        const base_sel = wire.get('bits') > 1 
+            ? (this._baseSelectorMarkup instanceof Function ? this._baseSelectorMarkup(wire.get('bits'), settings.base) : this._baseSelectorMarkup) 
+            : '';
         const trigger = wire.get('bits') > 1 ? this._busTriggerMarkup : this._bitTriggerMarkup;
         const row = $('<tr><td class="name"></td><td>'+base_sel+'</td><td>'+trigger+'</td><td>'+this._removeButtonMarkup+'</td><td><canvas class="wavecanvas" height="30" draggable="true"></canvas></td></tr>');
         row.attr('wireid', wireid);

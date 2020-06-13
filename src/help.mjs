@@ -1,60 +1,43 @@
 "use strict";
 
 import bigInt from 'big-integer';
-import { Vector3vl } from '3vl';
+import { Vector3vl, Display3vlWithRegex, Display3vl } from '3vl';
 
-export function validNumber(str, base) {
-    const binary_re = /^[01x]+$/;
-    const oct_re = /^[0-7x]+$/;
-    const hex_re = /^[0-9a-fx]+$/;
-    const dec_re = /^([0-9]+|x)$/;
-    const re =
-        base == 'bin' ? binary_re :
-        base == 'oct' ? oct_re :
-        base == 'hex' ? hex_re : 
-        base == 'dec' ? dec_re : /^$/;
-    return re.test(str);
-}
+export const display3vl = new Display3vl();
 
-export function basePattern(base) {
-    switch(base) {
-        case 'hex': return '[0-9a-fx]*';
-        case 'oct': return '[0-7x]*';
-        case 'bin': return '[01x]*';
-        case 'dec': return '[0-9]*|x';
+class Display3vlDec extends Display3vlWithRegex {
+    constructor() {
+        super('[0-9]*|x');
     }
-}
-
-export function base2sig(str, bits, base) {
-    switch(base) {
-        case 'bin': return Vector3vl.fromBin(str, bits);
-        case 'oct': return Vector3vl.fromOct(str, bits);
-        case 'hex': return Vector3vl.fromHex(str, bits);
-        case 'dec': 
-            if (str == 'x') return Vector3vl.xes(bits);
-            return bigint2sig(bigInt(str), bits);
+    get name() {
+        return "dec";
     }
-}
-
-export function sig2base(sig, base) {
-    switch(base) {
-        case 'bin': return sig.toBin();
-        case 'oct': return sig.toOct();
-        case 'hex': return sig.toHex();
-        case 'dec': 
-            if (!sig.isFullyDefined) return 'x';
-            return sig2bigint(sig).toString();
+    get sort() {
+        return 0;
     }
-}
-
-export function bitsPerDigit(base) {
-    switch(base) {
-        case 'hex': return 4;
-        case 'oct': return 3;
-        case 'bin': return 1;
-        case 'dec': return Math.log2(10);
+    can(kind, bits) {
+        return true;
     }
-}
+    read(data, bits) {
+        if (data == 'x') return Vector3vl.xes(bits);
+        return bigint2sig(bigInt(data), bits);
+    }
+    show(data) {
+        if (!data.isFullyDefined) return 'x';
+        return sig2bigint(data).toString();
+    }
+    size(bits) {
+        return Math.ceil(bits / Math.log2(10))
+    }
+};
+
+display3vl.addDisplay(new Display3vlDec());
+        
+export function baseSelectMarkupHTML(bits, base) { 
+    const markup = display3vl.usableDisplays('read', bits)
+        .map(n => '<option value="' + n + '"' + (n == base ? ' selected="selected"' : '') +'>' + n + '</option>');
+    return '<select name="base">' + markup.join("") + '</select>';
+};
 
 export function bigint2sig(i, bits) {
     const j = i.isNegative() ? bigInt.one.shiftLeft(Math.max(i.bitLength().toJSNumber()+2, bits)).plus(i) : i;

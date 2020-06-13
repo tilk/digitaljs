@@ -2,7 +2,7 @@
 
 import * as joint from 'jointjs';
 import bigInt from 'big-integer';
-import * as help from '../help.mjs';
+import { display3vl } from '../help.mjs';
 import { Vector3vl } from '3vl';
 
 export const portGroupAttrs = {
@@ -452,10 +452,10 @@ export const WireView = joint.dia.LinkView.extend({
         if (!this.wire_hover) return;
         const sig = this.model.get('signal');
         const hovertext = [
-            'Hex: ' + sig.toHex() + '<br>',
-            'Dec: ' + help.sig2base(sig, 'dec') + '<br>',
-            'Oct: ' + sig.toOct() + '<br>',
-            'Bin: ' + sig.toBin()
+            'Hex: ' + display3vl.show('hex', sig) + '<br>',
+            'Dec: ' + display3vl.show('dec', sig) + '<br>',
+            'Oct: ' + display3vl.show('oct', sig) + '<br>',
+            'Bin: ' + display3vl.show('bin', sig)
         ].join('');
         this.wire_hover.html(hovertext);
     },
