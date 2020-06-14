@@ -31,7 +31,34 @@ class Display3vlDec extends Display3vlWithRegex {
     }
 };
 
+class Display3vlDec2c extends Display3vlWithRegex {
+    constructor() {
+        super('-?[0-9]*|x');
+    }
+    get name() {
+        return "dec2c";
+    }
+    get sort() {
+        return 0;
+    }
+    can(kind, bits) {
+        return bits > 0;
+    }
+    read(data, bits) {
+        if (data == 'x') return Vector3vl.xes(bits);
+        return bigint2sig(bigInt(data), bits);
+    }
+    show(data) {
+        if (!data.isFullyDefined) return 'x';
+        return sig2bigint(data, true).toString();
+    }
+    size(bits) {
+        return 1 + Math.ceil(bits / Math.log2(10))
+    }
+};
+
 display3vl.addDisplay(new Display3vlDec());
+display3vl.addDisplay(new Display3vlDec2c());
         
 export function baseSelectMarkupHTML(bits, base) { 
     const markup = display3vl.usableDisplays('read', bits)

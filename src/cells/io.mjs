@@ -23,7 +23,7 @@ export const NumBase = Box.define('NumBase', {
                 this.set('numbase', 'hex');
         });
     },
-    tooltipMinWidth: 55,
+    tooltipMinWidth: 70,
     markup: Box.prototype.markup.concat([{
             tagName: 'foreignObject',
             className: 'tooltip',
