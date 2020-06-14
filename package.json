@@ -35,7 +35,6 @@
     "3vl": "^0.3.3",
     "babel-polyfill": "^6.26.0",
     "big-integer": "^1.6.48",
-    "css-element-queries": "^1.2.3",
     "dagre": "^0.8.5",
     "fastpriorityqueue": "^0.6.3",
     "graphlib": "^2.1.8",

@@ -8,7 +8,7 @@ import * as help from './help.mjs';
 import { display3vl } from './help.mjs';
 import { Vector3vl } from '3vl';
 import { Waveform, drawWaveform, defaultSettings, extendSettings, calcGridStep } from 'wavecanvas';
-import { ResizeSensor } from 'css-element-queries';
+import ResizeObserver from 'resize-observer-polyfill';
 
 function getWireId(wire) {
     const hier = [wire.cid];
@@ -195,16 +195,17 @@ export class MonitorView extends Backbone.View {
             this.$('table').append(this._handleAdd(wobj.wire));
         }
         this._canvasResize();
-        this._resizeSensor = new ResizeSensor(this.$el, () => {
+        this._resizeObserver = new ResizeObserver(() => {
             this._canvasResize();
         });
+        this._resizeObserver.observe(this.el);
         return this;
     }
     shutdown() {
         this.$el.off();
-        if (this._resizeSensor) {
-            this._resizeSensor.detach();
-            this._resizeSensor = undefined;
+        if (this._resizeObserver) {
+            this._resizeObserver.disconnect();
+            this._resizeObserver = undefined;
         }
         this.stopListening();
     }
