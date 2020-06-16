@@ -14,6 +14,7 @@ import * as cells from './cells.mjs';
 import { display3vl } from './help.mjs';
 import { HeadlessCircuit, getCellType } from './circuit.mjs';
 import { MonitorView, Monitor } from './monitor.mjs';
+import { IOPanelView } from './iopanel.mjs';
 import './style.css';
 
 // polyfill ResizeObserver for e.g. Firefox ESR 68.8
@@ -21,7 +22,7 @@ import './style.css';
 // see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#Browser_compatibility
 import ResizeObserver from 'resize-observer-polyfill';
 
-export { HeadlessCircuit, getCellType, cells, MonitorView, Monitor, display3vl };
+export { HeadlessCircuit, getCellType, cells, MonitorView, Monitor, IOPanelView, display3vl };
 
 export class Circuit extends HeadlessCircuit {
     constructor(data, windowCallback, cellsNamespace) {

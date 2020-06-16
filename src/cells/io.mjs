@@ -119,6 +119,9 @@ export const NumDisplay = NumBase.define('NumDisplay', {
             className: 'value numvalue'
         }
     ]),
+    getLogicValue: function() {
+        return this.get('inputSignals').in;
+    },
     gateParams: NumBase.prototype.gateParams.concat(['bits']),
     numbaseType: 'show'
 });
@@ -168,6 +171,10 @@ export const NumEntry = NumBase.define('NumEntry', {
             }]
         }
     ]),
+    setLogicValue: function(sig) {
+        console.assert(sig.bits == this.get('bits'));
+        this.set('buttonState', sig);
+    },
     gateParams: NumBase.prototype.gateParams.concat(['bits']),
     numbaseType: 'read'
 });
@@ -223,7 +230,10 @@ export const Lamp = Box.define('Lamp', {
             tagName: 'circle',
             className: 'led'
         }
-    ])
+    ]),
+    getLogicValue: function() {
+        return this.get('inputSignals').in;
+    }
 });
 export const LampView = BoxView.extend({
     confirmUpdate(flags) {
@@ -269,7 +279,10 @@ export const Button = Box.define('Button', {
             tagName: 'rect',
             className: 'btnface'
         }
-    ])
+    ]),
+    setLogicValue: function(sig) {
+        this.set('buttonState', sig.isHigh);
+    }
 });
 export const ButtonView = BoxView.extend({
     presentationAttributes: BoxView.addPresentationAttributes({
@@ -341,14 +354,21 @@ export const IOView = BoxView.extend({
 // Input model
 export const Input = IO.define('Input', {
 }, {
-    io_dir: 'out'
+    io_dir: 'out',
+    setLogicValue: function(sig) {
+        console.assert(sig.bits == this.get('bits'));
+        this.set('outputSignals', { out: sig });
+    }
 });
 export const InputView = IOView;
 
 // Output model
 export const Output = IO.define('Output', {
 }, {
-    io_dir: 'in'
+    io_dir: 'in',
+    getLogicValue: function() {
+        return this.get('inputSignals').in;
+    }
 });
 export const OutputView = IOView;
 

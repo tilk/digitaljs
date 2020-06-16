@@ -17,8 +17,10 @@
     </div>
     <div id="monitor">
     </div>
+    <div id="iopanel">
+    </div>
     <script>
-      var circuit, monitor, monitorview, paper;
+      var circuit, monitor, monitorview, iopanel, paper;
       var subpapers = {};
       const fixed = function (fixed) {
         paper.fixed(fixed);
@@ -28,6 +30,7 @@
         circuit = new digitaljs.Circuit(json);
         monitor = new digitaljs.Monitor(circuit);
         monitorview = new digitaljs.MonitorView({model: monitor, el: $('#monitor') });
+        iopanel = new digitaljs.IOPanelView({model: circuit, el: $('#iopanel') });
         paper = circuit.displayOn($('#paper'));
         fixed($('input[name=fixed]').prop('checked'));
         circuit.on('new:paper', function(subpaper) {
@@ -41,6 +44,7 @@
       }
       $('button[name=json]').on('click', (e) => {
         monitorview.shutdown();
+        iopanel.shutdown();
         circuit.stop();
         const json = circuit.toJSON($('input[name=layout]').prop('checked'));
         console.log(json);

@@ -228,15 +228,21 @@ export class HeadlessCircuit {
     get tick() {
         return this._tick;
     }
+    getInputCells() {
+        return this._graph.getElements().filter(x => x.setLogicValue);
+    }
+    getOutputCells() {
+        return this._graph.getElements().filter(x => x.getLogicValue);
+    }
     setInput(name, sig) {
         const cell = this._graph.getCell(name);
-        console.assert(cell instanceof this._cells.Input);
-        cell.set('outputSignals', { out: sig });
+        if (cell.setLogicValue) cell.setLogicValue(sig);
+        else throw new Error('Invalid call to setInput');
     }
     getOutput(name) {
         const cell = this._graph.getCell(name);
-        console.assert(cell instanceof this._cells.Output);
-        return cell.get('inputSignals').in;
+        if (cell.getLogicValue) return cell.getLogicValue();
+        else throw new Error('Invalid call to getOutput');
     }
     makeLabelIndex() {
         const fromGraph = (graph) => {

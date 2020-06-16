@@ -318,6 +318,10 @@ table.memeditor input {
     padding: 0.2em 0.5em;
 }
 
+div[data-iopanel="input"] input, div[data-iopanel="output"] {
+    font-family: monospace;
+}
+
 table.memeditor td:first-child {
     font-family: monospace;
     padding-right: 1em;
