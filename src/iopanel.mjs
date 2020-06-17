@@ -19,9 +19,10 @@ export class IOPanelView extends Backbone.View {
         this._baseSelectorMarkup = args.baseSelectorMarkup || help.baseSelectMarkupHTML;
         this._labelMarkup = args.labelMarkup || '<label></label>';
         this._buttonMarkup = args.buttonMarkup || '<input type="checkbox">';
-        this._lampMarkup = args.buttonMarkup || '<input type="checkbox">';
+        this._lampMarkup = args.lampMarkup || '<input type="checkbox">';
         this._rowMarkup = args.rowMarkup || '<div></div>';
-        this._inputMarkup = args.inputMarkup = '<input type="text">';
+        this._colMarkup = args.colMarkup || '<div></div>';
+        this._inputMarkup = args.inputMarkup || '<input type="text">';
         this.render();
         this.listenTo(this.model._graph, 'add', this._handleAdd);
         this.listenTo(this.model._graph, 'remove', this._handleRemove);
@@ -47,7 +48,7 @@ export class IOPanelView extends Backbone.View {
     _addLabel(row, cell) {
         const label = $(this._labelMarkup)
             .appendTo(row);
-        return label.closest('label')
+        return label.find('label').addBack('label')
             .text(cell.get('net') || cell.get('label'));
     }
     _addLabelFor(row, cell) {
@@ -58,10 +59,12 @@ export class IOPanelView extends Backbone.View {
         const row = $(this._rowMarkup)
             .appendTo(this.$('div[data-iopanel="input"]'));
         this._addLabelFor(row, cell);
+        const col = $(this._colMarkup)
+            .appendTo(row);
         if (cell.get('bits') == 1) {
             const ui = $(this._buttonMarkup)
-                .appendTo(row);
-            const inp = ui.closest('input')
+                .appendTo(col);
+            const inp = ui.find('input').addBack('input')
                 .attr('id', this._id(cell.id))
                 .on('click', (evt) => {
                     cell.setLogicValue(Vector3vl.fromBool(evt.target.checked));
@@ -73,12 +76,12 @@ export class IOPanelView extends Backbone.View {
             updater(cell, cell.get('outputSignals'));
         } else {
             const ui = $(this._inputMarkup)
-                .appendTo(row);
+                .appendTo(col);
             let base = 'hex';
             const base_sel = $(this._baseSelectorMarkup(cell.get('bits'), base))
-                .appendTo(row);
+                .appendTo(col);
             let sz = display3vl.size(base, cell.get('bits'));
-            const inp = ui.closest('input')
+            const inp = ui.find('input').addBack('input')
                 .prop('size', sz)
                 .prop('maxlength', sz)
                 .prop('pattern', display3vl.pattern(base))
@@ -105,10 +108,12 @@ export class IOPanelView extends Backbone.View {
         const row = $(this._rowMarkup)
             .appendTo(this.$('div[data-iopanel="input"]'));
         this._addLabel(row, cell);
+        const col = $(this._colMarkup)
+            .appendTo(row);
         if (cell.get('bits') == 1) {
             const ui = $(this._lampMarkup)
-                .appendTo(row);
-            const inp = ui.closest('input')
+                .appendTo(col);
+            const inp = ui.find('input').addBack('input')
                 .prop('disabled', true);
             const updater = (cell, sigs) => {
                 const val = cell.getLogicValue();
@@ -119,12 +124,12 @@ export class IOPanelView extends Backbone.View {
             updater(cell, cell.get('inputSignals'));
         } else {
             const ui = $(this._inputMarkup)
-                .appendTo(row);
+                .appendTo(col);
             let base = 'hex';
             const base_sel = $(this._baseSelectorMarkup(cell.get('bits'), base))
-                .appendTo(row);
+                .appendTo(col);
             const sz = display3vl.size(base, cell.get('bits'));
-            const inp = ui.closest('input')
+            const inp = ui.find('input').addBack('input')
                 .prop('disabled', true)
                 .prop('size', sz);
 //                .prop('maxlength', sz)
