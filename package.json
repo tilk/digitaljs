@@ -56,7 +56,9 @@
       "src"
     ],
     "transform": {
-      "^.+\\.js$": "babel-jest"
-    }
+      "^.+\\.mjs$": "babel-jest"
+    },
+    "moduleFileExtensions": ["js", "mjs"],
+    "testMatch": ["**/*.test.mjs"]
   }
 }
