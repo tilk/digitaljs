@@ -21,14 +21,17 @@
     stroke: #779ecb;
 }
 
+.djs .joint-element circle.led {
+    fill: #bfc5c6;
+    stroke-width: 0;
+}
+
 .djs .joint-element circle.led.live {
     fill: #03c03c;
-    stroke-width: 0;
 }
 
 .djs .joint-element circle.led.low {
     fill: #fc7c68;
-    stroke-width: 0;
 }
 
 .joint-link.live > .connection {
