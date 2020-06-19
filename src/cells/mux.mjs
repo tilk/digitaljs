@@ -1,6 +1,7 @@
 "use strict";
 
 import * as joint from 'jointjs';
+import _ from 'lodash';
 import { Gate, GateView, portGroupAttrs } from './base';
 import bigInt from 'big-integer';
 import * as help from '../help.mjs';
