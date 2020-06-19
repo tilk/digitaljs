@@ -1,6 +1,8 @@
 "use strict";
 
-import { HeadlessCircuit, getCellType } from '../dist/main.js';
+import 'core-js';
+import 'regenerator-runtime/runtime';
+import { HeadlessCircuit, getCellType } from '../src/circuit.mjs';
 import { Vector3vl } from '3vl';
 
 class SingleCellTestFixture {
