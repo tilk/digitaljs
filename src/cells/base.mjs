@@ -7,7 +7,7 @@ import { display3vl } from '../help.mjs';
 import { Vector3vl } from '3vl';
 
 export const portGroupAttrs = {
-    'line.wire': {
+    wire: {
         stroke: '#4B4F6A',
         x1: 0, y1: 0,
         x2: undefined, y2: 0
@@ -20,17 +20,17 @@ export const portGroupAttrs = {
         strokeWidth: 2,
         strokeOpacity: 0.5
     },
-    'text.bits': {
+    bits: {
         ref: 'port',
         fill: 'black',
         fontSize: '7pt'
     },
-    'text.iolabel': {
+    iolabel: {
         textVerticalAnchor: 'middle',
         fill: 'black',
         fontSize: '8pt'
     },
-    'path.decor': {
+    decor: {
         stroke: 'black',
         fill: 'transparent',
         d: undefined
@@ -48,12 +48,12 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
     outputSignals: {},
     attrs: {
         '.': { magnet: false },
-        '.body': { stroke: 'black', strokeWidth: 2 },
+        body: { stroke: 'black', strokeWidth: 2 },
         'text': {
             fontSize: '8pt',
             fill: 'black'
         },
-        'text.label': {
+        label: {
             refX: .5, refDy: 3,
             textAnchor: 'middle'
         }
@@ -63,19 +63,19 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
             'in': {
                 position: 'left',
                 attrs: _.merge({}, portGroupAttrs, {
-                    'line.wire': { x2: -25 },
+                    wire: { x2: -25 },
                     port: { magnet: 'passive', refX: -25 },
-                    'text.bits': { refDx: 1, refY: -3, textAnchor: 'start' },
-                    'text.iolabel': { refX: 5, textAnchor: 'start' }
+                    bits: { refDx: 1, refY: -3, textAnchor: 'start' },
+                    iolabel: { refX: 5, textAnchor: 'start' }
                 })
             },
             'out': {
                 position: 'right',
                 attrs: _.merge({}, portGroupAttrs, {
-                    'line.wire': { x2: 25 },
+                    wire: { x2: 25 },
                     port: { magnet: true, refX: 25 },
-                    'text.bits': { refX: -1, refY: -3, textAnchor: 'end' },
-                    'text.iolabel': { refX: -5, textAnchor: 'end' }
+                    bits: { refX: -1, refY: -3, textAnchor: 'end' },
+                    iolabel: { refX: -5, textAnchor: 'end' }
                 })
             }
         }
@@ -95,7 +95,7 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
         
         joint.shapes.basic.Generic.prototype.initialize.apply(this, arguments);
         
-        this.bindAttrToProp('text.label/text', 'label');
+        this.bindAttrToProp('label/text', 'label');
         if (this.unsupportedPropChanges.length > 0) {
             this.on(this.unsupportedPropChanges.map(prop => 'change:'+prop).join(' '), function(model, _, opt) {
                 if (opt.init) return;
@@ -118,7 +118,7 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
             console.assert(port.bits > 0);
             
             port.attrs = {};
-            port.attrs['text.bits'] = { text: this.getBitsText(port.bits) }
+            port.attrs['bits'] = { text: this.getBitsText(port.bits) }
             if (port.labelled) {
                 const iolabel = { text: 'portlabel' in port ? port.portlabel : port.id };
                 if (port.polarity === false)
@@ -127,10 +127,10 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
                     console.assert(port.group == 'in');
                     iolabel['refX'] = 10;
                 }
-                port.attrs['text.iolabel'] = iolabel;
+                port.attrs['iolabel'] = iolabel;
             }
             if (port.decor) {
-                port.attrs['path.decor'] = { d: port.decor };
+                port.attrs['decor'] = { d: port.decor };
             }
         }
     },
@@ -142,7 +142,7 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
                 return port.id && port.id === portid;
             });
             port.bits = bits;
-            port.attrs['text.bits'].text = this.getBitsText(bits);
+            port.attrs['bits'].text = this.getBitsText(bits);
             
             const signame = port.dir === 'in' ? 'inputSignals' : 'outputSignals';
             const signals = this.get(signame);
@@ -210,25 +210,30 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
     },
     portMarkup: [{
         tagName: 'line',
-        className: 'wire'
+        className: 'wire',
+        selector: 'wire'
     }, {
         tagName: 'circle',
         className: 'port',
         selector: 'port'
     }, {
         tagName: 'text',
-        className: 'bits'
+        className: 'bits',
+        selector: 'bits'
     }, {
         tagName: 'text',
-        className: 'iolabel'
+        className: 'iolabel',
+        selector: 'iolabel'
     }, {
         tagName: 'path',
-        className: 'decor'
+        className: 'decor',
+        selector: 'decor'
     }],
     //portLabelMarkup: null, //todo: see https://github.com/clientIO/joint/issues/1278
     markup: [{
         tagName: 'text',
-        className: 'label'
+        className: 'label',
+        selector: 'label'
     }],
     getGateParams: function(layout) {
         return _.cloneDeep(_.pick(this.attributes, this.gateParams.concat(layout ? this.gateLayoutParams : [])));
@@ -502,29 +507,31 @@ export const WireView = joint.dia.LinkView.extend({
 
 export const Box = Gate.define('Box', {
     attrs: {
-        'rect.body': { refWidth: 1, refHeight: 1 },
-        '.tooltip': { refX: 0, refY: -30, height: 30 }
+        body: { refWidth: 1, refHeight: 1 },
+        tooltip: { refX: 0, refY: -30, height: 30 }
     }
 }, {
     initialize: function(args) {
         Gate.prototype.initialize.apply(this, arguments);
         this.on('change:size', (_, size) => {
             if (size.width > this.tooltipMinWidth) {
-                this.attr('.tooltip', { refWidth: 1, width: null });
+                this.attr('tooltip', { refWidth: 1, width: null });
             } else {
-                this.attr('.tooltip', { refWidth: null, width: this.tooltipMinWidth });
+                this.attr('tooltip', { refWidth: null, width: this.tooltipMinWidth });
             }
         });
         this.trigger('change:size', this, this.prop('size'));
     },
     markup: Gate.prototype.markup.concat([{
             tagName: 'rect',
-            className: 'body'
+            className: 'body',
+            selector: 'body'
         }
     ]),
     markupZoom: [{
         tagName: 'foreignObject',
         className: 'tooltip',
+        selector: 'tooltip',
         children: [{
             tagName: 'body',
             namespaceURI: 'http://www.w3.org/1999/xhtml',

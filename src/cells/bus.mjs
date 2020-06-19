@@ -13,7 +13,7 @@ export const BitExtend = Box.define('BitExtend', {
     propagation: 0,
     
     attrs: {
-        "text.value": {
+        value: {
             refX: .5, refY: .5,
             textAnchor: 'middle', textVerticalAnchor: 'middle'
         }
@@ -39,7 +39,8 @@ export const BitExtend = Box.define('BitExtend', {
     },
     markup: Box.prototype.markup.concat([{
             tagName: 'text',
-            className: 'value'
+            className: 'value',
+            selector: 'value'
         }
     ]),
     gateParams: Box.prototype.gateParams.concat(['extend'])
@@ -54,7 +55,7 @@ export const BitExtendView = BoxView.extend({
 
 export const ZeroExtend = BitExtend.define('ZeroExtend', {
     attrs: {
-        "text.value": { text: 'zero-extend' }
+        value: { text: 'zero-extend' }
     }
 }, {
     extbit: function(i) {
@@ -65,7 +66,7 @@ export const ZeroExtendView = BitExtendView;
 
 export const SignExtend = BitExtend.define('SignExtend', {
     attrs: {
-        "text.value": { text: 'sign-extend' }
+        value: { text: 'sign-extend' }
     }
 }, {
     extbit: function(i) {

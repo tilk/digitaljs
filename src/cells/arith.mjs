@@ -10,8 +10,8 @@ import { Vector3vl } from '3vl';
 export const Arith = Gate.define('Arith', {
     size: { width: 40, height: 40 },
     attrs: {
-        'circle.body': { refR: 0.5, refCx: 0.5, refCy: 0.5 },
-        'text.oper': {
+        body: { refR: 0.5, refCx: 0.5, refCy: 0.5 },
+        oper: {
             refX: .5, refY: .5,
             textAnchor: 'middle', textVerticalAnchor: 'middle',
             fontSize: '12pt'
@@ -19,17 +19,19 @@ export const Arith = Gate.define('Arith', {
     },
     ports: {
         groups: {
-            'in': { position: { name: 'left', args: { dx: 10 } }, attrs: { 'line.wire': { x2: -35 }, port: { refX: -35 } }, z: -1 },
-            'out': { position: { name: 'right', args: { dx: -10 } }, attrs: { 'line.wire': { x2: 35 }, port: { refX: 35 } }, z: -1 }
+            'in': { position: { name: 'left', args: { dx: 10 } }, attrs: { wire: { x2: -35 }, port: { refX: -35 } }, z: -1 },
+            'out': { position: { name: 'right', args: { dx: -10 } }, attrs: { wire: { x2: 35 }, port: { refX: 35 } }, z: -1 }
         }
     }
 }, {
     markup: Gate.prototype.markup.concat([{
             tagName: 'circle',
-            className: 'body'
+            className: 'body',
+            selector: 'body'
         }, {
             tagName: 'text',
-            className: 'oper'
+            className: 'oper',
+            selector: 'oper'
         }
     ]),
     gateParams: Gate.prototype.gateParams.concat(['bits', 'signed']),
@@ -190,7 +192,7 @@ export const EqCompare = Compare.define('EqCompare', {}, {
 // Negation
 export const Negation = Arith11.define('Negation', {
     attrs: {
-        'text.oper': { text: '-' }
+        oper: { text: '-' }
     }
 }, {
     arithop: i => bigInt.zero.minus(i)
@@ -200,7 +202,7 @@ export const NegationView = GateView;
 // Unary plus
 export const UnaryPlus = Arith11.define('UnaryPlus', {
     attrs: {
-        'text.oper': { text: '+' }
+        oper: { text: '+' }
     }
 }, {
     arithop: i => i
@@ -210,7 +212,7 @@ export const UnaryPlusView = GateView;
 // Addition
 export const Addition = Arith21.define('Addition', {
     attrs: {
-        'text.oper': { text: '+' }
+        oper: { text: '+' }
     }
 }, {
     arithop: (i, j) => i.plus(j)
@@ -220,7 +222,7 @@ export const AdditionView = GateView;
 // Subtraction
 export const Subtraction = Arith21.define('Subtraction', {
     attrs: {
-        'text.oper': { text: '-' }
+        oper: { text: '-' }
     }
 }, {
     arithop: (i, j) => i.minus(j)
@@ -230,7 +232,7 @@ export const SubtractionView = GateView;
 // Multiplication
 export const Multiplication = Arith21.define('Multiplication', {
     attrs: {
-        'text.oper': { text: '×' }
+        oper: { text: '×' }
     }
 }, {
     arithop: (i, j) => i.multiply(j)
@@ -240,7 +242,7 @@ export const MultiplicationView = GateView;
 // Division
 export const Division = Arith21.define('Division', {
     attrs: {
-        'text.oper': { text: '÷' }
+        oper: { text: '÷' }
     }
 }, {
     arithop: (i, j) => j.isZero() ? i : i.divide(j) // as in IEEE Verilog
@@ -250,7 +252,7 @@ export const DivisionView = GateView;
 // Modulo
 export const Modulo = Arith21.define('Modulo', {
     attrs: {
-        'text.oper': { text: '%' }
+        oper: { text: '%' }
     }
 }, {
     arithop: (i, j) => j.isZero() ? i : i.mod(j) // as in IEEE Verilog
@@ -260,7 +262,7 @@ export const ModuloView = GateView;
 // Power
 export const Power = Arith21.define('Power', {
     attrs: {
-        'text.oper': { text: '**' }
+        oper: { text: '**' }
     }
 }, {
     arithop: (i, j) => i.pow(j)
@@ -270,7 +272,7 @@ export const PowerView = GateView;
 // Shift left operator
 export const ShiftLeft = Shift.define('ShiftLeft', {
     attrs: {
-        'text.oper': { text: '≪' }
+        oper: { text: '≪' }
     }
 }, {
     shiftdir: -1
@@ -280,7 +282,7 @@ export const ShiftLeftView = GateView;
 // Shift right operator
 export const ShiftRight = Shift.define('ShiftRight', {
     attrs: {
-        'text.oper': { text: '≫' }
+        oper: { text: '≫' }
     }
 }, {
     shiftdir: 1
@@ -290,7 +292,7 @@ export const ShiftRightView = GateView;
 // Less than operator
 export const Lt = Compare.define('Lt', {
     attrs: {
-        'text.oper': { text: '<' }
+        oper: { text: '<' }
     }
 }, {
     arithcomp: (i, j) => i.lt(j)
@@ -300,7 +302,7 @@ export const LtView = GateView;
 // Less or equal operator
 export const Le = Compare.define('Le', {
     attrs: {
-        'text.oper': { text: '≤' }
+        oper: { text: '≤' }
     }
 }, {
     arithcomp: (i, j) => i.leq(j)
@@ -310,7 +312,7 @@ export const LeView = GateView;
 // Greater than operator
 export const Gt = Compare.define('Gt', {
     attrs: {
-        'text.oper': { text: '>' }
+        oper: { text: '>' }
     }
 }, {
     arithcomp: (i, j) => i.gt(j)
@@ -320,7 +322,7 @@ export const GtView = GateView;
 // Less than operator
 export const Ge = Compare.define('Ge', {
     attrs: {
-        'text.oper': { text: '≥' }
+        oper: { text: '≥' }
     }
 }, {
     arithcomp: (i, j) => i.geq(j)
@@ -330,7 +332,7 @@ export const GeView = GateView;
 // Equality operator
 export const Eq = EqCompare.define('Eq', {
     attrs: {
-        'text.oper': { text: '=' }
+        oper: { text: '=' }
     }
 }, {
     bincomp: (i, j) => i.xnor(j).reduceAnd()
@@ -340,7 +342,7 @@ export const EqView = GateView;
 // Nonequality operator
 export const Ne = EqCompare.define('Ne', {
     attrs: {
-        'text.oper': { text: '≠' }
+        oper: { text: '≠' }
     }
 }, {
     bincomp: (i, j) => i.xor(j).reduceOr()

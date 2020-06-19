@@ -12,7 +12,7 @@ export const Subcircuit = Box.define('Subcircuit', {
     propagation: 0,
 
     attrs: {
-        'text.type': {
+        type: {
             refX: .5, refY: -10,
             textAnchor: 'middle', textVerticalAnchor: 'middle'
         }
@@ -71,7 +71,8 @@ export const Subcircuit = Box.define('Subcircuit', {
     },
     markup: Box.prototype.markup.concat([{
             tagName: 'text',
-            className: 'type'
+            className: 'type',
+            selector: 'type'
         }
     ], Box.prototype.markupZoom),
     gateParams: Box.prototype.gateParams.concat(['celltype']),

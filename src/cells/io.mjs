@@ -27,6 +27,7 @@ export const NumBase = Box.define('NumBase', {
     markup: Box.prototype.markup.concat([{
             tagName: 'foreignObject',
             className: 'tooltip',
+            selector: 'tooltip',
             children: [{
                 tagName: 'body',
                 namespaceURI: 'http://www.w3.org/1999/xhtml',
@@ -92,7 +93,7 @@ export const NumDisplay = NumBase.define('NumDisplay', {
     propagation: 0,
 
     attrs: {
-        'text.value': { 
+        value: { 
             refX: .5, refY: .5,
             textVerticalAnchor: 'middle'
         },
@@ -117,7 +118,8 @@ export const NumDisplay = NumBase.define('NumDisplay', {
     },
     markup: NumBase.prototype.markup.concat([{
             tagName: 'text',
-            className: 'value numvalue'
+            className: 'value numvalue',
+            selector: 'value'
         }
     ]),
     getLogicValue: function() {
@@ -225,7 +227,7 @@ export const Lamp = Box.define('Lamp', {
 
     size: { width: 30, height: 30 },
     attrs: {
-        '.led': {
+        led: {
             refX: .5, refY: .5,
             refR: .35,
             stroke: 'black'
@@ -234,7 +236,8 @@ export const Lamp = Box.define('Lamp', {
 }, {
     markup: Box.prototype.markup.concat([{
             tagName: 'circle',
-            className: 'led'
+            className: 'led',
+            selector: 'led',
         }
     ]),
     getLogicValue: function() {
@@ -273,7 +276,7 @@ export const Button = Box.define('Button', {
 
     size: { width: 30, height: 30 },
     attrs: {
-        '.btnface': { 
+        btnface: { 
             stroke: 'black', strokeWidth: 2,
             refX: .2, refY: .2,
             refHeight: .6, refWidth: .6,
@@ -286,7 +289,8 @@ export const Button = Box.define('Button', {
     },
     markup: Box.prototype.markup.concat([{
             tagName: 'rect',
-            className: 'btnface'
+            className: 'btnface',
+            selector: 'btnface'
         }
     ]),
     setLogicValue: function(sig) {
@@ -324,7 +328,7 @@ export const IO = Box.define('IO', {
     propagation: 0,
 
     attrs: {
-        'text.ioname': {
+        ioname: {
             refX: .5, refY: .5,
             textAnchor: 'middle', textVerticalAnchor: 'middle',
             fontWeight: 'bold',
@@ -349,7 +353,8 @@ export const IO = Box.define('IO', {
     },
     markup: Box.prototype.markup.concat([{
             tagName: 'text',
-            className: 'ioname'
+            className: 'ioname',
+            selector: 'ioname'
         }
     ]),
     gateParams: Box.prototype.gateParams.concat(['bits','net'])
@@ -389,7 +394,7 @@ export const Constant = NumBase.define('Constant', {
     propagation: 0,
 
     attrs: {
-        'text.value': {
+        value: {
             refX: .5, refY: .5,
             textVerticalAnchor: 'middle'
         }
@@ -423,7 +428,8 @@ export const Constant = NumBase.define('Constant', {
     },
     markup: NumBase.prototype.markup.concat([{
             tagName: 'text',
-            className: 'value numvalue'
+            className: 'value numvalue',
+            selector: 'value'
         }
     ]),
     gateParams: NumBase.prototype.gateParams.concat(['constant']),
@@ -461,6 +467,7 @@ export const Clock = Box.define('Clock', {
         }, {
             tagName: 'foreignObject',
             className: 'tooltip',
+            selector: 'tooltip',
             children: [{
                 tagName: 'body',
                 namespaceURI: 'http://www.w3.org/1999/xhtml',
