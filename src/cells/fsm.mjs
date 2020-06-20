@@ -31,8 +31,6 @@ export const FSM = Box.define('FSM', {
     }
 }, {
     initialize: function() {
-        Box.prototype.initialize.apply(this, arguments);
-        
         const bits = this.get('bits');
         const polarity = this.get('polarity');
         
@@ -45,12 +43,14 @@ export const FSM = Box.define('FSM', {
         const states = this.get('states');
         const trans_table = this.get('trans_table');
         
-        this.addPorts([
-            { id: 'in', group: 'in', dir: 'in', bits: bits.in },
-            { id: 'clk', group: 'in', dir: 'in', bits: 1, polarity: polarity.clock, decor: Box.prototype.decorClock },
-            { id: 'arst', group: 'in', dir: 'in', bits: 1, polarity: polarity.arst },
-            { id: 'out', group: 'out', dir: 'out', bits: bits.out },
-        ], { labelled: true });
+        this.get('ports').items = [
+            { id: 'in', group: 'in', dir: 'in', bits: bits.in, labelled: true },
+            { id: 'clk', group: 'in', dir: 'in', bits: 1, polarity: polarity.clock, decor: Box.prototype.decorClock, labelled: true },
+            { id: 'arst', group: 'in', dir: 'in', bits: 1, polarity: polarity.arst, labelled: true },
+            { id: 'out', group: 'out', dir: 'out', bits: bits.out, labelled: true }
+        ];
+        
+        Box.prototype.initialize.apply(this, arguments);
         
         this.fsmgraph = new joint.dia.Graph;
         const statenodes = [];

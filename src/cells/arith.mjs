@@ -43,18 +43,16 @@ export const Arith11 = Arith.define('Arith11', {
     signed: false
 }, {
     initialize: function() {
-        Arith.prototype.initialize.apply(this, arguments);
-        
         const bits = this.get('bits');
-        
-        this.addPorts([
+        this.get('ports').items = [
             { id: 'in', group: 'in', dir: 'in', bits: bits.in },
             { id: 'out', group: 'out', dir: 'out', bits: bits.out }
-        ]);
+        ];
+        
+        Arith.prototype.initialize.apply(this, arguments);
         
         this.on('change:bits', (_,bits) => {
-            this.setPortBits('in', bits.in);
-            this.setPortBits('out', bits.out);
+            this.setPortsBits(bits);
         });
     },
     operation: function(data) {
@@ -74,20 +72,17 @@ export const Arith21 = Arith.define('Arith21', {
     signed: { in1: false, in2: false }
 }, {
     initialize: function() {
-        Arith.prototype.initialize.apply(this, arguments);
-        
         const bits = this.get('bits');
-        
-        this.addPorts([
+        this.get('ports').items = [
             { id: 'in1', group: 'in', dir: 'in', bits: bits.in1 },
             { id: 'in2', group: 'in', dir: 'in', bits: bits.in2 },
             { id: 'out', group: 'out', dir: 'out', bits: bits.out }
-        ]);
+        ];
+        
+        Arith.prototype.initialize.apply(this, arguments);
         
         this.on('change:bits', (_, bits) => {
-            this.setPortBits('in1', bits.in1);
-            this.setPortBits('in2', bits.in2);
-            this.setPortBits('out', bits.out);
+            this.setPortsBits(bits);
         });
     },
     operation: function(data) {
@@ -111,20 +106,17 @@ export const Shift = Arith.define('Shift', {
     fillx: false
 }, {
     initialize: function() {
-        Arith.prototype.initialize.apply(this, arguments);
-        
         const bits = this.get('bits');
-        
-        this.addPorts([
+        this.get('ports').items = [
             { id: 'in1', group: 'in', dir: 'in', bits: bits.in1 },
             { id: 'in2', group: 'in', dir: 'in', bits: bits.in2 },
             { id: 'out', group: 'out', dir: 'out', bits: bits.out }
-        ]);
+        ];
+        
+        Arith.prototype.initialize.apply(this, arguments);
         
         this.on('change:bits', (_, bits) => {
-            this.setPortBits('in1', bits.in1);
-            this.setPortBits('in2', bits.in2);
-            this.setPortBits('out', bits.out);
+            this.setPortsBits(bits);
         });
     },
     operation: function(data) {
@@ -154,19 +146,17 @@ export const Compare = Arith.define('Compare', {
     signed: { in1: false, in2: false }
 }, {
     initialize: function() {
-        Arith.prototype.initialize.apply(this, arguments);
-        
         const bits = this.get('bits');
-        
-        this.addPorts([
+        this.get('ports').items = [
             { id: 'in1', group: 'in', dir: 'in', bits: bits.in1 },
             { id: 'in2', group: 'in', dir: 'in', bits: bits.in2 },
             { id: 'out', group: 'out', dir: 'out', bits: 1 }
-        ]);
+        ];
+        
+        Arith.prototype.initialize.apply(this, arguments);
         
         this.on('change:bits', (_, bits) => {
-            this.setPortBits('in1', bits.in1);
-            this.setPortBits('in2', bits.in2);
+            this.setPortsBits(bits);
         });
     },
     operation: function(data) {

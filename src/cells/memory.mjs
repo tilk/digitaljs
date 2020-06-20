@@ -36,8 +36,6 @@ export const Memory = Box.define('Memory', {
     }
 }, {
     initialize: function() {
-        Box.prototype.initialize.apply(this, arguments);
-        
         const bits = this.get('bits');
         const abits = this.get('abits');
         const rdports = this.get('rdports');
@@ -59,23 +57,23 @@ export const Memory = Box.define('Memory', {
         this.last_clk = {};
         let num = 0;
         let idxOffset = 0;
-        const portsplits = [];
+        const ports = [], portsplits = [];
         for (const [pnum, port] of rdports.entries()) {
             const portname = "rd" + pnum;
-            this.addPorts([
-                { id: portname + 'addr', group: 'in', dir: 'in', bits: bits, portlabel: 'addr' },
-                { id: portname + 'data', group: 'out', dir: 'out', bits: bits, portlabel: 'data', args: { idxOffset: idxOffset } }
-            ], { labelled: true });
+            ports.push(
+                { id: portname + 'addr', group: 'in', dir: 'in', bits: bits, portlabel: 'addr', labelled: true },
+                { id: portname + 'data', group: 'out', dir: 'out', bits: bits, portlabel: 'data', labelled: true, args: { idxOffset: idxOffset } }
+            );
             num += 1;
             if ('enable_polarity' in port) {
                 num++;
                 idxOffset++;
-                this.addPort({ id: portname + 'en', group: 'in', dir: 'in', bits: 1, portlabel: 'en', polarity: port.enable_polarity }, { labelled: true });
+                ports.push({ id: portname + 'en', group: 'in', dir: 'in', bits: 1, portlabel: 'en', polarity: port.enable_polarity, labelled: true });
             }
             if ('clock_polarity' in port) {
                 num++;
                 idxOffset++;
-                this.addPort({ id: portname + 'clk', group: 'in', dir: 'in', bits: 1, portlabel: 'clk', polarity: port.clock_polarity, decor: Box.prototype.decorClock }, { labelled: true });
+                ports.push({ id: portname + 'clk', group: 'in', dir: 'in', bits: 1, portlabel: 'clk', polarity: port.clock_polarity, decor: Box.prototype.decorClock, labelled: true });
                 this.last_clk[portname + 'clk'] = 0;
             } else {
                 port.transparent = true;
@@ -85,22 +83,26 @@ export const Memory = Box.define('Memory', {
         for (const [pnum, port] of wrports.entries()) {
             const portname = "wr" + pnum;
             num += 2;
-            this.addPorts([
-                { id: portname + 'data', group: 'in', dir: 'in', bits: bits, portlabel: 'data' },
-                { id: portname + 'addr', group: 'in', dir: 'in', bits: bits, portlabel: 'addr' }
-            ], { labelled: true });
+            ports.push(
+                { id: portname + 'data', group: 'in', dir: 'in', bits: bits, portlabel: 'data', labelled: true },
+                { id: portname + 'addr', group: 'in', dir: 'in', bits: bits, portlabel: 'addr', labelled: true }
+            );
             if ('enable_polarity' in port) {
                 num++;
-                this.addPort({ id: portname + 'en', group: 'in', dir: 'in', bits: 1, portlabel: 'en', polarity: port.enable_polarity }, { labelled: true });
+                ports.push({ id: portname + 'en', group: 'in', dir: 'in', bits: 1, portlabel: 'en', polarity: port.enable_polarity, labelled: true });
             }
             if ('clock_polarity' in port) {
                 num++;
-                this.addPort({ id: portname + 'clk', group: 'in', dir: 'in', bits: 1, portlabel: 'clk', polarity: port.clock_polarity, decor: Box.prototype.decorClock }, { labelled: true });
+                ports.push({ id: portname + 'clk', group: 'in', dir: 'in', bits: 1, portlabel: 'clk', polarity: port.clock_polarity, decor: Box.prototype.decorClock, labelled: true });
                 this.last_clk[portname + 'clk'] = 0;
             }
             portsplits.push(num);
         }
         portsplits.pop();
+        this.get('size').height = num*16+8;
+        this.get('ports').items = ports;
+        
+        Box.prototype.initialize.apply(this, arguments);
         
         this.on('change:size', (_, size) => {
             // only adapting to changed width
@@ -113,8 +115,6 @@ export const Memory = Box.define('Memory', {
             }
             this.attr('path.portsplit/d', 'M ' + path.join(' M '));
         });
-        const height = num*16+8;
-        this.prop('size/height', height);
     },
     operation: function(data) {
         const out = {};

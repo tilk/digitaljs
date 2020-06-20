@@ -20,20 +20,17 @@ export const BitExtend = Box.define('BitExtend', {
     }
 }, {
     initialize: function() {
-        Box.prototype.initialize.apply(this, arguments);
-        
         const extend = this.get('extend');
-        
         console.assert(extend.input <= extend.output);
-        
-        this.addPorts([
+        this.get('ports').items = [
             { id: 'in', group: 'in', dir: 'in', bits: extend.input },
             { id: 'out', group: 'out', dir: 'out', bits: extend.output }
-        ]);
+        ];
+        
+        Box.prototype.initialize.apply(this, arguments);
         
         this.on('change:extend', (_, extend) => {
-            this.setPortBits('in', extend.input);
-            this.setPortBits('out', extend.output);
+            this.setPortsBits({ in: extend.input, out: extend.output });
         });
     },
     operation: function(data) {
@@ -86,15 +83,21 @@ export const BusSlice = Box.define('BusSlice', {
     size: { width: 40, height: 24 }
 }, {
     initialize: function() {
-        Box.prototype.initialize.apply(this, arguments);
-        
         const slice = this.get('slice');
         
         const val = slice.count == 1 ? slice.first : 
             slice.first + "-" + (slice.first + slice.count - 1);
         
-        this.addPort({ id: 'in', group: 'in', dir: 'in', bits: slice.total });
-        this.addPort({ id: 'out', group: 'out', dir: 'out', bits: slice.count, portlabel: val }, { labelled: true });
+        this.get('ports').items = [
+            { id: 'in', group: 'in', dir: 'in', bits: slice.total },
+            { id: 'out', group: 'out', dir: 'out', bits: slice.count, portlabel: val, labelled: true }
+        ];
+        
+        Box.prototype.initialize.apply(this, arguments);
+        
+        this.on('change:extend', (_, extend) => {
+            this.setPortsBits({ in: slice.total, out: slice.count });
+        });
     },
     operation: function(data) {
         const s = this.get('slice');
@@ -110,26 +113,29 @@ export const BusSliceView = BoxView.extend({
 export const BusRegroup = Box.define('BusRegroup', {
     /* default properties */
     groups: [1],
-    propagation: 0
+    propagation: 0,
+
+    size: { width: 40, height: undefined }
 }, {
     initialize: function() {
-        Box.prototype.initialize.apply(this, arguments);
-        
         var bits = 0;
+        const ports = [];
         const groups = this.get('groups');
         
-        const size = { width: 40, height: groups.length*16+8 };
-        this.set('size', size);
+        this.get('size').height = groups.length*16+8;
         
         for (const [num, gbits] of groups.entries()) {
             const lbl = bits + (gbits > 1 ? '-' + (bits + gbits - 1) : '');
             bits += gbits;
-            this.addPort({ id: this.group_dir + num, group: this.group_dir, dir: this.group_dir, bits: gbits, portlabel: lbl }, { labelled: true });
+            ports.push({ id: this.group_dir + num, group: this.group_dir, dir: this.group_dir, bits: gbits, portlabel: lbl, labelled: true });
         }
         this.set('bits', bits);
         
         const contra = this.group_dir == 'out' ? 'in' : 'out';
-        this.addPort({ id: contra, group: contra, dir: contra, bits: bits });
+        ports.push({ id: contra, group: contra, dir: contra, bits: bits });
+        this.get('ports').items = ports;
+        
+        Box.prototype.initialize.apply(this, arguments);
     },
     gateParams: Box.prototype.gateParams.concat(['groups']),
     unsupportedPropChanges: Box.prototype.unsupportedPropChanges.concat(['groups'])

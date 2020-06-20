@@ -33,7 +33,7 @@ const neg_markup = {
 export const GateSVG = Gate.define('GateSVG', {
     /* default properties */
     bits: 1,
-    
+
     size: { width: 60, height: 40 },
     ports: {
         groups: {
@@ -53,18 +53,16 @@ export const GateSVG = Gate.define('GateSVG', {
 // Single-input gate model
 export const Gate11 = GateSVG.define('Gate11', {}, {
     initialize: function() {
-        GateSVG.prototype.initialize.apply(this, arguments);
-        
         const bits = this.get('bits');
-        
-        this.addPorts([
+        this.get('ports').items = [
             { id: 'in', group: 'in', dir: 'in', bits: bits },
             { id: 'out', group: 'out', dir: 'out', bits: bits }
-        ]);
+        ];
+        
+        GateSVG.prototype.initialize.apply(this, arguments);
         
         this.on('change:bits', (_, bits) => {
-            this.setPortBits('in', bits);
-            this.setPortBits('out', bits);
+            this.setPortsBits({ in: bits, out: bits });
         });
     }
 });
@@ -72,19 +70,17 @@ export const Gate11 = GateSVG.define('Gate11', {}, {
 // Two-input gate model
 export const Gate21 = GateSVG.define('Gate21', {}, {
     initialize: function() {
-        GateSVG.prototype.initialize.apply(this, arguments);
-        
         const bits = this.get('bits');
-        this.addPorts([
+        this.get('ports').items = [
             { id: 'in1', group: 'in', dir: 'in', bits: bits },
             { id: 'in2', group: 'in', dir: 'in', bits: bits },
             { id: 'out', group: 'out', dir: 'out', bits: bits }
-        ]);
+        ];
+        
+        GateSVG.prototype.initialize.apply(this, arguments);
         
         this.on('change:bits', (_, bits) => {
-            this.setPortBits('in1', bits);
-            this.setPortBits('in2', bits);
-            this.setPortBits('out', bits);
+            this.setPortsBits({ in1: bits, in2: bits, out: bits });
         });
     }
 });
@@ -92,16 +88,16 @@ export const Gate21 = GateSVG.define('Gate21', {}, {
 // Reducing gate model
 export const GateReduce = GateSVG.define('GateReduce', {}, {
     initialize: function() {
-        GateSVG.prototype.initialize.apply(this, arguments);
         const bits = this.get('bits');
-        
-        this.addPorts([
+        this.get('ports').items = [
             { id: 'in', group: 'in', dir: 'in', bits: bits },
             { id: 'out', group: 'out', dir: 'out', bits: 1 }
-        ]);
+        ];
+        
+        GateSVG.prototype.initialize.apply(this, arguments);
         
         this.on('change:bits', (_, bits) => {
-            this.setPortBits('in', bits);
+            this.setPortsBits({ in: bits });
         });
     }
 });
