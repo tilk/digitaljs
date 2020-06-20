@@ -33,17 +33,17 @@ export const FSM = Box.define('FSM', {
     initialize: function() {
         Box.prototype.initialize.apply(this, arguments);
         
-        const bits = this.prop('bits');
-        const polarity = this.prop('polarity');
+        const bits = this.get('bits');
+        const polarity = this.get('polarity');
         
-        const init_state = this.prop('init_state');
-        var current_state = this.prop('current_state');
+        const init_state = this.get('init_state');
+        var current_state = this.get('current_state');
         if (current_state === undefined) {
             current_state = init_state;
-            this.prop('current_state', current_state);
+            this.set('current_state', current_state);
         }
-        const states = this.prop('states');
-        const trans_table = this.prop('trans_table');
+        const states = this.get('states');
+        const trans_table = this.get('trans_table');
         
         this.addPorts([
             { id: 'in', group: 'in', dir: 'in', bits: bits.in },

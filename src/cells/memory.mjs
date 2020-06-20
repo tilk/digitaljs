@@ -38,12 +38,12 @@ export const Memory = Box.define('Memory', {
     initialize: function() {
         Box.prototype.initialize.apply(this, arguments);
         
-        const bits = this.prop('bits');
-        const abits = this.prop('abits');
-        const rdports = this.prop('rdports');
-        const wrports = this.prop('wrports');
-        var words = this.prop('words');
-        const memdata = this.prop('memdata');
+        const bits = this.get('bits');
+        const abits = this.get('abits');
+        const rdports = this.get('rdports');
+        const wrports = this.get('wrports');
+        var words = this.get('words');
+        const memdata = this.get('memdata');
         
         if (!words) {
             words = 1 << abits;

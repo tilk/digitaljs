@@ -23,7 +23,7 @@ export const Subcircuit = Box.define('Subcircuit', {
         
         this.bindAttrToProp('text.type/text', 'celltype');
         
-        const graph = this.prop('graph');
+        const graph = this.get('graph');
         console.assert(graph instanceof joint.dia.Graph);
         graph.set('subcircuit', this);
         const IOs = graph.getCells()
@@ -39,20 +39,22 @@ export const Subcircuit = Box.define('Subcircuit', {
         outputs.sort(sortfun);
         const vcount = Math.max(inputs.length, outputs.length);
         const size = { width: 80, height: vcount*16+8 };
-        const iomap = {};
+        const iomap = {}, inputSignals = {}, outputSignals = {};
         for (const [num, io] of inputs.entries()) {
             this.addPort({ id: io.get('net'), group: 'in', dir: 'in', bits: io.get('bits') }, { labelled: true });
-            this.prop(['inputSignals', io.get('net')], io.get('outputSignals').out);
+            inputSignals[io.get('net')] = io.get('outputSignals').out;
         }
         for (const [num, io] of outputs.entries()) {
             this.addPort({ id: io.get('net'), group: 'out', dir: 'out', bits: io.get('bits') }, { labelled: true });
-            this.prop(['outputSignals', io.get('net')], io.get('inputSignals').in);
+            outputSignals[io.get('net')] = io.get('inputSignals').in;
         }
         for (const io of IOs) {
             iomap[io.get('net')] = io.get('id');
         }
-        this.prop('size', size);
-        this.prop('circuitIOmap', iomap);
+        this.set('size', size);
+        this.set('circuitIOmap', iomap);
+        this.set('inputSignals', inputSignals);
+        this.set('outputSignals', outputSignals);
     },
     //add offset of 10pt to account for the top label at layout time
     getLayoutSize: function() {

@@ -102,7 +102,7 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
         }
     },
     bindAttrToProp: function(attr, prop) {
-        this.attr(attr, this.prop(prop));
+        this.attr(attr, this.get(prop));
         this.on('change:' + prop, (_, val) => this.attr(attr, val));
     },
     setPortBits: function(port, bits) {

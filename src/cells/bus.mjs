@@ -22,7 +22,7 @@ export const BitExtend = Box.define('BitExtend', {
     initialize: function() {
         Box.prototype.initialize.apply(this, arguments);
         
-        const extend = this.prop('extend');
+        const extend = this.get('extend');
         
         console.assert(extend.input <= extend.output);
         
@@ -88,7 +88,7 @@ export const BusSlice = Box.define('BusSlice', {
     initialize: function() {
         Box.prototype.initialize.apply(this, arguments);
         
-        const slice = this.prop('slice');
+        const slice = this.get('slice');
         
         const val = slice.count == 1 ? slice.first : 
             slice.first + "-" + (slice.first + slice.count - 1);
@@ -116,17 +116,17 @@ export const BusRegroup = Box.define('BusRegroup', {
         Box.prototype.initialize.apply(this, arguments);
         
         var bits = 0;
-        const groups = this.prop('groups');
+        const groups = this.get('groups');
         
         const size = { width: 40, height: groups.length*16+8 };
-        this.prop('size', size);
+        this.set('size', size);
         
         for (const [num, gbits] of groups.entries()) {
             const lbl = bits + (gbits > 1 ? '-' + (bits + gbits - 1) : '');
             bits += gbits;
             this.addPort({ id: this.group_dir + num, group: this.group_dir, dir: this.group_dir, bits: gbits, portlabel: lbl }, { labelled: true });
         }
-        this.prop('bits', bits);
+        this.set('bits', bits);
         
         const contra = this.group_dir == 'out' ? 'in' : 'out';
         this.addPort({ id: contra, group: contra, dir: contra, bits: bits });

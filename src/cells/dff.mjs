@@ -27,18 +27,18 @@ export const Dff = Box.define('Dff', {
     initialize: function() {
         Box.prototype.initialize.apply(this, arguments);
         
-        const bits = this.prop('bits');
-        const initial = this.prop('initial');
-        const polarity = this.prop('polarity');
+        const bits = this.get('bits');
+        const initial = this.get('initial');
+        const polarity = this.get('polarity');
         
         this.addPorts([
             { id: 'in', group: 'in', dir: 'in', bits: bits, portlabel: 'D' },
             { id: 'out', group: 'out', dir: 'out', bits: bits, portlabel: 'Q' }
         ], { labelled: true });
-        this.prop('outputSignals/out', Vector3vl.fromBin(initial, bits));
+        this.set('outputSignals', { out: Vector3vl.fromBin(initial, bits) });
         
-        if ('arst' in polarity && this.prop('arst_value'))
-            this.prop('arst_value', Array(bits).fill('0').join(''));
+        if ('arst' in polarity && this.get('arst_value'))
+            this.set('arst_value', Array(bits).fill('0').join(''));
         
         let num = 1;
         if ('clock' in polarity) {
@@ -54,7 +54,7 @@ export const Dff = Box.define('Dff', {
             this.addPort({ id: 'en', group: 'in', dir: 'in', bits: 1, polarity: polarity.enable }, { labelled: true });
         }
         
-        this.prop('size', { width: 80, height: num*16+8 });
+        this.set('size', { width: 80, height: num*16+8 });
         
         this.last_clk = 0;
     },

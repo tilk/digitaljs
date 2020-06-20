@@ -101,7 +101,7 @@ export const NumDisplay = NumBase.define('NumDisplay', {
     initialize: function(args) {
         NumBase.prototype.initialize.apply(this, arguments);
         
-        const bits = this.prop('bits');
+        const bits = this.get('bits');
         
         this.addPort({ id: 'in', group: 'in', dir: 'in', bits: bits });
         
@@ -145,7 +145,7 @@ export const NumEntry = NumBase.define('NumEntry', {
     initialize: function(args) {
         NumBase.prototype.initialize.apply(this, arguments);
         
-        const bits = this.prop('bits');
+        const bits = this.get('bits');
         
         this.addPort({ id: 'out', group: 'out', dir: 'out', bits: bits });
         
@@ -153,7 +153,7 @@ export const NumEntry = NumBase.define('NumEntry', {
             this.setPortBits('out', bits);
         });
         
-        this.prop('buttonState', this.prop('outputSignals/out'));
+        this.set('buttonState', this.get('outputSignals').out);
     },
     operation: function() {
         return { out: this.get('buttonState') };
@@ -326,7 +326,7 @@ export const IO = Box.define('IO', {
     initialize: function(args) {
         Box.prototype.initialize.apply(this, arguments);
         
-        const bits = this.prop('bits');
+        const bits = this.get('bits');
         
         this.addPort({ id: this.io_dir, group: this.io_dir, dir: this.io_dir, bits: bits });
         
@@ -388,9 +388,9 @@ export const Constant = NumBase.define('Constant', {
     initialize: function(args) {
         NumBase.prototype.initialize.apply(this, arguments);
         
-        const constant = this.prop('constant');
-        this.prop('bits', constant.length);
-        this.prop('constantCache', Vector3vl.fromBin(constant, constant.length));
+        const constant = this.get('constant');
+        this.set('bits', constant.length);
+        this.set('constantCache', Vector3vl.fromBin(constant, constant.length));
         
         this.addPort({ id: 'out', group: 'out', dir: 'out', bits: constant.length });
         
@@ -399,8 +399,8 @@ export const Constant = NumBase.define('Constant', {
         
         this.on('change:constant', (_, constant) => {
             this.setPortBits('out', constant.length);
-            this.prop('bits', constant.length);
-            this.prop('constantCache', Vector3vl.fromBin(constant, constant.length));
+            this.set('bits', constant.length);
+            this.set('constantCache', Vector3vl.fromBin(constant, constant.length));
             settext();
         });
         this.on('change:numbase', settext);
@@ -430,7 +430,7 @@ export const Clock = Box.define('Clock', {
         
         this.addPort({ id: 'out', group: 'out', dir: 'out', bits: 1 });
         
-        this.prop('outputSignals/out', Vector3vl.zeros(1));
+        this.set('outputSignals', { out: Vector3vl.zeros(1) });
     },
     operation: function() {
         // trigger next clock edge

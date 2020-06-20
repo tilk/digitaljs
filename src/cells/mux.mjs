@@ -30,7 +30,7 @@ export const GenMux = Gate.define('GenMux', {
     initialize: function() {
         Gate.prototype.initialize.apply(this, arguments);
         
-        const bits = this.prop('bits');
+        const bits = this.get('bits');
         
         this.addPorts([
             { id: 'sel', group: 'in2', dir: 'in', bits: bits.sel },

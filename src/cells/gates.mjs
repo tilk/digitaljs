@@ -55,7 +55,7 @@ export const Gate11 = GateSVG.define('Gate11', {}, {
     initialize: function() {
         GateSVG.prototype.initialize.apply(this, arguments);
         
-        const bits = this.prop('bits');
+        const bits = this.get('bits');
         
         this.addPorts([
             { id: 'in', group: 'in', dir: 'in', bits: bits },
@@ -74,7 +74,7 @@ export const Gate21 = GateSVG.define('Gate21', {}, {
     initialize: function() {
         GateSVG.prototype.initialize.apply(this, arguments);
         
-        const bits = this.prop('bits');
+        const bits = this.get('bits');
         this.addPorts([
             { id: 'in1', group: 'in', dir: 'in', bits: bits },
             { id: 'in2', group: 'in', dir: 'in', bits: bits },
@@ -93,7 +93,7 @@ export const Gate21 = GateSVG.define('Gate21', {}, {
 export const GateReduce = GateSVG.define('GateReduce', {}, {
     initialize: function() {
         GateSVG.prototype.initialize.apply(this, arguments);
-        const bits = this.prop('bits');
+        const bits = this.get('bits');
         
         this.addPorts([
             { id: 'in', group: 'in', dir: 'in', bits: bits },

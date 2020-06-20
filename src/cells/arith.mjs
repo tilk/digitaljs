@@ -45,7 +45,7 @@ export const Arith11 = Arith.define('Arith11', {
     initialize: function() {
         Arith.prototype.initialize.apply(this, arguments);
         
-        const bits = this.prop('bits');
+        const bits = this.get('bits');
         
         this.addPorts([
             { id: 'in', group: 'in', dir: 'in', bits: bits.in },
@@ -76,7 +76,7 @@ export const Arith21 = Arith.define('Arith21', {
     initialize: function() {
         Arith.prototype.initialize.apply(this, arguments);
         
-        const bits = this.prop('bits');
+        const bits = this.get('bits');
         
         this.addPorts([
             { id: 'in1', group: 'in', dir: 'in', bits: bits.in1 },
@@ -113,7 +113,7 @@ export const Shift = Arith.define('Shift', {
     initialize: function() {
         Arith.prototype.initialize.apply(this, arguments);
         
-        const bits = this.prop('bits');
+        const bits = this.get('bits');
         
         this.addPorts([
             { id: 'in1', group: 'in', dir: 'in', bits: bits.in1 },
@@ -156,7 +156,7 @@ export const Compare = Arith.define('Compare', {
     initialize: function() {
         Arith.prototype.initialize.apply(this, arguments);
         
-        const bits = this.prop('bits');
+        const bits = this.get('bits');
         
         this.addPorts([
             { id: 'in1', group: 'in', dir: 'in', bits: bits.in1 },
