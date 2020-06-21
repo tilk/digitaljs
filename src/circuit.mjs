@@ -66,8 +66,8 @@ export function getCellType(tp) {
 }
     
 export class HeadlessCircuit {
-    constructor(data, cellsNamespace) {
-        this._cells = Object.assign(cells, cellsNamespace || {});
+    constructor(data, {cellsNamespace = {}} = {}) {
+        this._cells = Object.assign(cells, cellsNamespace);
         this._queue = new Map();
         this._pq = new FastPriorityQueue();
         this._tick = 0;

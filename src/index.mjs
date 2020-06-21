@@ -71,9 +71,10 @@ export const paperOptions = {
 };
 
 export class Circuit extends HeadlessCircuit {
-    constructor(data, windowCallback, cellsNamespace) {
-        super(data, cellsNamespace);
-        this._windowCallback = windowCallback || this._defaultWindowCallback;
+    constructor(data, options = {}) {
+        super(data, options);
+        const { windowCallback = this._defaultWindowCallback } = options;
+        this._windowCallback = windowCallback;
         this._interval_ms = 10;
         this._interval = null;
         this._idle = null;
