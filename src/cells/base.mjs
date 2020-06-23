@@ -87,6 +87,12 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
         return {};
     },
     initialize: function() {
+        // pre-process ports
+        const ports = this.get('ports');
+        if (ports.items) {
+            this._preprocessPorts(ports.items);
+        }
+        
         joint.shapes.basic.Generic.prototype.initialize.apply(this, arguments);
         
         this.bindAttrToProp('text.label/text', 'label');
@@ -105,50 +111,72 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
         this.attr(attr, this.get(prop));
         this.on('change:' + prop, (_, val) => this.attr(attr, val));
     },
-    setPortBits: function(port, bits) {
-        this.portProp(port, 'bits', bits);
-        this.showPortBits(port, bits);
-        this.resetPortSignals(port, bits);
+    _preprocessPorts: function(ports) {
+        for (const port of ports) {
+            const signame = port.dir === 'in' ? 'inputSignals' : 'outputSignals';
+            this.get(signame)[port.id] = Vector3vl.xes(port.bits);
+            console.assert(port.bits > 0);
+            
+            port.attrs = {};
+            port.attrs['text.bits'] = { text: this.getBitsText(port.bits) }
+            if (port.labelled) {
+                const iolabel = { text: 'portlabel' in port ? port.portlabel : port.id };
+                if (port.polarity === false)
+                    iolabel['text-decoration'] = 'overline';
+                if (port.decor) {
+                    console.assert(port.group == 'in');
+                    iolabel['refX'] = 10;
+                }
+                port.attrs['text.iolabel'] = iolabel;
+            }
+            if (port.decor) {
+                port.attrs['path.decor'] = { d: port.decor };
+            }
+        }
+    },
+    setPortsBits: function(portsBits) {
+        const ports = this.get('ports');
+        for (const portid in portsBits) {
+            const bits = portsBits[portid];
+            const port = ports.items.find(function(port) {
+                return port.id && port.id === portid;
+            });
+            port.bits = bits;
+            port.attrs['text.bits'].text = this.getBitsText(bits);
+            
+            const signame = port.dir === 'in' ? 'inputSignals' : 'outputSignals';
+            const signals = this.get(signame);
+            signals[portid] = Vector3vl.xes(bits);
+            this.set(signame, signals);
+        }
+        //trigger port changes on model and view
+        this.trigger('change:ports', this, ports);
+        
         //todo: handle connected wires
         console.warn('Beta property change support: Connected wires are currently not rechecked for connection');
     },
-    showPortBits: function(port, bits) {
-        this.portProp(port, 'attrs/text.bits/text', bits > 1 ? bits : '');
-    },
-    resetPortSignals: function(port, bits) {
-        const signame = this.portProp(port, 'dir') === 'in' ? 'inputSignals' : 'outputSignals';
-        this.prop([signame, this.portProp(port, 'id')], Vector3vl.xes(bits));
+    getBitsText: function(bits) {
+        return bits > 1 ? bits : '';
     },
     removePortSignals: function(port) {
+        port = port.id !== undefined ? port : this.getPort(port);
         const signame = port.dir === 'in' ? 'inputSignals' : 'outputSignals';
         this.removeProp([signame, port.id]);
     },
-    addPort: function(port, opt = {}) {
-        joint.shapes.basic.Generic.prototype.addPort.apply(this, arguments);
-        this.showPortBits(port.id, port.bits);
-        this.resetPortSignals(port.id, port.bits);
-        if (opt.labelled) {
-            this.portProp(port, 'attrs/text.iolabel/text', 'portlabel' in port ? port.portlabel : port.id);
-            if (port.polarity === false)
-                this.portProp(port, 'attrs/text.iolabel/text-decoration', 'overline');
-            if (port.decor) {
-                console.assert(port.group == 'in');
-                this.portProp(port, 'attrs/text.iolabel/refX', 10);
-            }
-        }
-        if (port.decor) {
-            this.portProp(port, 'attrs/path.decor/d', port.decor);
-        }
+    addPort: function(port) {
+        this.addPorts([port]);
     },
-    addPorts: function(ports, opt) {
-        ports.forEach((port) => this.addPort(port, opt), this);
+    addPorts: function(ports) {
+        this._preprocessPorts(ports);
+        joint.shapes.basic.Generic.prototype.addPorts.apply(this, arguments);
     },
     removePort: function(port, opt) {
+        this.removePortSignals(port);
         joint.shapes.basic.Generic.prototype.removePort.apply(this, arguments);
-        this.removePortSignals(port.id !== undefined ? port.id : port);
     },
     removePorts: function(ports, opt) {
-        ports.forEach((port) => this.removePort(port, opt), this);
+        ports.forEach((port) => this.removePortSignals(port), this);
+        joint.shapes.basic.Generic.prototype.removePorts.apply(this, arguments);
     },
     getStackedPosition: function(opt) {
         return function(portsArgs, elBBox) {

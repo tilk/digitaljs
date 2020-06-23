@@ -12,7 +12,8 @@ export const Dff = Box.define('Dff', {
     bits: 1,
     polarity: { clock: true },
     initial: 'x',
-    
+
+    size: { width: 80, height: undefined },
     ports: {
         groups: {
             'in': {
@@ -25,16 +26,16 @@ export const Dff = Box.define('Dff', {
     }
 }, {
     initialize: function() {
-        Box.prototype.initialize.apply(this, arguments);
-        
         const bits = this.get('bits');
         const initial = this.get('initial');
         const polarity = this.get('polarity');
         
-        this.addPorts([
-            { id: 'in', group: 'in', dir: 'in', bits: bits, portlabel: 'D' },
-            { id: 'out', group: 'out', dir: 'out', bits: bits, portlabel: 'Q' }
-        ], { labelled: true });
+        const ports = [];
+        
+        ports.push(
+            { id: 'in', group: 'in', dir: 'in', bits: bits, portlabel: 'D', labelled: true },
+            { id: 'out', group: 'out', dir: 'out', bits: bits, portlabel: 'Q', labelled: true }
+        );
         this.set('outputSignals', { out: Vector3vl.fromBin(initial, bits) });
         
         if ('arst' in polarity && this.get('arst_value'))
@@ -43,20 +44,22 @@ export const Dff = Box.define('Dff', {
         let num = 1;
         if ('clock' in polarity) {
             num++;
-            this.addPort({ id: 'clk', group: 'in', dir: 'in', bits: 1, polarity: polarity.clock, decor: Box.prototype.decorClock },  { labelled: true });
+            ports.push({ id: 'clk', group: 'in', dir: 'in', bits: 1, polarity: polarity.clock, decor: Box.prototype.decorClock, labelled: true });
         }
         if ('arst' in polarity) {
             num++;
-            this.addPort({ id: 'arst', group: 'in', dir: 'in', bits: 1, polarity: polarity.arst }, { labelled: true });
+            ports.push({ id: 'arst', group: 'in', dir: 'in', bits: 1, polarity: polarity.arst, labelled: true });
         }
         if ('enable' in polarity) {
             num++;
-            this.addPort({ id: 'en', group: 'in', dir: 'in', bits: 1, polarity: polarity.enable }, { labelled: true });
+            ports.push({ id: 'en', group: 'in', dir: 'in', bits: 1, polarity: polarity.enable, labelled: true });
         }
         
-        this.set('size', { width: 80, height: num*16+8 });
-        
+        this.get('size').height = num*16+8;
+        this.get('ports').items = ports;
         this.last_clk = 0;
+        
+        Box.prototype.initialize.apply(this, arguments);
     },
     operation: function(data) {
         const polarity = this.get('polarity');

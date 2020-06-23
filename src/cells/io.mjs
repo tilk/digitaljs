@@ -90,7 +90,7 @@ export const NumDisplay = NumBase.define('NumDisplay', {
     /* default properties */
     bits: 1,
     propagation: 0,
-    
+
     attrs: {
         'text.value': { 
             refX: .5, refY: .5,
@@ -99,14 +99,15 @@ export const NumDisplay = NumBase.define('NumDisplay', {
     }
 }, {
     initialize: function(args) {
+        const bits = this.get('bits');
+        this.get('ports').items = [
+            { id: 'in', group: 'in', dir: 'in', bits: bits }
+        ];
+        
         NumBase.prototype.initialize.apply(this, arguments);
         
-        const bits = this.get('bits');
-        
-        this.addPort({ id: 'in', group: 'in', dir: 'in', bits: bits });
-        
         this.on('change:bits', (_, bits) => {
-            this.setPortBits('in', bits);
+            this.setPortsBits({ in: bits });
         });
 
         const settext = () => this.attr('text.value/text', display3vl.show(this.get('numbase'), this.get('inputSignals').in));
@@ -133,7 +134,7 @@ export const NumEntry = NumBase.define('NumEntry', {
     bits: 1,
     propagation: 0,
     buttonState: Vector3vl.xes(1),
-    
+
     attrs: {
         'foreignObject.valinput': {
             refX: .5, refY: .5,
@@ -143,14 +144,15 @@ export const NumEntry = NumBase.define('NumEntry', {
     }
 }, {
     initialize: function(args) {
+        const bits = this.get('bits');
+        this.get('ports').items = [
+            { id: 'out', group: 'out', dir: 'out', bits: bits }
+        ];
+        
         NumBase.prototype.initialize.apply(this, arguments);
         
-        const bits = this.get('bits');
-        
-        this.addPort({ id: 'out', group: 'out', dir: 'out', bits: bits });
-        
         this.on('change:bits', (_, bits) => {
-            this.setPortBits('out', bits);
+            this.setPortsBits({ out: bits });
         });
         
         this.set('buttonState', this.get('outputSignals').out);
@@ -213,6 +215,14 @@ export const NumEntryView = NumBaseView.extend({
 
 // Lamp model -- displays a single-bit input
 export const Lamp = Box.define('Lamp', {
+    bits: 1,
+    
+    ports: {
+        items: [
+            { id: 'in', group: 'in', dir: 'in', bits: 1 }
+        ]
+    },
+
     size: { width: 30, height: 30 },
     attrs: {
         '.led': {
@@ -222,10 +232,6 @@ export const Lamp = Box.define('Lamp', {
         }
     }
 }, {
-    initialize: function(args) {
-        Box.prototype.initialize.apply(this, arguments);
-        this.addPort({ id: 'in', group: 'in', dir: 'in', bits: 1 });
-    },
     markup: Box.prototype.markup.concat([{
             tagName: 'circle',
             className: 'led'
@@ -255,9 +261,16 @@ export const LampView = BoxView.extend({
 // Button model -- single-bit clickable input
 export const Button = Box.define('Button', {
     /* default properties */
+    bits: 1,
     buttonState: false,
     propagation: 0,
-    
+
+    ports: {
+        items: [
+            { id: 'out', group: 'out', dir: 'out', bits: 1 }
+        ]
+    },
+
     size: { width: 30, height: 30 },
     attrs: {
         '.btnface': { 
@@ -268,10 +281,6 @@ export const Button = Box.define('Button', {
         }
     }
 }, {
-    initialize: function(args) {
-        Box.prototype.initialize.apply(this, arguments);
-        this.addPort({ id: 'out', group: 'out', dir: 'out', bits: 1 });
-    },
     operation: function() {
         return { out: this.get('buttonState') ? Vector3vl.ones(1) : Vector3vl.zeros(1) };
     },
@@ -313,7 +322,7 @@ export const IO = Box.define('IO', {
     bits: 1,
     net: '',
     propagation: 0,
-    
+
     attrs: {
         'text.ioname': {
             refX: .5, refY: .5,
@@ -324,14 +333,17 @@ export const IO = Box.define('IO', {
     }
 }, {
     initialize: function(args) {
+        const bits = this.get('bits');
+        this.get('ports').items = [
+            { id: this.io_dir, group: this.io_dir, dir: this.io_dir, bits: bits }
+        ];
+        
         Box.prototype.initialize.apply(this, arguments);
         
-        const bits = this.get('bits');
-        
-        this.addPort({ id: this.io_dir, group: this.io_dir, dir: this.io_dir, bits: bits });
-        
         this.on('change:bits', (_, bits) => {
-            this.setPortBits(this.io_dir, bits);
+            const b = {};
+            b[this.io_dir] = bits;
+            this.setPortsBits(b);
         });
         this.bindAttrToProp('text.ioname/text', 'net');
     },
@@ -352,8 +364,7 @@ export const IOView = BoxView.extend({
 });
 
 // Input model
-export const Input = IO.define('Input', {
-}, {
+export const Input = IO.define('Input', {}, {
     io_dir: 'out',
     setLogicValue: function(sig) {
         console.assert(sig.bits == this.get('bits'));
@@ -363,8 +374,7 @@ export const Input = IO.define('Input', {
 export const InputView = IOView;
 
 // Output model
-export const Output = IO.define('Output', {
-}, {
+export const Output = IO.define('Output', {}, {
     io_dir: 'in',
     getLogicValue: function() {
         return this.get('inputSignals').in;
@@ -377,7 +387,7 @@ export const Constant = NumBase.define('Constant', {
     /* default properties */
     constant: '0',
     propagation: 0,
-    
+
     attrs: {
         'text.value': {
             refX: .5, refY: .5,
@@ -386,21 +396,24 @@ export const Constant = NumBase.define('Constant', {
     }
 }, {
     initialize: function(args) {
-        NumBase.prototype.initialize.apply(this, arguments);
-        
         const constant = this.get('constant');
-        this.set('bits', constant.length);
-        this.set('constantCache', Vector3vl.fromBin(constant, constant.length));
+        const bits = constant.length;
+        this.set('bits', bits);
+        this.set('constantCache', Vector3vl.fromBin(constant, bits));
+        this.get('ports').items = [
+            { id: 'out', group: 'out', dir: 'out', bits: bits }
+        ];
         
-        this.addPort({ id: 'out', group: 'out', dir: 'out', bits: constant.length });
+        NumBase.prototype.initialize.apply(this, arguments);
         
         const settext = () => this.attr('text.value/text', display3vl.show(this.get('numbase'), this.get('constantCache')));
         settext();
         
         this.on('change:constant', (_, constant) => {
-            this.setPortBits('out', constant.length);
-            this.set('bits', constant.length);
-            this.set('constantCache', Vector3vl.fromBin(constant, constant.length));
+            const bits = constant.length;
+            this.setPortsBits({ out: bits });
+            this.set('bits', bits);
+            this.set('constantCache', Vector3vl.fromBin(constant, bits));
             settext();
         });
         this.on('change:numbase', settext);
@@ -422,14 +435,17 @@ export const ConstantView = NumBaseView;
 export const Clock = Box.define('Clock', {
     /* default properties */
     propagation: 100,
-    
+
+    ports: {
+        items: [
+            { id: 'out', group: 'out', dir: 'out', bits: 1 }
+        ]
+    },
+
     size: { width: 30, height: 30 }
 }, {
     initialize: function(args) {
         Box.prototype.initialize.apply(this, arguments);
-        
-        this.addPort({ id: 'out', group: 'out', dir: 'out', bits: 1 });
-        
         this.set('outputSignals', { out: Vector3vl.zeros(1) });
     },
     operation: function() {

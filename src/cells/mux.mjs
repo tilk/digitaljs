@@ -28,22 +28,14 @@ export const GenMux = Gate.define('GenMux', {
     }
 }, {
     initialize: function() {
-        Gate.prototype.initialize.apply(this, arguments);
-        
         const bits = this.get('bits');
-        
-        this.addPorts([
+        const ports = [
             { id: 'sel', group: 'in2', dir: 'in', bits: bits.sel },
             { id: 'out', group: 'out', dir: 'out', bits: bits.in }
-        ]);
+        ];
         
-        this.on('change:size', (_, size) => {
-            this.attr(['polygon.body', 'points'], 
-            [[0,0],[size.width,10],[size.width,size.height-10],[0,size.height]]
-                .map(x => x.join(',')).join(' '));
-        });
         const n_ins = this.muxNumInputs(bits.sel);
-        this.prop('size/height', n_ins*16+8);
+        this.get('size').height = n_ins*16+8;
         
         const vpath = [
             [2, 0],
@@ -53,8 +45,19 @@ export const GenMux = Gate.define('GenMux', {
         const path = 'M' + vpath.map(l => l.join(' ')).join(' L');
         
         for (const num of Array(n_ins).keys()) {
-            this.addPort({ id: 'in' + num, group: 'in', dir: 'in', bits: bits.in, decor: path });
+            ports.push({ id: 'in' + num, group: 'in', dir: 'in', bits: bits.in, decor: path });
         }
+        
+        this.get('ports').items = ports;
+        
+        Gate.prototype.initialize.apply(this, arguments);
+        
+        const drawBorder = (size) => this.attr(['polygon.body', 'points'], 
+            [[0,0],[size.width,10],[size.width,size.height-10],[0,size.height]]
+                .map(x => x.join(',')).join(' '));
+        drawBorder(this.get('size'));
+        
+        this.on('change:size', (_, size) => drawBorder(size));
     },
     operation: function(data) {
         const i = this.muxInput(data.sel);

@@ -14,7 +14,8 @@ const tests = [
     {name: 'rom', title: 'Async ROM'},
     {name: 'ram', title: 'Simple RAM'},
     {name: 'fsm', title: 'Finite State Machine'},
-    {name: 'gates', title: 'All available gates'}
+    {name: 'gates', title: 'All available gates'},
+    {name: 'horner', title: 'Benchmark example'}
 ];
 
 module.exports = {

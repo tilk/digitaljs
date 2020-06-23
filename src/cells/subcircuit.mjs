@@ -10,7 +10,7 @@ import * as help from '../help.mjs';
 export const Subcircuit = Box.define('Subcircuit', {
     /* default properties */
     propagation: 0,
-    
+
     attrs: {
         'text.type': {
             refX: .5, refY: -10,
@@ -19,8 +19,6 @@ export const Subcircuit = Box.define('Subcircuit', {
     }
 }, {
     initialize: function() {
-        Box.prototype.initialize.apply(this, arguments);
-        
         this.bindAttrToProp('text.type/text', 'celltype');
         
         const graph = this.get('graph');
@@ -39,13 +37,13 @@ export const Subcircuit = Box.define('Subcircuit', {
         outputs.sort(sortfun);
         const vcount = Math.max(inputs.length, outputs.length);
         const size = { width: 80, height: vcount*16+8 };
-        const iomap = {}, inputSignals = {}, outputSignals = {};
+        const ports = [], iomap = {}, inputSignals = {}, outputSignals = {};
         for (const [num, io] of inputs.entries()) {
-            this.addPort({ id: io.get('net'), group: 'in', dir: 'in', bits: io.get('bits') }, { labelled: true });
+            ports.push({ id: io.get('net'), group: 'in', dir: 'in', bits: io.get('bits'), labelled: true });
             inputSignals[io.get('net')] = io.get('outputSignals').out;
         }
         for (const [num, io] of outputs.entries()) {
-            this.addPort({ id: io.get('net'), group: 'out', dir: 'out', bits: io.get('bits') }, { labelled: true });
+            ports.push({ id: io.get('net'), group: 'out', dir: 'out', bits: io.get('bits'), labelled: true });
             outputSignals[io.get('net')] = io.get('inputSignals').in;
         }
         for (const io of IOs) {
@@ -55,6 +53,9 @@ export const Subcircuit = Box.define('Subcircuit', {
         this.set('circuitIOmap', iomap);
         this.set('inputSignals', inputSignals);
         this.set('outputSignals', outputSignals);
+        this.get('ports').items = ports;
+        
+        Box.prototype.initialize.apply(this, arguments);
     },
     //add offset of 10pt to account for the top label at layout time
     getLayoutSize: function() {
