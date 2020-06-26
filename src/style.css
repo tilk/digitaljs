@@ -1,69 +1,8 @@
-.connection {
-    stroke: #999;
-}
-
 .joint-element .highlighted {
     outline: none;
     fill: #ecf0f1;
     stroke: #bdc3c7;
     cursor: crosshair;
-}
-
-.djs .joint-port-body.defined.live circle.port {
-    stroke: #03c03c;
-}
-
-.djs .joint-port-body.defined.low circle.port {
-    stroke: #fc7c68;
-}
-
-.djs .joint-port-body.defined circle.port {
-    stroke: #779ecb;
-}
-
-.djs .joint-element circle.led {
-    fill: #bfc5c6;
-    stroke-width: 0;
-}
-
-.djs .joint-element circle.led.live {
-    fill: #03c03c;
-}
-
-.djs .joint-element circle.led.low {
-    fill: #fc7c68;
-}
-
-.joint-link.live > .connection {
-    stroke: #03c03c;
-}
-
-.joint-link.low > .connection {
-    stroke: #fc7c68;
-}
-
-.joint-link.defined > .connection {
-    stroke: #779ecb;
-}
-
-.joint-link.bus > .connection {
-    stroke-width: 4px;
-}
-
-.joint-link .label > text {
-    font-size: 8pt;
-}
-
-.joint-element.live .body {
-    fill: #FEB662;
-    stroke: #CF9452;
-}
-
-.joint-element.live text {
-    fill: #ffffff;
-}
-.wire {
-    stroke: #4B4F6A;
 }
 
 .djs.fixed .joint-link {
@@ -191,10 +130,6 @@ body {
     font-family: 'verdana', sans-serif;
     font-weight: normal;
     font-style: normal;
-}
-
-.btnface.live {
-    fill: black;
 }
 
 .joint-element foreignObject {

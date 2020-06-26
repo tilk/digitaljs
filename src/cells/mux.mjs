@@ -92,7 +92,7 @@ export const GenMuxView = GateView.extend({
     },
     confirmUpdate(flags) {
         GateView.prototype.confirmUpdate.apply(this, arguments);
-        if (this.hasFlag(flags, 'flag:inputSignals')) {
+        if (this.hasFlag(flags, 'SIGNAL')) {
             this.updateMux(this.model.get('inputSignals'));
         }
     },

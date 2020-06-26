@@ -244,36 +244,59 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
 });
 
 export const GateView = joint.dia.ElementView.extend({
+    attrs: {
+        signal: {
+            high: { port: { 'stroke': '#03c03c' } },
+            low: { port: { 'stroke': '#fc7c68' } },
+            def: { port: { 'stroke': '#779ecb' } },
+            undef: { port: { 'stroke': '#999' } }
+        }
+    },
     presentationAttributes: joint.dia.ElementView.addPresentationAttributes({
-        inputSignals: 'flag:inputSignals',
-        outputSignals: 'flag:outputSignals'
+        inputSignals: 'SIGNAL',
+        outputSignals: 'SIGNAL2'
     }),
     stopprop(evt) {
         evt.stopPropagation();
     },
     confirmUpdate(flags) {
-        if (this.hasFlag(flags, 'flag:inputSignals')) {
-            this.updatePortSignals('in', this.model.get('inputSignals'));
+        if (this.hasFlag(flags, 'SIGNAL')) {
+            this.updatePortSignals('in');
         }
-        if (this.hasFlag(flags, 'flag:outputSignals')) {
-            this.updatePortSignals('out', this.model.get('outputSignals'));
+        if (this.hasFlag(flags, 'SIGNAL2')) {
+            this.updatePortSignals('out');
         }
         joint.dia.ElementView.prototype.confirmUpdate.apply(this, arguments);
     },
-    updatePortSignals(dir, signal) {
-        for (const port of this.model.getPorts()) {
-            if (port.dir !== dir) continue;
-            const portel = this.el.querySelector('[port='+port.id+']');
-            if (portel === null) continue; // workaround for a race condition
-            portel.classList.toggle('live', signal[port.id].isHigh);
-            portel.classList.toggle('low', signal[port.id].isLow);
-            portel.classList.toggle('defined', signal[port.id].isDefined);
+    updatePortSignals(dir) {
+        const signals =
+            dir === 'in' ? this.model.get('inputSignals') :
+            dir === 'out' ? this.model.get('outputSignals') :
+            _.merge({}, this.model.get('inputSignals'), this.model.get('outputSignals'));
+        for (const port in signals) {
+            const attrs = this.attrs.signal[
+                signals[port].isHigh ? 'high' :
+                signals[port].isLow ? 'low' :
+                signals[port].isDefined ? 'def' : 'undef'
+            ];
+            this.applyPortAttrs(port, attrs);
         }
     },
-    render() {
-        joint.dia.ElementView.prototype.render.apply(this, arguments);
-        this.updatePortSignals('in', this.model.get('inputSignals'));
-        this.updatePortSignals('out', this.model.get('outputSignals'));
+    applyAttrs(attrs) {
+        for (const selector in attrs) {
+            const node = this.selectors[selector];
+            this.setNodeAttributes(node, attrs[selector]);
+        }
+    },
+    applyPortAttrs(port, attrs) {
+        for (const selector in attrs) {
+            const node = this._portElementsCache[port].portSelectors[selector];
+            this.setNodeAttributes(node, attrs[selector]);
+        }
+    },
+    _updatePorts() {
+        joint.dia.ElementView.prototype._updatePorts.apply(this, arguments);
+        this.updatePortSignals();
     }
 });
 
@@ -305,7 +328,8 @@ export const Wire = joint.shapes.standard.Link.define('Wire', {
                 attrs: {
                     label: {
                         text: this.get('netname'),
-                        fill: 'black'
+                        fill: 'black',
+                        fontSize: '8pt'
                     }
                 },
                 position: {
@@ -397,26 +421,36 @@ export const WireView = joint.dia.LinkView.extend({
     initFlag: joint.dia.LinkView.prototype.initFlag.concat(['INIT']),
 
     longWireLength: 400,
+    attrs: {
+        signal: {
+            high: { line: { 'stroke': '#03c03c' } },
+            low: { line: { 'stroke': '#fc7c68' } },
+            def: { line: { 'stroke': '#779ecb' } },
+            undef: { line: { 'stroke': '#999' } }
+        },
+        bits: {
+            bus: { line: { 'stroke-width': '4px' } },
+            single: { line: { 'stroke-width': '2px' } }
+        }
+    },
 
     presentationAttributes: joint.dia.LinkView.addPresentationAttributes({
-        signal: 'flag:signal',
-        bits: 'flag:bits'
+        signal: 'SIGNAL',
+        bits: 'BITS'
     }),
 
     initialize() {
         joint.dia.LinkView.prototype.initialize.apply(this, arguments);
-        this.updateColor(this.model.get('signal'));
-        this.$el.toggleClass('bus', this.model.get('bits') > 1);
         this.prevModels = { source: null, target: null };
     },
 
     confirmUpdate(flags) {
         joint.dia.LinkView.prototype.confirmUpdate.apply(this, arguments);
-        if (this.hasFlag(flags, 'flag:signal')) {
-            this.updateColor(this.model.get('signal'));
+        if (this.hasFlag(flags, 'SIGNAL')) {
+            this.updateSignal();
         };
-        if (this.hasFlag(flags, 'flag:bits')) {
-            this.$el.toggleClass('bus', this.model.get('bits') > 1);
+        if (this.hasFlag(flags, 'BITS')) {
+            this.updateBits();
         };
         if (this.hasFlag(flags, 'INIT')) {
             if (this.hasTools()) return;
@@ -451,11 +485,35 @@ export const WireView = joint.dia.LinkView.extend({
         return this.getConnectionLength() < this.longWireLength;
     },
 
-    updateColor(sig) {
-        const h = sig.isHigh, l = sig.isLow;
-        this.$el.toggleClass('live', h);
-        this.$el.toggleClass('low', l);
-        this.$el.toggleClass('defined', !h && !l && sig.isDefined);
+    updateSignal() {
+        const signal = this.model.get('signal');
+        const attrs = this.attrs.signal[
+            signal.isHigh ? 'high' :
+            signal.isLow ? 'low' :
+            signal.isDefined ? 'def' : 'undef'
+        ];
+        this.applyAttrs(attrs);
+    },
+
+    updateBits() {
+        const bits = this.model.get('bits');
+        const attrs = this.attrs.bits[
+            bits > 1 ? 'bus' : 'single'
+        ];
+        this.applyAttrs(attrs);
+    },
+
+    applyAttrs(attrs) {
+        for (const selector in attrs) {
+            const node = this.selectors[selector];
+            this.setNodeAttributes(node, attrs[selector]);
+        }
+    },
+
+    update() {
+        joint.dia.LinkView.prototype.update.apply(this, arguments);
+        this.updateSignal();
+        this.updateBits();
     },
 
     mouseenter: function(evt) {
