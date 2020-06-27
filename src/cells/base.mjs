@@ -7,7 +7,7 @@ import { display3vl } from '../help.mjs';
 import { Vector3vl } from '3vl';
 
 export const portGroupAttrs = {
-    'line.wire': {
+    wire: {
         stroke: '#4B4F6A',
         x1: 0, y1: 0,
         x2: undefined, y2: 0
@@ -20,17 +20,17 @@ export const portGroupAttrs = {
         strokeWidth: 2,
         strokeOpacity: 0.5
     },
-    'text.bits': {
+    bits: {
         ref: 'port',
         fill: 'black',
         fontSize: '7pt'
     },
-    'text.iolabel': {
+    iolabel: {
         textVerticalAnchor: 'middle',
         fill: 'black',
         fontSize: '8pt'
     },
-    'path.decor': {
+    decor: {
         stroke: 'black',
         fill: 'transparent',
         d: undefined
@@ -48,12 +48,12 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
     outputSignals: {},
     attrs: {
         '.': { magnet: false },
-        '.body': { stroke: 'black', strokeWidth: 2 },
+        body: { stroke: 'black', strokeWidth: 2 },
         'text': {
             fontSize: '8pt',
             fill: 'black'
         },
-        'text.label': {
+        label: {
             refX: .5, refDy: 3,
             textAnchor: 'middle'
         }
@@ -63,19 +63,19 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
             'in': {
                 position: 'left',
                 attrs: _.merge({}, portGroupAttrs, {
-                    'line.wire': { x2: -25 },
+                    wire: { x2: -25 },
                     port: { magnet: 'passive', refX: -25 },
-                    'text.bits': { refDx: 1, refY: -3, textAnchor: 'start' },
-                    'text.iolabel': { refX: 5, textAnchor: 'start' }
+                    bits: { refDx: 1, refY: -3, textAnchor: 'start' },
+                    iolabel: { refX: 5, textAnchor: 'start' }
                 })
             },
             'out': {
                 position: 'right',
                 attrs: _.merge({}, portGroupAttrs, {
-                    'line.wire': { x2: 25 },
+                    wire: { x2: 25 },
                     port: { magnet: true, refX: 25 },
-                    'text.bits': { refX: -1, refY: -3, textAnchor: 'end' },
-                    'text.iolabel': { refX: -5, textAnchor: 'end' }
+                    bits: { refX: -1, refY: -3, textAnchor: 'end' },
+                    iolabel: { refX: -5, textAnchor: 'end' }
                 })
             }
         }
@@ -95,7 +95,7 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
         
         joint.shapes.basic.Generic.prototype.initialize.apply(this, arguments);
         
-        this.bindAttrToProp('text.label/text', 'label');
+        this.bindAttrToProp('label/text', 'label');
         if (this.unsupportedPropChanges.length > 0) {
             this.on(this.unsupportedPropChanges.map(prop => 'change:'+prop).join(' '), function(model, _, opt) {
                 if (opt.init) return;
@@ -118,7 +118,7 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
             console.assert(port.bits > 0);
             
             port.attrs = {};
-            port.attrs['text.bits'] = { text: this.getBitsText(port.bits) }
+            port.attrs['bits'] = { text: this.getBitsText(port.bits) }
             if (port.labelled) {
                 const iolabel = { text: 'portlabel' in port ? port.portlabel : port.id };
                 if (port.polarity === false)
@@ -127,10 +127,10 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
                     console.assert(port.group == 'in');
                     iolabel['refX'] = 10;
                 }
-                port.attrs['text.iolabel'] = iolabel;
+                port.attrs['iolabel'] = iolabel;
             }
             if (port.decor) {
-                port.attrs['path.decor'] = { d: port.decor };
+                port.attrs['decor'] = { d: port.decor };
             }
         }
     },
@@ -142,7 +142,7 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
                 return port.id && port.id === portid;
             });
             port.bits = bits;
-            port.attrs['text.bits'].text = this.getBitsText(bits);
+            port.attrs['bits'].text = this.getBitsText(bits);
             
             const signame = port.dir === 'in' ? 'inputSignals' : 'outputSignals';
             const signals = this.get(signame);
@@ -210,25 +210,30 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
     },
     portMarkup: [{
         tagName: 'line',
-        className: 'wire'
+        className: 'wire',
+        selector: 'wire'
     }, {
         tagName: 'circle',
         className: 'port',
         selector: 'port'
     }, {
         tagName: 'text',
-        className: 'bits'
+        className: 'bits',
+        selector: 'bits'
     }, {
         tagName: 'text',
-        className: 'iolabel'
+        className: 'iolabel',
+        selector: 'iolabel'
     }, {
         tagName: 'path',
-        className: 'decor'
+        className: 'decor',
+        selector: 'decor'
     }],
     //portLabelMarkup: null, //todo: see https://github.com/clientIO/joint/issues/1278
     markup: [{
         tagName: 'text',
-        className: 'label'
+        className: 'label',
+        selector: 'label'
     }],
     getGateParams: function(layout) {
         return _.cloneDeep(_.pick(this.attributes, this.gateParams.concat(layout ? this.gateLayoutParams : [])));
@@ -239,36 +244,59 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
 });
 
 export const GateView = joint.dia.ElementView.extend({
+    attrs: {
+        signal: {
+            high: { port: { 'stroke': '#03c03c' } },
+            low: { port: { 'stroke': '#fc7c68' } },
+            def: { port: { 'stroke': '#779ecb' } },
+            undef: { port: { 'stroke': '#999' } }
+        }
+    },
     presentationAttributes: joint.dia.ElementView.addPresentationAttributes({
-        inputSignals: 'flag:inputSignals',
-        outputSignals: 'flag:outputSignals'
+        inputSignals: 'SIGNAL',
+        outputSignals: 'SIGNAL2'
     }),
     stopprop(evt) {
         evt.stopPropagation();
     },
     confirmUpdate(flags) {
-        if (this.hasFlag(flags, 'flag:inputSignals')) {
-            this.updatePortSignals('in', this.model.get('inputSignals'));
+        if (this.hasFlag(flags, 'SIGNAL')) {
+            this.updatePortSignals('in');
         }
-        if (this.hasFlag(flags, 'flag:outputSignals')) {
-            this.updatePortSignals('out', this.model.get('outputSignals'));
+        if (this.hasFlag(flags, 'SIGNAL2')) {
+            this.updatePortSignals('out');
         }
         joint.dia.ElementView.prototype.confirmUpdate.apply(this, arguments);
     },
-    updatePortSignals(dir, signal) {
-        for (const port of this.model.getPorts()) {
-            if (port.dir !== dir) continue;
-            const portel = this.el.querySelector('[port='+port.id+']');
-            if (portel === null) continue; // workaround for a race condition
-            portel.classList.toggle('live', signal[port.id].isHigh);
-            portel.classList.toggle('low', signal[port.id].isLow);
-            portel.classList.toggle('defined', signal[port.id].isDefined);
+    updatePortSignals(dir) {
+        const signals =
+            dir === 'in' ? this.model.get('inputSignals') :
+            dir === 'out' ? this.model.get('outputSignals') :
+            _.merge({}, this.model.get('inputSignals'), this.model.get('outputSignals'));
+        for (const port in signals) {
+            const attrs = this.attrs.signal[
+                signals[port].isHigh ? 'high' :
+                signals[port].isLow ? 'low' :
+                signals[port].isDefined ? 'def' : 'undef'
+            ];
+            this.applyPortAttrs(port, attrs);
         }
     },
-    render() {
-        joint.dia.ElementView.prototype.render.apply(this, arguments);
-        this.updatePortSignals('in', this.model.get('inputSignals'));
-        this.updatePortSignals('out', this.model.get('outputSignals'));
+    applyAttrs(attrs) {
+        for (const selector in attrs) {
+            const node = this.selectors[selector];
+            this.setNodeAttributes(node, attrs[selector]);
+        }
+    },
+    applyPortAttrs(port, attrs) {
+        for (const selector in attrs) {
+            const node = this._portElementsCache[port].portSelectors[selector];
+            this.setNodeAttributes(node, attrs[selector]);
+        }
+    },
+    _updatePorts() {
+        joint.dia.ElementView.prototype._updatePorts.apply(this, arguments);
+        this.updatePortSignals();
     }
 });
 
@@ -300,7 +328,8 @@ export const Wire = joint.shapes.standard.Link.define('Wire', {
                 attrs: {
                     label: {
                         text: this.get('netname'),
-                        fill: 'black'
+                        fill: 'black',
+                        fontSize: '8pt'
                     }
                 },
                 position: {
@@ -392,26 +421,36 @@ export const WireView = joint.dia.LinkView.extend({
     initFlag: joint.dia.LinkView.prototype.initFlag.concat(['INIT']),
 
     longWireLength: 400,
+    attrs: {
+        signal: {
+            high: { line: { 'stroke': '#03c03c' } },
+            low: { line: { 'stroke': '#fc7c68' } },
+            def: { line: { 'stroke': '#779ecb' } },
+            undef: { line: { 'stroke': '#999' } }
+        },
+        bits: {
+            bus: { line: { 'stroke-width': '4px' } },
+            single: { line: { 'stroke-width': '2px' } }
+        }
+    },
 
     presentationAttributes: joint.dia.LinkView.addPresentationAttributes({
-        signal: 'flag:signal',
-        bits: 'flag:bits'
+        signal: 'SIGNAL',
+        bits: 'BITS'
     }),
 
     initialize() {
         joint.dia.LinkView.prototype.initialize.apply(this, arguments);
-        this.updateColor(this.model.get('signal'));
-        this.$el.toggleClass('bus', this.model.get('bits') > 1);
         this.prevModels = { source: null, target: null };
     },
 
     confirmUpdate(flags) {
         joint.dia.LinkView.prototype.confirmUpdate.apply(this, arguments);
-        if (this.hasFlag(flags, 'flag:signal')) {
-            this.updateColor(this.model.get('signal'));
+        if (this.hasFlag(flags, 'SIGNAL')) {
+            this.updateSignal();
         };
-        if (this.hasFlag(flags, 'flag:bits')) {
-            this.$el.toggleClass('bus', this.model.get('bits') > 1);
+        if (this.hasFlag(flags, 'BITS')) {
+            this.updateBits();
         };
         if (this.hasFlag(flags, 'INIT')) {
             if (this.hasTools()) return;
@@ -446,11 +485,35 @@ export const WireView = joint.dia.LinkView.extend({
         return this.getConnectionLength() < this.longWireLength;
     },
 
-    updateColor(sig) {
-        const h = sig.isHigh, l = sig.isLow;
-        this.$el.toggleClass('live', h);
-        this.$el.toggleClass('low', l);
-        this.$el.toggleClass('defined', !h && !l && sig.isDefined);
+    updateSignal() {
+        const signal = this.model.get('signal');
+        const attrs = this.attrs.signal[
+            signal.isHigh ? 'high' :
+            signal.isLow ? 'low' :
+            signal.isDefined ? 'def' : 'undef'
+        ];
+        this.applyAttrs(attrs);
+    },
+
+    updateBits() {
+        const bits = this.model.get('bits');
+        const attrs = this.attrs.bits[
+            bits > 1 ? 'bus' : 'single'
+        ];
+        this.applyAttrs(attrs);
+    },
+
+    applyAttrs(attrs) {
+        for (const selector in attrs) {
+            const node = this.selectors[selector];
+            this.setNodeAttributes(node, attrs[selector]);
+        }
+    },
+
+    update() {
+        joint.dia.LinkView.prototype.update.apply(this, arguments);
+        this.updateSignal();
+        this.updateBits();
     },
 
     mouseenter: function(evt) {
@@ -502,29 +565,31 @@ export const WireView = joint.dia.LinkView.extend({
 
 export const Box = Gate.define('Box', {
     attrs: {
-        'rect.body': { refWidth: 1, refHeight: 1 },
-        '.tooltip': { refX: 0, refY: -30, height: 30 }
+        body: { refWidth: 1, refHeight: 1 },
+        tooltip: { refX: 0, refY: -30, height: 30 }
     }
 }, {
     initialize: function(args) {
         Gate.prototype.initialize.apply(this, arguments);
         this.on('change:size', (_, size) => {
             if (size.width > this.tooltipMinWidth) {
-                this.attr('.tooltip', { refWidth: 1, width: null });
+                this.attr('tooltip', { refWidth: 1, width: null });
             } else {
-                this.attr('.tooltip', { refWidth: null, width: this.tooltipMinWidth });
+                this.attr('tooltip', { refWidth: null, width: this.tooltipMinWidth });
             }
         });
         this.trigger('change:size', this, this.prop('size'));
     },
     markup: Gate.prototype.markup.concat([{
             tagName: 'rect',
-            className: 'body'
+            className: 'body',
+            selector: 'body'
         }
     ]),
     markupZoom: [{
         tagName: 'foreignObject',
         className: 'tooltip',
+        selector: 'tooltip',
         children: [{
             tagName: 'body',
             namespaceURI: 'http://www.w3.org/1999/xhtml',
