@@ -321,6 +321,9 @@ export const Wire = joint.shapes.standard.Link.define('Wire', {
         line: {
             class: 'connection',
             targetMarker: null
+        },
+        wrapper: {
+            stroke: 'red'
         }
     },
 
@@ -371,8 +374,10 @@ export const Wire = joint.shapes.standard.Link.define('Wire', {
     changeSource(src) {
         const source = this.graph.getCell(src.id);
         if (source && 'port' in src) {
-            this.set('signal', source.get('outputSignals')[src.port]);
             this.set('bits', source.getPort(src.port).bits);
+            this.checkConnection();
+            //set signal after checking connection to avoid false signal propagation
+            this.set('signal', source.get('outputSignals')[src.port]);
         } else {
             this.set('signal', Vector3vl.xes(this.get('bits')));
         }
@@ -382,11 +387,17 @@ export const Wire = joint.shapes.standard.Link.define('Wire', {
         if (target && 'port' in tar) {
             target.setInput(this.get('signal'), tar.port);
         }
+        this.checkConnection();
         const preTar = this.previous('target');
         const preTarget = this.graph.getCell(preTar.id);
         if (preTarget && 'port' in preTar) {
             preTarget.clearInput(preTar.port);
         }
+    },
+    checkConnection() {
+        const tar = this.get('target');
+        const target = this.graph.getCell(tar.id);
+        this.set('warning', target && target.getPort(tar.port).bits !== this.get('bits'));
     },
     getWireParams: function(layout) {
         const connector = {
@@ -489,12 +500,17 @@ export const WireView = joint.dia.LinkView.extend({
         bits: {
             bus: { line: { 'stroke-width': '4px' } },
             single: { line: { 'stroke-width': '2px' } }
+        },
+        warning: {
+            warn: { wrapper: { 'stroke-opacity': '0.5' } },
+            none: { wrapper: { 'stroke-opacity': '0' } }
         }
     },
 
     presentationAttributes: joint.dia.LinkView.addPresentationAttributes({
         signal: 'SIGNAL',
-        bits: 'BITS'
+        bits: 'BITS',
+        warning: 'WARNING'
     }),
 
     initialize() {
@@ -506,10 +522,13 @@ export const WireView = joint.dia.LinkView.extend({
         joint.dia.LinkView.prototype.confirmUpdate.apply(this, arguments);
         if (this.hasFlag(flags, 'SIGNAL')) {
             this.updateSignal();
-        };
+        }
         if (this.hasFlag(flags, 'BITS')) {
             this.updateBits();
-        };
+        }
+        if (this.hasFlag(flags, 'WARNING')) {
+            this.updateWarning();
+        }
         if (this.hasFlag(flags, 'INIT')) {
             if (this.hasTools()) return;
 
@@ -561,6 +580,14 @@ export const WireView = joint.dia.LinkView.extend({
         this.applyAttrs(attrs);
     },
 
+    updateWarning() {
+        const warning = this.model.get('warning');
+        const attrs = this.attrs.warning[
+            warning ? 'warn' : 'none'
+        ];
+        this.applyAttrs(attrs);
+    },
+
     applyAttrs(attrs) {
         for (const selector in attrs) {
             const node = this.selectors[selector];
@@ -572,6 +599,7 @@ export const WireView = joint.dia.LinkView.extend({
         joint.dia.LinkView.prototype.update.apply(this, arguments);
         this.updateSignal();
         this.updateBits();
+        this.updateWarning();
     },
 
     mouseenter: function(evt) {
