@@ -106,6 +106,22 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
             });
         }
     },
+    changeOutputSignals: function(sigs) {
+        _.chain(this.graph.getConnectedLinks(this, {outbound: true}))
+            .groupBy((wire) => wire.get('source').port)
+            .forEach((wires, port) => 
+                wires.forEach((wire) => wire.set('signal', sigs[port])))
+            .value();
+    },
+    setInput: function(sig, port) {
+        const signals = _.clone(this.get('inputSignals'));
+        signals[port] = sig;
+        this.set('inputSignals', signals);
+    },
+    clearInput: function(port) {
+        const bits = this.getPort(port).bits;
+        this.setInput(Vector3vl.xes(bits), port);
+    },
     bindAttrToProp: function(attr, prop) {
         this.attr(attr, this.get(prop));
         this.on('change:' + prop, (_, val) => this.attr(attr, val));
@@ -335,6 +351,41 @@ export const Wire = joint.shapes.standard.Link.define('Wire', {
                     distance: 0.5
                 }
             });
+        }
+    },
+    onAdd: function() {
+        this.changeSource(this.get('source'));
+    },
+    remove: function() {
+        const tar = this.get('target');
+        const target = this.graph.getCell(tar.id);
+        if (target && 'port' in tar) {
+            target.clearInput(tar.port);
+        }
+        joint.shapes.standard.Link.prototype.remove.apply(this, arguments);
+    },
+    changeSignal(sig) {
+        const target = this.getTargetElement();
+        if (target) target.setInput(sig, this.get('target').port);
+    },
+    changeSource(src) {
+        const source = this.graph.getCell(src.id);
+        if (source && 'port' in src) {
+            this.set('signal', source.get('outputSignals')[src.port]);
+            this.set('bits', source.getPort(src.port).bits);
+        } else {
+            this.set('signal', Vector3vl.xes(this.get('bits')));
+        }
+    },
+    changeTarget(tar) {
+        const target = this.graph.getCell(tar.id);
+        if (target && 'port' in tar) {
+            target.setInput(this.get('signal'), tar.port);
+        }
+        const preTar = this.previous('target');
+        const preTarget = this.graph.getCell(preTar.id);
+        if (preTarget && 'port' in preTar) {
+            preTarget.clearInput(preTar.port);
         }
     },
     getWireParams: function(layout) {
