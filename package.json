@@ -1,6 +1,6 @@
 {
   "name": "digitaljs",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "Digital logic simulator",
   "main": "src/index.mjs",
   "scripts": {
