@@ -245,13 +245,13 @@ export const Lamp = Box.define('Lamp', {
     }
 });
 export const LampView = BoxView.extend({
-    attrs: {
-        signal: {
+    attrs: _.merge({}, BoxView.prototype.attrs, {
+        lamp: {
             high: { led: { 'fill': '#03c03c' } },
             low: { led: { 'fill': '#fc7c68' } },
             undef: { led: { 'fill': '#bfc5c6' } }
         }
-    },
+    }),
     confirmUpdate(flags) {
         BoxView.prototype.confirmUpdate.apply(this, arguments);
         if (this.hasFlag(flags, 'SIGNAL')) {
@@ -260,7 +260,7 @@ export const LampView = BoxView.extend({
     },
     updateLamp() {
         const signal = this.model.get('inputSignals').in;
-        const attrs = this.attrs.signal[
+        const attrs = this.attrs.lamp[
             signal.isHigh ? 'high' :
             signal.isLow ? 'low' : 'undef'
         ];
@@ -309,12 +309,12 @@ export const Button = Box.define('Button', {
     }
 });
 export const ButtonView = BoxView.extend({
-    attrs: {
-        signal: {
+    attrs: _.merge({}, BoxView.prototype.attrs, {
+        button: {
             high: { btnface: { 'fill': 'black' } },
             low: { btnface: { 'fill': 'white' } }
         }
-    },
+    }),
     presentationAttributes: BoxView.addPresentationAttributes({
         buttonState: 'SIGNAL',
     }),
@@ -326,7 +326,7 @@ export const ButtonView = BoxView.extend({
     },
     updateButton() {
         const buttonState = this.model.get('buttonState');
-        const attrs = this.attrs.signal[
+        const attrs = this.attrs.button[
             buttonState ? 'high' : 'low'
         ];
         this.applyAttrs(attrs);
