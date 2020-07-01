@@ -204,8 +204,9 @@ export const NumEntryView = NumBaseView.extend({
     },
     change(evt) {
         const numbase = this.model.get('numbase');
-        if (display3vl.validate(numbase, evt.target.value)) {
-            const val = display3vl.read(numbase, evt.target.value, this.model.get('bits'));
+        const bits = this.model.get('bits');
+        if (display3vl.validate(numbase, evt.target.value, bits)) {
+            const val = display3vl.read(numbase, evt.target.value, bits);
             this.model.set('buttonState', val);
         } else {
             this.$('input').addClass('invalid');

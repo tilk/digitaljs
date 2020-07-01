@@ -71,6 +71,7 @@ export class HeadlessCircuit {
         this._pq = new FastPriorityQueue();
         this._tick = 0;
         this._graph = this.makeGraph(data, data.subcircuits);
+        this.makeLabelIndex();
     }
     shutdown() {
         this.stopListening();
@@ -103,6 +104,7 @@ export class HeadlessCircuit {
                 .value();
         });
         this.listenTo(graph, 'change:source', (wire, end) => {
+            this._labelIndex = null; // TODO: update index
             const gate = graph.getCell(end.id);
             if (gate && 'port' in end) {
                 wire.set('signal', gate.get('outputSignals')[end.port]);
@@ -125,7 +127,8 @@ export class HeadlessCircuit {
             var bits = gate.getPort(end.port).bits;
             setInput(Vector3vl.xes(bits), end, gate);
         }
-        this.listenTo(graph, 'change:target', function(wire, end) {
+        this.listenTo(graph, 'change:target', (wire, end) => {
+            this._labelIndex = null; // TODO: update index
             const gate = graph.getCell(end.id);
             if (gate && 'port' in end) {
                 setInput(wire.get('signal'), end, gate);
@@ -136,7 +139,8 @@ export class HeadlessCircuit {
                 clearInput(pend, pgate);
             }
         });
-        this.listenTo(graph, 'remove', function(cell, coll, opt) {
+        this.listenTo(graph, 'remove', (cell, coll, opt) => {
+            this._labelIndex = null; // TODO: update index
             if (!cell.isLink()) return;
             const end = cell.get('target');
             const gate = graph.getCell(end.id);
@@ -144,7 +148,8 @@ export class HeadlessCircuit {
                 clearInput(end, gate);
             }
         });
-        this.listenTo(graph, 'add', function(cell, coll, opt) {
+        this.listenTo(graph, 'add', (cell, coll, opt) => {
+            this._labelIndex = null; // TODO: update index
             if (!cell.isLink()) return;
             const strt = cell.get('source');
             const sgate = graph.getCell(strt.id);
@@ -245,16 +250,26 @@ export class HeadlessCircuit {
         else throw new Error('Invalid call to getOutput');
     }
     makeLabelIndex() {
+        // TODO: update label index on changes
+        if (this._labelIndex) return this._labelIndex;
         const fromGraph = (graph) => {
             const ret = {
                 wires: {},
-                gates: {},
-                subcircuits: {}
+                devices: {},
+                subcircuits: {},
+                inputs: {},
+                outputs: {}
             };
             for (const elem of graph.getElements()) {
+                if (elem.has('net')) {
+                    if (elem.setLogicValue) 
+                        ret.inputs[elem.get('net')] = elem;
+                    if (elem.getLogicValue) 
+                        ret.outputs[elem.get('net')] = elem;
+                }
                 if (!elem.has('label')) continue;
                 const label = elem.get('label');
-                ret.gates[label] = elem;
+                ret.devices[label] = elem;
                 if (elem instanceof this._cells.Subcircuit)
                     ret.subcircuits[label] = fromGraph(elem.get('graph'));
             }
@@ -264,7 +279,30 @@ export class HeadlessCircuit {
             }
             return ret;
         }
-        return fromGraph(this._graph);
+        return this._labelIndex = fromGraph(this._graph);
+    }
+    getLabelIndex(path = []) {
+        const f = (p, i) => {
+            if (p == path.length) {
+                return i;
+            } else {
+                const s = i.subcircuits[path[p]];
+                if (s) f(p+1, s);
+            }
+        };
+        return f(0, this.makeLabelIndex());
+    }
+    findWireByLabel(name, path = []) {
+        return this.getLabelIndex(path).wires[name];
+    }
+    findDeviceByLabel(name, path = []) {
+        return this.getLabelIndex(path).devices[name];
+    }
+    findInputByNet(name) {
+        return this.getLabelIndex([]).inputs[name];
+    }
+    findOutputByNet(name) {
+        return this.getLabelIndex([]).outputs[name];
     }
     toJSON(layout = true) {
         const subcircuits = {};

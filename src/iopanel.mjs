@@ -81,13 +81,14 @@ export class IOPanelView extends Backbone.View {
             const base_sel = $(this._baseSelectorMarkup(cell.get('bits'), base))
                 .appendTo(col);
             let sz = display3vl.size(base, cell.get('bits'));
+            const bits = cell.get('bits');
             const inp = ui.find('input').addBack('input')
                 .prop('size', sz)
                 .prop('maxlength', sz)
                 .prop('pattern', display3vl.pattern(base))
                 .on('change', (e) => {
-                    if (!display3vl.validate(base, e.target.value)) return;
-                    cell.setLogicValue(display3vl.read(base, e.target.value, cell.get('bits')));
+                    if (!display3vl.validate(base, e.target.value, bits)) return;
+                    cell.setLogicValue(display3vl.read(base, e.target.value, bits));
                 });
             const updater = (cell, sigs) => {
                 ui.val(display3vl.show(base, sigs.out));

@@ -300,8 +300,9 @@ export const MemoryView = BoxView.extend({
             const c = target.closest('td').index() - 1;
             const r = target.closest('tr').index();
             const addr = address + r * columns + c;
-            if (display3vl.validate(numbase, evt.target.value)) {
-                const val = display3vl.read(numbase, evt.target.value, this.model.get('bits'));
+            const bits = this.model.get('bits');
+            if (display3vl.validate(numbase, evt.target.value, bits)) {
+                const val = display3vl.read(numbase, evt.target.value, bits);
                 memdata.set(addr, val);
                 this.model.updateOutputs(addr);
                 target.removeClass('invalid');

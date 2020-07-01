@@ -71,31 +71,17 @@ export class Monitor {
     getWiresDesc() {
         return this.getWires().map(wire => {
             if (!wire.has('netname')) return;
-            const hier = [];
-            for (let sc = wire.graph.get('subcircuit'); sc != null; sc = sc.graph.get('subcircuit')) {
-                if (!sc.has('label')) return;
-                hier.push(sc.get('label'));
-            }
             return {
                 name: wire.get('netname'),
-                path: hier.reverse(),
+                path: wire.getWirePath(),
                 bits: wire.get('bits')
             };
         }).filter(x => x !== undefined);
     }
     loadWiresDesc(wd) {
-        const idx = this._circuit.makeLabelIndex();
         for (const w of wd) {
-            const f = (p, i) => {
-                if (p == w.path.length) {
-                    const e = i.wires[w.name];
-                    if (e && e.get('bits') == w.bits) this.addWire(e);
-                } else {
-                    const s = i.subcircuits[w.path[p]];
-                    if (s) f(p+1, s);
-                }
-            };
-            f(0, idx);
+            const e = this._circuit.findWireByLabel(w.name, w.path);
+            if (e && e.get('bits') == w.bits) this.addWire(e);
         }
     }
     _handleChange(wire, signal) {
@@ -151,10 +137,10 @@ export class MonitorView extends Backbone.View {
         this.$el.on('change', 'input[name=trigger]', (e) => {
             const settings = this._settingsFor.get(evt_wireid(e));
             const base = settings.base;
+            const bits = this.model._wires.get(evt_wireid(e)).waveform.bits;
             if (e.target.value == "") {
                 settings.trigger = "";
-            } else if (display3vl.validate(base, e.target.value)) {
-                const bits = this.model._wires.get(evt_wireid(e)).waveform.bits;
+            } else if (display3vl.validate(base, e.target.value, bits)) {
                 settings.trigger = display3vl.read(base, e.target.value, bits);
                 e.target.value = display3vl.show(base, settings.trigger);
             } else {

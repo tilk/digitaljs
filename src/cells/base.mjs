@@ -325,6 +325,14 @@ export const Wire = joint.shapes.standard.Link.define('Wire', {
         if (layout && this.has('vertices') && this.get('vertices').length > 0)
             connector.vertices = _.cloneDeep(this.get('vertices'));
         return connector;
+    },
+    getWirePath: function() {
+        const hier = [];
+        for (let sc = this.graph.get('subcircuit'); sc != null; sc = sc.graph.get('subcircuit')) {
+            if (!sc.has('label')) return null;
+            hier.push(sc.get('label'));
+        }
+        return hier.reverse();
     }
 });
 
