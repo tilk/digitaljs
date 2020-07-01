@@ -176,7 +176,8 @@ export const NumEntry = NumBase.define('NumEntry', {
         }
     ]),
     setLogicValue: function(sig) {
-        console.assert(sig.bits == this.get('bits'));
+        if (sig.bits != this.get('bits')) 
+            throw new Error("setLogicValue: wrong number of bits");
         this.set('buttonState', sig);
     },
     gateParams: NumBase.prototype.gateParams.concat(['bits']),
@@ -306,6 +307,8 @@ export const Button = Box.define('Button', {
         }
     ]),
     setLogicValue: function(sig) {
+        if (sig.bits != 1) 
+            throw new Error("setLogicValue: wrong number of bits");
         this.set('buttonState', sig.isHigh);
     }
 });
@@ -397,7 +400,8 @@ export const IOView = BoxView.extend({
 export const Input = IO.define('Input', {}, {
     io_dir: 'out',
     setLogicValue: function(sig) {
-        console.assert(sig.bits == this.get('bits'));
+        if (sig.bits != this.get('bits')) 
+            throw new Error("setLogicValue: wrong number of bits");
         this.set('outputSignals', { out: sig });
     }
 });
