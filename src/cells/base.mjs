@@ -163,12 +163,13 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
             const signals = this.get(signame);
             signals[portid] = Vector3vl.xes(bits);
             this.set(signame, signals);
+            
+            this.graph.getConnectedLinks(this, { outbound: port.dir === 'out', inbound: port.dir === 'in' })
+                .filter((wire) => wire.get(port.dir === 'out' ? 'source' : 'target').port === portid)
+                .forEach((wire) => wire.checkConnection());
         }
         //trigger port changes on model and view
         this.trigger('change:ports', this, ports);
-        
-        //todo: handle connected wires
-        console.warn('Beta property change support: Connected wires are currently not rechecked for connection');
     },
     getBitsText: function(bits) {
         return bits > 1 ? bits : '';
@@ -329,6 +330,7 @@ export const Wire = joint.shapes.standard.Link.define('Wire', {
 
     signal: Vector3vl.xes(1),
     bits: 1,
+    warning: false,
 
     // show behind gates
     z: 0
@@ -360,6 +362,8 @@ export const Wire = joint.shapes.standard.Link.define('Wire', {
         this.changeSource(this.get('source'));
     },
     remove: function() {
+        //remove warning if inside subcircuit
+        this.set('warning', false);
         const tar = this.get('target');
         const target = this.graph.getCell(tar.id);
         if (target && 'port' in tar) {

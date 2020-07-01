@@ -32,12 +32,16 @@ export class Circuit extends HeadlessCircuit {
         this._idle = null;
     }
     start() {
+        if (this.hasWarnings())
+            return; //todo: print/show error
         this._interval = setInterval(() => {
             this.updateGates();
         }, this._interval_ms);
         this.trigger('changeRunning');
     }
     startFast() {
+        if (this.hasWarnings())
+            return; //todo: print/show error
         this._idle = requestIdleCallback((dd) => {
             while (dd.timeRemaining() > 0 && this.hasPendingEvents && this._idle !== null)
                 this.updateGatesNext();

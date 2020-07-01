@@ -83,9 +83,13 @@ export class HeadlessCircuit {
     shutdown() {
         this.stopListening();
     }
+    hasWarnings() {
+        return this._graph._warnings > 0;
+    }
     makeGraph(data, subcircuits) {
         const graph = new joint.dia.Graph();
         graph._display3vl = this._display3vl;
+        graph._warnings = 0;
         this.listenTo(graph, 'change:buttonState', (gate, sig) => {
             // buttonState is triggered for any user change on inputs
             this.enqueue(gate);
@@ -109,6 +113,20 @@ export class HeadlessCircuit {
         this.listenTo(graph, 'change:target', (wire, end) => {
             this._labelIndex = null; // TODO: update index
             wire.changeTarget(end);
+        });
+        this.listenTo(graph, 'change:warning', (cell, warn) => {
+            if (cell.previous('warning') === warn)
+                return;
+            graph._warnings += warn ? 1 : -1;
+
+            //todo: better handling for stopping simulation
+            if (graph._warnings > 0 && this.running)
+                this.stop();
+
+            // bubble warning up in case of subcircuit
+            const subcir = graph.get('subcircuit');
+            if (subcir == null) return;
+            subcir.set('warning', graph._warnings > 0);
         });
         this.listenTo(graph, 'add', (cell, coll, opt) => {
             this._labelIndex = null; // TODO: update index
