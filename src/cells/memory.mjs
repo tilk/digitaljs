@@ -20,7 +20,7 @@ export const Memory = Box.define('Memory', {
     offset: 0,
     
     attrs: {
-        'path.portsplit': {
+        portsplit: {
             stroke: 'black', d: undefined
         }
     },
@@ -194,7 +194,8 @@ export const Memory = Box.define('Memory', {
     },
     markup: Box.prototype.markup.concat([{
             tagName: 'path',
-            className: 'portsplit'
+            className: 'portsplit',
+            selector: 'portsplit'
         }], Box.prototype.markupZoom),
     getGateParams: function() { 
         // hack to get memdata back

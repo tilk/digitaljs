@@ -27,6 +27,7 @@ export const NumBase = Box.define('NumBase', {
     markup: Box.prototype.markup.concat([{
             tagName: 'foreignObject',
             className: 'tooltip',
+            selector: 'tooltip',
             children: [{
                 tagName: 'body',
                 namespaceURI: 'http://www.w3.org/1999/xhtml',
@@ -41,8 +42,8 @@ export const NumBase = Box.define('NumBase', {
 });
 export const NumBaseView = BoxView.extend({
     presentationAttributes: BoxView.addPresentationAttributes({
-        bits: 'flag:bits',
-        numbase: 'flag:numbase'
+        bits: 'BITS',
+        numbase: 'NUMBASE'
     }),
     autoResizeBox: true,
     events: {
@@ -64,9 +65,9 @@ export const NumBaseView = BoxView.extend({
     },
     confirmUpdate(flags) {
         BoxView.prototype.confirmUpdate.apply(this, arguments);
-        if (this.hasFlag(flags, 'flag:bits') || this.hasFlag(flags, 'RENDER'))
+        if (this.hasFlag(flags, 'BITS') || this.hasFlag(flags, 'RENDER'))
             this.makeNumBaseSelector();
-        if (this.hasFlag(flags, 'flag:numbase'))
+        if (this.hasFlag(flags, 'NUMBASE'))
             this.updateNumBaseSelector();
     },
     makeNumBaseSelector() {
@@ -92,7 +93,7 @@ export const NumDisplay = NumBase.define('NumDisplay', {
     propagation: 0,
 
     attrs: {
-        'text.value': { 
+        value: { 
             refX: .5, refY: .5,
             textVerticalAnchor: 'middle'
         },
@@ -117,7 +118,8 @@ export const NumDisplay = NumBase.define('NumDisplay', {
     },
     markup: NumBase.prototype.markup.concat([{
             tagName: 'text',
-            className: 'value numvalue'
+            className: 'value numvalue',
+            selector: 'value'
         }
     ]),
     getLogicValue: function() {
@@ -182,7 +184,7 @@ export const NumEntry = NumBase.define('NumEntry', {
 });
 export const NumEntryView = NumBaseView.extend({
     presentationAttributes: NumBaseView.addPresentationAttributes({
-        buttonState: 'flag:buttonState'
+        buttonState: 'SIGNAL'
     }),
     events: _.merge({
         "click input": "stopprop",
@@ -195,8 +197,8 @@ export const NumEntryView = NumBaseView.extend({
     },
     confirmUpdate(flags) {
         NumBaseView.prototype.confirmUpdate.apply(this, arguments);
-        if (this.hasFlag(flags, 'flag:buttonState') ||
-            this.hasFlag(flags, 'flag:numbase')) this.settext();
+        if (this.hasFlag(flags, 'SIGNAL') ||
+            this.hasFlag(flags, 'NUMBASE')) this.settext();
     },
     settext() {
         this.$('input').val(display3vl.show(this.model.get('numbase'), this.model.get('buttonState')));
@@ -226,16 +228,17 @@ export const Lamp = Box.define('Lamp', {
 
     size: { width: 30, height: 30 },
     attrs: {
-        '.led': {
+        led: {
             refX: .5, refY: .5,
             refR: .35,
-            stroke: 'black'
+            fill: '#bfc5c6'
         }
     }
 }, {
     markup: Box.prototype.markup.concat([{
             tagName: 'circle',
-            className: 'led'
+            className: 'led',
+            selector: 'led'
         }
     ]),
     getLogicValue: function() {
@@ -243,19 +246,30 @@ export const Lamp = Box.define('Lamp', {
     }
 });
 export const LampView = BoxView.extend({
+    attrs: _.merge({}, BoxView.prototype.attrs, {
+        lamp: {
+            high: { led: { 'fill': '#03c03c' } },
+            low: { led: { 'fill': '#fc7c68' } },
+            undef: { led: { 'fill': '#bfc5c6' } }
+        }
+    }),
     confirmUpdate(flags) {
         BoxView.prototype.confirmUpdate.apply(this, arguments);
-        if (this.hasFlag(flags, 'flag:inputSignals')) {
-            this.updateLamp(this.model.get('inputSignals'));
+        if (this.hasFlag(flags, 'SIGNAL')) {
+            this.updateLamp();
         };
     },
-    updateLamp(signal) {
-        this.$(".led").toggleClass('live', signal.in.isHigh);
-        this.$(".led").toggleClass('low', signal.in.isLow);
+    updateLamp() {
+        const signal = this.model.get('inputSignals').in;
+        const attrs = this.attrs.lamp[
+            signal.isHigh ? 'high' :
+            signal.isLow ? 'low' : 'undef'
+        ];
+        this.applyAttrs(attrs);
     },
-    render() {
-        BoxView.prototype.render.apply(this, arguments);
-        this.updateLamp(this.model.get('inputSignals'));
+    update() {
+        BoxView.prototype.update.apply(this, arguments);
+        this.updateLamp();
     }
 });
 
@@ -274,7 +288,7 @@ export const Button = Box.define('Button', {
 
     size: { width: 30, height: 30 },
     attrs: {
-        '.btnface': { 
+        btnface: { 
             stroke: 'black', strokeWidth: 2,
             refX: .2, refY: .2,
             refHeight: .6, refWidth: .6,
@@ -287,7 +301,8 @@ export const Button = Box.define('Button', {
     },
     markup: Box.prototype.markup.concat([{
             tagName: 'rect',
-            className: 'btnface'
+            className: 'btnface',
+            selector: 'btnface'
         }
     ]),
     setLogicValue: function(sig) {
@@ -295,18 +310,31 @@ export const Button = Box.define('Button', {
     }
 });
 export const ButtonView = BoxView.extend({
-    presentationAttributes: BoxView.addPresentationAttributes({
-        buttonState: 'flag:buttonState',
+    attrs: _.merge({}, BoxView.prototype.attrs, {
+        button: {
+            high: { btnface: { 'fill': 'black' } },
+            low: { btnface: { 'fill': 'white' } }
+        }
     }),
-    initialize: function() {
-        BoxView.prototype.initialize.apply(this, arguments);
-        this.$(".btnface").toggleClass('live', this.model.get('buttonState'));
-    },
+    presentationAttributes: BoxView.addPresentationAttributes({
+        buttonState: 'SIGNAL',
+    }),
     confirmUpdate(flags) {
         BoxView.prototype.confirmUpdate.apply(this, arguments);
-        if (this.hasFlag(flags, 'flag:buttonState')) {
-            this.$(".btnface").toggleClass('live', this.model.get('buttonState'));
+        if (this.hasFlag(flags, 'SIGNAL')) {
+            this.updateButton();
         }
+    },
+    updateButton() {
+        const buttonState = this.model.get('buttonState');
+        const attrs = this.attrs.button[
+            buttonState ? 'high' : 'low'
+        ];
+        this.applyAttrs(attrs);
+    },
+    update() {
+        BoxView.prototype.update.apply(this, arguments);
+        this.updateButton();
     },
     events: {
         "click .btnface": "activateButton",
@@ -314,7 +342,7 @@ export const ButtonView = BoxView.extend({
     },
     activateButton() {
         this.model.set('buttonState', !this.model.get('buttonState'));
-    },
+    }
 });
 
 // Input/output model
@@ -325,7 +353,7 @@ export const IO = Box.define('IO', {
     propagation: 0,
 
     attrs: {
-        'text.ioname': {
+        ioname: {
             refX: .5, refY: .5,
             textAnchor: 'middle', textVerticalAnchor: 'middle',
             fontWeight: 'bold',
@@ -350,7 +378,8 @@ export const IO = Box.define('IO', {
     },
     markup: Box.prototype.markup.concat([{
             tagName: 'text',
-            className: 'ioname'
+            className: 'ioname',
+            selector: 'ioname'
         }
     ]),
     gateParams: Box.prototype.gateParams.concat(['bits','net'])
@@ -390,7 +419,7 @@ export const Constant = NumBase.define('Constant', {
     propagation: 0,
 
     attrs: {
-        'text.value': {
+        value: {
             refX: .5, refY: .5,
             textVerticalAnchor: 'middle'
         }
@@ -424,7 +453,8 @@ export const Constant = NumBase.define('Constant', {
     },
     markup: NumBase.prototype.markup.concat([{
             tagName: 'text',
-            className: 'value numvalue'
+            className: 'value numvalue',
+            selector: 'value'
         }
     ]),
     gateParams: NumBase.prototype.gateParams.concat(['constant']),
@@ -462,6 +492,7 @@ export const Clock = Box.define('Clock', {
         }, {
             tagName: 'foreignObject',
             className: 'tooltip',
+            selector: 'tooltip',
             children: [{
                 tagName: 'body',
                 namespaceURI: 'http://www.w3.org/1999/xhtml',
@@ -475,7 +506,7 @@ export const Clock = Box.define('Clock', {
 });
 export const ClockView = BoxView.extend({
     presentationAttributes: BoxView.addPresentationAttributes({
-        propagation: 'flag:propagation'
+        propagation: 'SIGNAL'
     }),
     events: {
         "click input": "stopprop",
@@ -489,7 +520,7 @@ export const ClockView = BoxView.extend({
     },
     confirmUpdate(flags) {
         BoxView.prototype.confirmUpdate.apply(this, arguments);
-        if (this.hasFlag(flags, 'flag:propagation')) this.updatePropagation();
+        if (this.hasFlag(flags, 'SIGNAL')) this.updatePropagation();
     },
     changePropagation(evt) {
         const val = evt.target.value;

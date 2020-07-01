@@ -18,9 +18,9 @@ export const GenMux = Gate.define('GenMux', {
             'in2': {
                 position: { name: 'top', args: { y: 5 } },
                 attrs: _.merge({}, portGroupAttrs, {
-                    'line.wire': { x2: 0, y2: -20 },
+                    wire: { x2: 0, y2: -20 },
                     port: { magnet: 'passive', refY: -20 },
-                    'text.bits': { refDx: -5, refDy: 2, textAnchor: 'start' }
+                    bits: { refDx: -5, refDy: 2, textAnchor: 'start' }
                 }),
                 z: -1
             }
@@ -52,7 +52,7 @@ export const GenMux = Gate.define('GenMux', {
         
         Gate.prototype.initialize.apply(this, arguments);
         
-        const drawBorder = (size) => this.attr(['polygon.body', 'points'], 
+        const drawBorder = (size) => this.attr(['body', 'points'], 
             [[0,0],[size.width,10],[size.width,size.height-10],[0,size.height]]
                 .map(x => x.join(',')).join(' '));
         drawBorder(this.get('size'));
@@ -78,7 +78,8 @@ export const GenMux = Gate.define('GenMux', {
     },
     markup: Gate.prototype.markup.concat([{
             tagName: 'polygon',
-            className: 'body'
+            className: 'body',
+            selector: 'body'
         }
     ]),
     gateParams: Gate.prototype.gateParams.concat(['bits']),
@@ -91,7 +92,7 @@ export const GenMuxView = GateView.extend({
     },
     confirmUpdate(flags) {
         GateView.prototype.confirmUpdate.apply(this, arguments);
-        if (this.hasFlag(flags, 'flag:inputSignals')) {
+        if (this.hasFlag(flags, 'SIGNAL')) {
             this.updateMux(this.model.get('inputSignals'));
         }
     },
