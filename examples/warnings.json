@@ -1,0 +1,95 @@
+{
+  "devices": {
+    "const1": {
+      "type": "Constant",
+      "constant": "00"
+    },
+    "not": {
+      "type": "Not",
+      "bits": 2
+    },
+    "lamp": {
+      "type": "Lamp"
+    },
+    "const2": {
+      "type": "Constant"
+    },
+    "subcir": {
+      "type": "Subcircuit",
+      "celltype": "subcir"
+    },
+    "display": {
+      "type": "NumDisplay",
+      "bits": 2
+    }
+  },
+  "connectors": [
+    {
+      "to": {
+        "id": "not",
+        "port": "in"
+      },
+      "from": {
+        "id": "const1",
+        "port": "out"
+      }
+    },
+    {
+      "to": {
+        "id": "lamp",
+        "port": "in"
+      },
+      "from": {
+        "id": "not",
+        "port": "out"
+      }
+    },
+    {
+      "to": {
+        "id": "subcir",
+        "port": "in"
+      },
+      "from": {
+        "id": "const2",
+        "port": "out"
+      }
+    },
+    {
+      "to": {
+        "id": "display",
+        "port": "in"
+      },
+      "from": {
+        "id": "subcir",
+        "port": "out"
+      }
+    }
+  ],
+  "subcircuits": {
+    "subcir": {
+      "devices": {
+        "in": {
+          "type": "Input",
+          "net": "in"
+        },
+        "out": {
+          "type": "Output",
+          "net": "out",
+          "bits": 2
+        }
+      },
+      "connectors": [
+        {
+          "to": {
+            "id": "out",
+            "port": "in"
+          },
+          "from": {
+            "id": "in",
+            "port": "out"
+          }
+        }
+      ]
+    }
+  }
+}
