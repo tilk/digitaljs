@@ -3,9 +3,10 @@
 import * as joint from 'jointjs';
 import _ from 'lodash';
 import Backbone from 'backbone';
-import { Vector3vl } from '3vl';
+import { Vector3vl, Display3vl } from '3vl';
 import * as cells from './cells.mjs';
 import FastPriorityQueue from 'fastpriorityqueue';
+import * as help from './help.mjs';
     
 export function getCellType(tp) {
     const types = {
@@ -70,6 +71,8 @@ export class HeadlessCircuit {
         this._queue = new Map();
         this._pq = new FastPriorityQueue();
         this._tick = 0;
+        this._display3vl = new Display3vl();
+        this._display3vl.addDisplay(new help.Display3vlASCII());
         this._graph = this.makeGraph(data, data.subcircuits);
         this.makeLabelIndex();
     }
@@ -78,6 +81,7 @@ export class HeadlessCircuit {
     }
     makeGraph(data, subcircuits) {
         const graph = new joint.dia.Graph();
+        graph._display3vl = this._display3vl;
         this.listenTo(graph, 'change:buttonState', (gate, sig) => {
             this.enqueue(gate);
             this.trigger('userChange');

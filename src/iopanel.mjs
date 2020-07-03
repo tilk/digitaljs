@@ -6,7 +6,6 @@ import $ from 'jquery';
 import Backbone from 'backbone';
 import * as help from './help.mjs';
 import * as cells from './cells.mjs';
-import { display3vl } from './help.mjs';
 import { Vector3vl } from '3vl';
 
 let uniq_cntr = 0;
@@ -56,6 +55,7 @@ export class IOPanelView extends Backbone.View {
             .attr('for', this._id(cell.id));
     }
     _handleAddInput(cell) {
+        const display3vl = this.model._display3vl;
         const row = $(this._rowMarkup)
             .appendTo(this.$('div[data-iopanel="input"]'));
         this._addLabelFor(row, cell);
@@ -78,7 +78,7 @@ export class IOPanelView extends Backbone.View {
             const ui = $(this._inputMarkup)
                 .appendTo(col);
             let base = 'hex';
-            const base_sel = $(this._baseSelectorMarkup(cell.get('bits'), base))
+            const base_sel = $(this._baseSelectorMarkup(display3vl, cell.get('bits'), base))
                 .appendTo(col);
             let sz = display3vl.size(base, cell.get('bits'));
             const bits = cell.get('bits');
@@ -106,6 +106,7 @@ export class IOPanelView extends Backbone.View {
         }
     }
     _handleAddOutput(cell) {
+        const display3vl = this.model._display3vl;
         const row = $(this._rowMarkup)
             .appendTo(this.$('div[data-iopanel="input"]'));
         this._addLabel(row, cell);
@@ -127,7 +128,7 @@ export class IOPanelView extends Backbone.View {
             const ui = $(this._inputMarkup)
                 .appendTo(col);
             let base = 'hex';
-            const base_sel = $(this._baseSelectorMarkup(cell.get('bits'), base))
+            const base_sel = $(this._baseSelectorMarkup(display3vl, cell.get('bits'), base))
                 .appendTo(col);
             const sz = display3vl.size(base, cell.get('bits'));
             const inp = ui.find('input').addBack('input')

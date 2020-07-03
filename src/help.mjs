@@ -3,8 +3,6 @@
 import bigInt from 'big-integer';
 import { Vector3vl, Display3vlWithRegex, Display3vl } from '3vl';
 
-export const display3vl = new Display3vl();
-
 class Display3vlDec extends Display3vlWithRegex {
     constructor() {
         super('[0-9]*|x');
@@ -64,7 +62,7 @@ const controlCodes20 = [
     'CAN', 'EM',  'SUB', 'ESC', 'FS',  'GS',  'RS',  'US',
     'SP',  'DEL'];
 
-class Display3vlASCII extends Display3vlWithRegex {
+export class Display3vlASCII extends Display3vlWithRegex {
     constructor() {
         super('[\x20-\x7e\xa0-\xff\ufffd\u2400-\u2421]|' + controlCodes20.join('|'))
     }
@@ -109,11 +107,8 @@ class Display3vlASCII extends Display3vlWithRegex {
     }
 }
 
-display3vl.addDisplay(new Display3vlDec());
-display3vl.addDisplay(new Display3vlDec2c());
-display3vl.addDisplay(new Display3vlASCII());
         
-export function baseSelectMarkupHTML(bits, base) { 
+export function baseSelectMarkupHTML(display3vl, bits, base) { 
     const markup = display3vl.usableDisplays('read', bits)
         .map(n => '<option value="' + n + '"' + (n == base ? ' selected="selected"' : '') +'>' + n + '</option>');
     return '<select name="base">' + markup.join("") + '</select>';

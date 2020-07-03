@@ -5,7 +5,6 @@ import _ from 'lodash';
 import $ from 'jquery';
 import Backbone from 'backbone';
 import * as help from './help.mjs';
-import { display3vl } from './help.mjs';
 import { Vector3vl } from '3vl';
 import { Waveform, drawWaveform, defaultSettings, extendSettings, calcGridStep } from 'wavecanvas';
 import ResizeObserver from 'resize-observer-polyfill';
@@ -119,6 +118,7 @@ export class MonitorView extends Backbone.View {
         function evt_wireid(e) {
             return $(e.target).closest('tr').attr('wireid');
         }
+        const display3vl = this.model._circuit._display3vl;
         this.$el.on('click', 'button[name=remove]', (e) => { this.model.removeWire(evt_wireid(e)); });
         this.$el.on('input', 'select[name=base]', (e) => { 
             const base = e.target.value;
@@ -247,6 +247,7 @@ export class MonitorView extends Backbone.View {
         }
     }
     _draw(wireid) {
+        const display3vl = this.model._circuit._display3vl;
         const canvas = this.$('tr[wireid="'+wireid+'"]').find('canvas');
         const waveform = this.model._wires.get(wireid).waveform;
         drawWaveform(waveform, canvas[0].getContext('2d'), this._settingsFor.get(wireid), display3vl);
@@ -289,8 +290,9 @@ export class MonitorView extends Backbone.View {
     _createRow(wire) {
         const wireid = getWireId(wire);
         const settings = this._settingsFor.get(wireid);
+        const display3vl = this.model._circuit._display3vl;
         const base_sel = wire.get('bits') > 1 
-            ? (this._baseSelectorMarkup instanceof Function ? this._baseSelectorMarkup(wire.get('bits'), settings.base) : this._baseSelectorMarkup) 
+            ? (this._baseSelectorMarkup instanceof Function ? this._baseSelectorMarkup(display3vl, wire.get('bits'), settings.base) : this._baseSelectorMarkup) 
             : '';
         const trigger = wire.get('bits') > 1 ? this._busTriggerMarkup : this._bitTriggerMarkup;
         const row = $('<tr><td class="name"></td><td>'+base_sel+'</td><td>'+trigger+'</td><td>'+this._removeButtonMarkup+'</td><td><canvas class="wavecanvas" height="30" draggable="true"></canvas></td></tr>');

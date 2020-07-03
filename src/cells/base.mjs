@@ -3,7 +3,6 @@
 import * as joint from 'jointjs';
 import _ from 'lodash';
 import bigInt from 'big-integer';
-import { display3vl } from '../help.mjs';
 import { Vector3vl } from '3vl';
 
 export const portGroupAttrs = {
@@ -551,6 +550,7 @@ export const WireView = joint.dia.LinkView.extend({
     hover_gentext() {
         if (!this.wire_hover) return;
         const sig = this.model.get('signal');
+        const display3vl = this.model.graph._display3vl;
         const hovertext = [
             'Hex: ' + display3vl.show('hex', sig) + '<br>',
             'Dec: ' + display3vl.show('dec', sig) + '<br>',
