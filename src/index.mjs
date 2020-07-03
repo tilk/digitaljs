@@ -172,6 +172,13 @@ export class Circuit extends HeadlessCircuit {
             });
             graph.set('laid_out', true);
         }
+        paper.listenTo(this, 'display:add', function() {
+            // a very inefficient way to refresh numbase dropdowns
+            // TODO: a better method
+            paper.freeze();
+            graph.resetCells(graph.getCells());
+            paper.unfreeze();
+        });
         this.listenTo(paper, 'render:done', function() {
             paper.fitToContent({ padding: 30, allowNewOrigin: 'any' });
         });

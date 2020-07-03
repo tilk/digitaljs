@@ -25,6 +25,7 @@ export class IOPanelView extends Backbone.View {
         this.render();
         this.listenTo(this.model._graph, 'add', this._handleAdd);
         this.listenTo(this.model._graph, 'remove', this._handleRemove);
+        this.listenTo(this.model, "display:add", () => { this.render() });
     }
     render() {
         this.$el.html('<form>' + this._inputPanelMarkup + this._outputPanelMarkup + '</form>');

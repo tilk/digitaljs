@@ -106,6 +106,7 @@ export class MonitorView extends Backbone.View {
         this.listenTo(this.model, 'add', this._handleAdd);
         this.listenTo(this.model, 'remove', this._handleRemove);
         this.listenTo(this.model, 'change', this._handleChange);
+        this.listenTo(this.model._circuit, "display:add", () => { this.render() });
         this.listenTo(this.model._circuit, 'postUpdateGates', (tick) => {
             if (this._live) this.start = tick - this._width / this._settings.pixelsPerTick;
             this._settings.present = tick;
@@ -115,6 +116,10 @@ export class MonitorView extends Backbone.View {
             }, {timeout: 100});
         });
         this.render();
+        this._resizeObserver = new ResizeObserver(() => {
+            this._canvasResize();
+        });
+        this._resizeObserver.observe(this.el);
         function evt_wireid(e) {
             return $(e.target).closest('tr').attr('wireid');
         }
@@ -181,10 +186,6 @@ export class MonitorView extends Backbone.View {
             this.$('table').append(this._handleAdd(wobj.wire));
         }
         this._canvasResize();
-        this._resizeObserver = new ResizeObserver(() => {
-            this._canvasResize();
-        });
-        this._resizeObserver.observe(this.el);
         return this;
     }
     shutdown() {

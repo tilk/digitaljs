@@ -76,6 +76,10 @@ export class HeadlessCircuit {
         this._graph = this.makeGraph(data, data.subcircuits);
         this.makeLabelIndex();
     }
+    addDisplay(display) {
+        this._display3vl.addDisplay(display);
+        this.trigger('display:add', display);
+    }
     shutdown() {
         this.stopListening();
     }
