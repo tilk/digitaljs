@@ -3,58 +3,6 @@
 import bigInt from 'big-integer';
 import { Vector3vl, Display3vlWithRegex, Display3vl } from '3vl';
 
-class Display3vlDec extends Display3vlWithRegex {
-    constructor() {
-        super('[0-9]*|x');
-    }
-    get name() {
-        return "dec";
-    }
-    get sort() {
-        return 0;
-    }
-    can(kind, bits) {
-        return true;
-    }
-    read(data, bits) {
-        if (data == 'x') return Vector3vl.xes(bits);
-        return bigint2sig(bigInt(data), bits);
-    }
-    show(data) {
-        if (!data.isFullyDefined) return 'x';
-        return sig2bigint(data).toString();
-    }
-    size(bits) {
-        return Math.ceil(bits / Math.log2(10))
-    }
-};
-
-class Display3vlDec2c extends Display3vlWithRegex {
-    constructor() {
-        super('-?[0-9]*|x');
-    }
-    get name() {
-        return "dec2c";
-    }
-    get sort() {
-        return 0;
-    }
-    can(kind, bits) {
-        return bits > 0;
-    }
-    read(data, bits) {
-        if (data == 'x') return Vector3vl.xes(bits);
-        return bigint2sig(bigInt(data), bits);
-    }
-    show(data) {
-        if (!data.isFullyDefined) return 'x';
-        return sig2bigint(data, true).toString();
-    }
-    size(bits) {
-        return 1 + Math.ceil(bits / Math.log2(10))
-    }
-};
-
 const controlCodes20 = [
     'NUL', 'SOH', 'STX', 'ETX', 'EOT', 'ENQ', 'ACK', 'BEL', 
     'BS',  'HT',  'LF',  'VT',  'FF',  'CR',  'SO',  'SI', 
