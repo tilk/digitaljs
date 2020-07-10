@@ -295,7 +295,7 @@ export class HeadlessCircuit {
                 return i;
             } else {
                 const s = i.subcircuits[path[p]];
-                if (s) f(p+1, s);
+                if (s) return f(p+1, s);
             }
         };
         return f(0, this.makeLabelIndex());
