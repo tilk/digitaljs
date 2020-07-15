@@ -523,6 +523,11 @@ export const WireView = joint.dia.LinkView.extend({
         this.updateBits();
     },
 
+    onRemove() {
+        joint.dia.LinkView.prototype.onRemove.apply(this, arguments);
+        this.hover_remove();
+    },
+
     mouseenter: function(evt) {
         joint.dia.LinkView.prototype.mouseenter.apply(this, arguments);
         this.showTools();
@@ -539,7 +544,10 @@ export const WireView = joint.dia.LinkView.extend({
     mouseleave: function(evt) {
         joint.dia.LinkView.prototype.mouseleave.apply(this, arguments);
         this.hideTools();
+        this.hover_remove();
+    },
 
+    hover_remove() {
         if (this.wire_hover) {
             this.wire_hover.remove();
             this.wire_hover = null;
