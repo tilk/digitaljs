@@ -423,6 +423,11 @@ export const InputView = IOView;
 // Output model
 export const Output = IO.define('Output', {}, {
     io_dir: 'in',
+    changeInputSignals: function(sigs) {
+        const subcir = this.graph.get('subcircuit');
+        if (subcir == null) return; // not inside a subcircuit
+        subcir.setOutput(sigs.in, this.get('net'));
+    },
     getLogicValue: function() {
         return this.get('inputSignals').in;
     }

@@ -83,88 +83,57 @@ export class HeadlessCircuit {
     shutdown() {
         this.stopListening();
     }
+    hasWarnings() {
+        return this._graph._warnings > 0;
+    }
     makeGraph(data, subcircuits) {
         const graph = new joint.dia.Graph();
         graph._display3vl = this._display3vl;
+        graph._warnings = 0;
         this.listenTo(graph, 'change:buttonState', (gate, sig) => {
+            // buttonState is triggered for any user change on inputs
             this.enqueue(gate);
             this.trigger('userChange');
         });
-        this.listenTo(graph, 'change:signal', (wire, signal) => {
-            const gate = graph.getCell(wire.get('target').id);
-            if (gate) setInput(signal, wire.get('target'), gate);
-        });
         this.listenTo(graph, 'change:inputSignals', (gate, sigs) => {
-            // forward the change back from a subcircuit
-            if (gate instanceof this._cells.Output) {
-                const subcir = gate.graph.get('subcircuit');
-                if (subcir == null) return; // not in a subcircuit
-                console.assert(subcir instanceof this._cells.Subcircuit);
-                subcir.set('outputSignals', _.chain(subcir.get('outputSignals'))
-                    .clone().set(gate.get('net'), sigs.in).value());
+            if (gate.changeInputSignals) {
+                gate.changeInputSignals(sigs);
             } else this.enqueue(gate);
         });
         this.listenTo(graph, 'change:outputSignals', (gate, sigs) => {
-            _.chain(graph.getConnectedLinks(gate, {outbound: true}))
-                .groupBy((wire) => wire.get('source').port)
-                .forEach((wires, port) => 
-                    wires.forEach((wire) => wire.set('signal', sigs[port])))
-                .value();
+            gate.changeOutputSignals(sigs);
         });
-        this.listenTo(graph, 'change:source', (wire, end) => {
+        this.listenTo(graph, 'change:signal', (wire, signal) => {
+            wire.changeSignal(signal);
+        });
+        this.listenTo(graph, 'change:source', (wire, src) => {
             this._labelIndex = null; // TODO: update index
-            const gate = graph.getCell(end.id);
-            if (gate && 'port' in end) {
-                wire.set('signal', gate.get('outputSignals')[end.port]);
-            } else {
-                wire.set('signal', Vector3vl.xes(wire.get('bits')));
-            }
+            wire.changeSource(src);
         });
-        const setInput = (sig, end, gate) => {
-            gate.set('inputSignals', _.chain(gate.get('inputSignals'))
-                .clone().set(end.port, sig).value());
-            // forward the input change to a subcircuit
-            if (gate instanceof this._cells.Subcircuit) {
-                const iomap = gate.get('circuitIOmap');
-                const input = gate.get('graph').getCell(iomap[end.port]);
-                console.assert(input instanceof this._cells.Input);
-                input.set('outputSignals', { out: sig });
-            }
-        }
-        function clearInput(end, gate) {
-            var bits = gate.getPort(end.port).bits;
-            setInput(Vector3vl.xes(bits), end, gate);
-        }
         this.listenTo(graph, 'change:target', (wire, end) => {
             this._labelIndex = null; // TODO: update index
-            const gate = graph.getCell(end.id);
-            if (gate && 'port' in end) {
-                setInput(wire.get('signal'), end, gate);
-            } 
-            const pend = wire.previous('target');
-            const pgate = graph.getCell(pend.id);
-            if (pgate && 'port' in pend) {
-                clearInput(pend, pgate);
-            }
+            wire.changeTarget(end);
         });
-        this.listenTo(graph, 'remove', (cell, coll, opt) => {
-            this._labelIndex = null; // TODO: update index
-            if (!cell.isLink()) return;
-            const end = cell.get('target');
-            const gate = graph.getCell(end.id);
-            if (gate && 'port' in end) {
-                clearInput(end, gate);
-            }
+        this.listenTo(graph, 'change:warning', (cell, warn) => {
+            if (cell.previous('warning') === warn)
+                return;
+            graph._warnings += warn ? 1 : -1;
+
+            //todo: better handling for stopping simulation
+            if (graph._warnings > 0 && this.running)
+                this.stop();
+
+            // bubble warning up in case of subcircuit
+            const subcir = graph.get('subcircuit');
+            if (subcir == null) return;
+            subcir.set('warning', graph._warnings > 0);
         });
         this.listenTo(graph, 'add', (cell, coll, opt) => {
             this._labelIndex = null; // TODO: update index
-            if (!cell.isLink()) return;
-            const strt = cell.get('source');
-            const sgate = graph.getCell(strt.id);
-            if (sgate && 'port' in strt) {
-                cell.set('signal', sgate.get('outputSignals')[strt.port]);
-                cell.set('bits', sgate.getPort(strt.port).bits);
-            }
+            if (cell.onAdd) cell.onAdd();
+        });
+        this.listenTo(graph, 'remove', (cell, coll, opt) => {
+            this._labelIndex = null; // TODO: update index
         });
         let laid_out = false;
         for (const devid in data.devices) {

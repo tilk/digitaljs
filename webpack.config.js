@@ -15,7 +15,8 @@ const tests = [
     {name: 'ram', title: 'Simple RAM'},
     {name: 'fsm', title: 'Finite State Machine'},
     {name: 'gates', title: 'All available gates'},
-    {name: 'horner', title: 'Benchmark example'}
+    {name: 'horner', title: 'Benchmark example'},
+    {name: 'warnings', title: 'Warnings example'}
 ];
 
 module.exports = {

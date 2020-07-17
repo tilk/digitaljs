@@ -1,6 +1,7 @@
 "use strict";
 
 import * as joint from 'jointjs';
+import _ from 'lodash';
 import { Box, BoxView } from './base';
 import { IO, Input, Output } from './io';
 import bigInt from 'big-integer';
@@ -10,8 +11,13 @@ import * as help from '../help.mjs';
 export const Subcircuit = Box.define('Subcircuit', {
     /* default properties */
     propagation: 0,
+    warning: false,
 
     attrs: {
+        wrapper: {
+            refWidth: 1, refHeight: 1,
+            stroke: 'red', strokeWidth: 10
+        },
         type: {
             refX: .5, refY: -10,
             textAnchor: 'middle', textVerticalAnchor: 'middle'
@@ -54,8 +60,21 @@ export const Subcircuit = Box.define('Subcircuit', {
         this.set('inputSignals', inputSignals);
         this.set('outputSignals', outputSignals);
         this.get('ports').items = ports;
+        this.set('warning', graph._warnings > 0);
         
         Box.prototype.initialize.apply(this, arguments);
+    },
+    setInput: function(sig, port) {
+        Box.prototype.setInput.apply(this, arguments);
+        const iomap = this.get('circuitIOmap');
+        const input = this.get('graph').getCell(iomap[port]);
+        console.assert(input.setLogicValue);
+        input.setLogicValue(sig);
+    },
+    setOutput: function(sig, port) {
+        const signals = _.clone(this.get('outputSignals'));
+        signals[port] = sig;
+        this.set('outputSignals', signals);
     },
     //add offset of 10pt to account for the top label at layout time
     getLayoutSize: function() {
@@ -69,7 +88,11 @@ export const Subcircuit = Box.define('Subcircuit', {
             y: position.y - position.height / 2 + 10
         });
     },
-    markup: Box.prototype.markup.concat([{
+    markup: [{
+            tagName: 'rect',
+            selector: 'wrapper'
+        }
+    ].concat(Box.prototype.markup, [{
             tagName: 'text',
             className: 'type',
             selector: 'type'
@@ -80,7 +103,33 @@ export const Subcircuit = Box.define('Subcircuit', {
 });
 
 export const SubcircuitView = BoxView.extend({
+    attrs: _.merge({}, BoxView.prototype.attrs, {
+        warning: {
+            warn: { wrapper: { 'stroke-opacity': '0.5' } },
+            none: { wrapper: { 'stroke-opacity': '0' } }
+        }
+    }),
     autoResizeBox: true,
+    presentationAttributes: BoxView.addPresentationAttributes({
+        warning: 'WARNING'
+    }),
+    confirmUpdate(flags) {
+        BoxView.prototype.confirmUpdate.apply(this, arguments);
+        if (this.hasFlag(flags, 'WARNING')) {
+            this.updateWarning();
+        }
+    },
+    updateWarning() {
+        const warning = this.model.get('warning');
+        const attrs = this.attrs.warning[
+            warning ? 'warn' : 'none'
+        ];
+        this.applyAttrs(attrs);
+    },
+    update() {
+        BoxView.prototype.update.apply(this, arguments);
+        this.updateWarning();
+    },
     events: {
         "click foreignObject.tooltip": "stopprop",
         "mousedown foreignObject.tooltip": "stopprop",
