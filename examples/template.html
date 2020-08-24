@@ -21,24 +21,27 @@
     </div>
     <script>
       var circuit, monitor, monitorview, iopanel, paper;
-      var subpapers = {};
+      var papers = {};
       const fixed = function (fixed) {
-        paper.fixed(fixed);
-        Object.values(subpapers).forEach(p => p.fixed(fixed));
+        Object.values(papers).forEach(p => p.fixed(fixed));
       }
       const loadCircuit = function (json) {
         circuit = new digitaljs.Circuit(json);
         monitor = new digitaljs.Monitor(circuit);
         monitorview = new digitaljs.MonitorView({model: monitor, el: $('#monitor') });
         iopanel = new digitaljs.IOPanelView({model: circuit, el: $('#iopanel') });
+        circuit.on('new:paper', function(paper) {
+          paper.fixed($('input[name=fixed]').prop('checked'));
+          papers[paper.cid] = paper;
+          paper.on('element:pointerdblclick', (cellView) => {
+            window.digitaljsCell = cellView.model;
+            console.info('You can now access the doubly clicked gate as digitaljsCell in your WebBrowser console!');
+          });
+        });
         paper = circuit.displayOn($('#paper'));
         fixed($('input[name=fixed]').prop('checked'));
-        circuit.on('new:paper', function(subpaper) {
-          subpaper.fixed($('input[name=fixed]').prop('checked'));
-          subpapers[subpaper.cid] = subpaper;
-        });
-        circuit.on('remove:paper', function(subpaper) {
-          delete subpapers[subpaper.cid];
+        circuit.on('remove:paper', function(paper) {
+          delete papers[paper.cid];
         });
         circuit.start();
       }
