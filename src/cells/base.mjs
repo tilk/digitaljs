@@ -290,10 +290,11 @@ export const GateView = joint.dia.ElementView.extend({
             dir === 'out' ? this.model.get('outputSignals') :
             _.merge({}, this.model.get('inputSignals'), this.model.get('outputSignals'));
         for (const port in signals) {
+            const signal = signals[port];
             const attrs = this.attrs.signal[
-                signals[port].isHigh ? 'high' :
-                signals[port].isLow ? 'low' :
-                signals[port].isDefined ? 'def' : 'undef'
+                !signal.isDefined ? 'undef' :
+                signal.isHigh ? 'high' :
+                signal.isLow ? 'low' : 'def'
             ];
             this.applyPortAttrs(port, attrs);
         }
@@ -569,9 +570,9 @@ export const WireView = joint.dia.LinkView.extend({
     updateSignal() {
         const signal = this.model.get('signal');
         const attrs = this.attrs.signal[
+            !signal.isDefined ? 'undef' :
             signal.isHigh ? 'high' :
-            signal.isLow ? 'low' :
-            signal.isDefined ? 'def' : 'undef'
+            signal.isLow ? 'low' : 'def'
         ];
         this.applyAttrs(attrs);
     },
