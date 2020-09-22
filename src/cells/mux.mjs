@@ -27,7 +27,7 @@ export const GenMux = Gate.define('GenMux', {
         }
     }
 }, {
-    initialize: function() {
+    initialize() {
         const bits = this.get('bits');
         const ports = [
             { id: 'sel', group: 'in2', dir: 'in', bits: bits.sel },
@@ -59,18 +59,18 @@ export const GenMux = Gate.define('GenMux', {
         
         this.on('change:size', (_, size) => drawBorder(size));
     },
-    operation: function(data) {
+    operation(data) {
         const i = this.muxInput(data.sel);
         if (i === undefined) return { out: Vector3vl.xes(this.get('bits').in) };
         return { out: data['in' + i] };
     },
     //add offset of 20pt to account for the top selection port at layout time
-    getLayoutSize: function() {
+    getLayoutSize() {
         const size = this.size();
         size.height += 20;
         return size;
     },
-    setLayoutPosition: function(position) {
+    setLayoutPosition(position) {
         this.set('position', {
             x: position.x - position.width / 2,
             y: position.y - position.height / 2 + 20
@@ -82,8 +82,8 @@ export const GenMux = Gate.define('GenMux', {
             selector: 'body'
         }
     ]),
-    gateParams: Gate.prototype.gateParams.concat(['bits']),
-    unsupportedPropChanges: Gate.prototype.unsupportedPropChanges.concat(['bits'])
+    _gateParams: Gate.prototype._gateParams.concat(['bits']),
+    _unsupportedPropChanges: Gate.prototype._unsupportedPropChanges.concat(['bits'])
 });
 export const GenMuxView = GateView.extend({
     initialize() {
@@ -93,14 +93,14 @@ export const GenMuxView = GateView.extend({
     confirmUpdate(flags) {
         GateView.prototype.confirmUpdate.apply(this, arguments);
         if (this.hasFlag(flags, 'SIGNAL')) {
-            this.updateMux(this.model.get('inputSignals'));
+            this._updateMux(this.model.get('inputSignals'));
         }
     },
     render() {
         GateView.prototype.render.apply(this, arguments);
-        this.updateMux(this.model.get('inputSignals'));
+        this._updateMux(this.model.get('inputSignals'));
     },
-    updateMux(data) {
+    _updateMux(data) {
         const i = this.model.muxInput(data.sel);
         for (const num of Array(this.n_ins).keys()) {
             this.$('[port=in' + num + '] path.decor').css('visibility', i == num ? 'visible' : 'hidden');

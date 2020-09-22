@@ -24,7 +24,7 @@ export const Subcircuit = Box.define('Subcircuit', {
         }
     }
 }, {
-    initialize: function() {
+    initialize() {
         this.bindAttrToProp('text.type/text', 'celltype');
         
         const graph = this.get('graph');
@@ -64,25 +64,25 @@ export const Subcircuit = Box.define('Subcircuit', {
         
         Box.prototype.initialize.apply(this, arguments);
     },
-    setInput: function(sig, port) {
-        Box.prototype.setInput.apply(this, arguments);
+    _setInput(sig, port) {
+        Box.prototype._setInput.apply(this, arguments);
         const iomap = this.get('circuitIOmap');
         const input = this.get('graph').getCell(iomap[port]);
         console.assert(input.setLogicValue);
         input.setLogicValue(sig);
     },
-    setOutput: function(sig, port) {
+    _setOutput(sig, port) {
         const signals = _.clone(this.get('outputSignals'));
         signals[port] = sig;
         this.set('outputSignals', signals);
     },
     //add offset of 10pt to account for the top label at layout time
-    getLayoutSize: function() {
+    getLayoutSize() {
         const size = this.size();
         size.height += 10;
         return size;
     },
-    setLayoutPosition: function(position) {
+    setLayoutPosition(position) {
         this.set('position', {
             x: position.x - position.width / 2,
             y: position.y - position.height / 2 + 10
@@ -98,8 +98,8 @@ export const Subcircuit = Box.define('Subcircuit', {
             selector: 'type'
         }
     ], Box.prototype.markupZoom),
-    gateParams: Box.prototype.gateParams.concat(['celltype']),
-    unsupportedPropChanges: Box.prototype.unsupportedPropChanges.concat(['celltype'])
+    _gateParams: Box.prototype._gateParams.concat(['celltype']),
+    _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['celltype'])
 });
 
 export const SubcircuitView = BoxView.extend({
@@ -109,33 +109,33 @@ export const SubcircuitView = BoxView.extend({
             none: { wrapper: { 'stroke-opacity': '0' } }
         }
     }),
-    autoResizeBox: true,
+    _autoResizeBox: true,
     presentationAttributes: BoxView.addPresentationAttributes({
         warning: 'WARNING'
     }),
     confirmUpdate(flags) {
         BoxView.prototype.confirmUpdate.apply(this, arguments);
         if (this.hasFlag(flags, 'WARNING')) {
-            this.updateWarning();
+            this._updateWarning();
         }
     },
-    updateWarning() {
+    _updateWarning() {
         const warning = this.model.get('warning');
         const attrs = this.attrs.warning[
             warning ? 'warn' : 'none'
         ];
-        this.applyAttrs(attrs);
+        this._applyAttrs(attrs);
     },
     update() {
         BoxView.prototype.update.apply(this, arguments);
-        this.updateWarning();
+        this._updateWarning();
     },
     events: {
         "click foreignObject.tooltip": "stopprop",
         "mousedown foreignObject.tooltip": "stopprop",
         "click a.zoom": "zoomInCircuit"
     },
-    zoomInCircuit: function(evt) {
+    zoomInCircuit(evt) {
         evt.stopPropagation();
         this.paper.trigger('open:subcircuit', this.model);
         return false;

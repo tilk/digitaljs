@@ -73,7 +73,7 @@ export class HeadlessCircuit {
         this._tick = 0;
         this._display3vl = new Display3vl();
         this._display3vl.addDisplay(new help.Display3vlASCII());
-        this._graph = this.makeGraph(data, data.subcircuits);
+        this._graph = this._makeGraph(data, data.subcircuits);
         this.makeLabelIndex();
     }
     addDisplay(display) {
@@ -86,36 +86,36 @@ export class HeadlessCircuit {
     hasWarnings() {
         return this._graph._warnings > 0;
     }
-    makeGraph(data, subcircuits) {
+    _makeGraph(data, subcircuits) {
         const graph = new joint.dia.Graph();
         graph._display3vl = this._display3vl;
         graph._warnings = 0;
         this.listenTo(graph, 'change:buttonState', (gate) => {
             // buttonState is triggered for any user change on inputs
-            this.enqueue(gate);
+            this._enqueue(gate);
             this.trigger('userChange');
         });
         this.listenTo(graph, 'change:constantCache', (gate) => {
-            this.enqueue(gate);
+            this._enqueue(gate);
         });
         this.listenTo(graph, 'change:inputSignals', (gate, sigs) => {
-            if (gate.changeInputSignals) {
-                gate.changeInputSignals(sigs);
-            } else this.enqueue(gate);
+            if (gate._changeInputSignals) {
+                gate._changeInputSignals(sigs);
+            } else this._enqueue(gate);
         });
         this.listenTo(graph, 'change:outputSignals', (gate, sigs) => {
-            gate.changeOutputSignals(sigs);
+            gate._changeOutputSignals(sigs);
         });
         this.listenTo(graph, 'change:signal', (wire, signal) => {
-            wire.changeSignal(signal);
+            wire._changeSignal(signal);
         });
         this.listenTo(graph, 'change:source', (wire, src) => {
             this._labelIndex = null; // TODO: update index
-            wire.changeSource(src);
+            wire._changeSource(src);
         });
         this.listenTo(graph, 'change:target', (wire, end) => {
             this._labelIndex = null; // TODO: update index
-            wire.changeTarget(end);
+            wire._changeTarget(end);
         });
         this.listenTo(graph, 'change:warning', (cell, warn) => {
             if (cell.previous('warning') === warn)
@@ -147,10 +147,10 @@ export class HeadlessCircuit {
             const cellArgs = _.clone(dev);
             cellArgs.id = devid;
             if (cellType == this._cells.Subcircuit)
-                cellArgs.graph = this.makeGraph(subcircuits[dev.celltype], subcircuits);
+                cellArgs.graph = this._makeGraph(subcircuits[dev.celltype], subcircuits);
             const cell = new cellType(cellArgs);
             graph.addCell(cell);
-            this.enqueue(cell);
+            this._enqueue(cell);
         }
         for (const conn of data.connectors) {
             graph.addCell(new this._cells.Wire({
@@ -163,7 +163,7 @@ export class HeadlessCircuit {
         if (laid_out) graph.set('laid_out', true);
         return graph;
     }
-    enqueue(gate) {
+    _enqueue(gate) {
         const k = (this._tick + gate.get('propagation')) | 0;
         const sq = (() => {
             const q = this._queue.get(k);
@@ -175,7 +175,7 @@ export class HeadlessCircuit {
         })();
         sq.set(gate, gate.get('inputSignals'));
     }
-    updateGatesNext() {
+    _updateGatesNext() {
         const k = this._pq.poll() | 0;
         console.assert(k >= this._tick);
         this._tick = k;
@@ -198,8 +198,8 @@ export class HeadlessCircuit {
         this.trigger('postUpdateGates', k, count);
         return count;
     }
-    updateGates() {
-        if (this._pq.peek() == this._tick) return this.updateGatesNext();
+    _updateGates() {
+        if (this._pq.peek() == this._tick) return this._updateGatesNext();
         else {
             const k = this._tick | 0;
             this.trigger('preUpdateGates', k);

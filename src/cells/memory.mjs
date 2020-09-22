@@ -26,15 +26,15 @@ export const Memory = Box.define('Memory', {
     ports: {
         groups: {
             'in': {
-                position: Box.prototype.getStackedPosition({ side: 'left' })
+                position: Box.prototype._getStackedPosition({ side: 'left' })
             },
             'out': {
-                position: Box.prototype.getStackedPosition({ side: 'right' })
+                position: Box.prototype._getStackedPosition({ side: 'right' })
             }
         }
     }
 }, {
-    initialize: function() {
+    initialize() {
         const bits = this.get('bits');
         const abits = this.get('abits');
         const rdports = this.get('rdports');
@@ -115,7 +115,7 @@ export const Memory = Box.define('Memory', {
             this.attr('path.portsplit/d', 'M ' + path.join(' M '));
         });
     },
-    operation: function(data) {
+    operation(data) {
         const out = {};
         const check_enabled = (portname, port) => {
             const pol = what => port[what + '_polarity'] ? 1 : -1;
@@ -171,7 +171,7 @@ export const Memory = Box.define('Memory', {
             if (port.transparent) do_read('rd' + num, port);
         return out;
     },
-    updateOutputs: function(addr) {
+    _updateOutputs(addr) {
         if (addr < 0 || addr >= this.get('words')) return;
         const data = this.get('inputSignals');
         const calc_addr = sig => help.sig2bigint(sig, false) - this.get('offset');
@@ -196,23 +196,23 @@ export const Memory = Box.define('Memory', {
             className: 'portsplit',
             selector: 'portsplit'
         }], Box.prototype.markupZoom),
-    getGateParams: function() { 
+    getGateParams() {
         // hack to get memdata back
         const params = Box.prototype.getGateParams.apply(this, arguments);
         params.memdata = this.memdata.toJSON();
         return params;
     },
-    gateParams: Box.prototype.gateParams.concat(['bits', 'abits', 'rdports', 'wrports', 'words', 'offset']),
-    unsupportedPropChanges: Box.prototype.unsupportedPropChanges.concat(['bits', 'abits', 'rdports', 'wrports', 'words', 'offset'])
+    _gateParams: Box.prototype._gateParams.concat(['bits', 'abits', 'rdports', 'wrports', 'words', 'offset']),
+    _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['bits', 'abits', 'rdports', 'wrports', 'words', 'offset'])
 });
 export const MemoryView = BoxView.extend({
-    autoResizeBox: true,
+    _autoResizeBox: true,
     events: {
         "click foreignObject.tooltip": "stopprop",
         "mousedown foreignObject.tooltip": "stopprop",
-        "click a.zoom": "displayEditor"
+        "click a.zoom": "_displayEditor"
     },
-    displayEditor(evt) {
+    _displayEditor(evt) {
         evt.stopPropagation();
         const display3vl = this.model.graph._display3vl;
         const div = $('<div>', {
@@ -305,7 +305,7 @@ export const MemoryView = BoxView.extend({
             if (display3vl.validate(numbase, evt.target.value, bits)) {
                 const val = display3vl.read(numbase, evt.target.value, bits);
                 memdata.set(addr, val);
-                this.model.updateOutputs(addr);
+                this.model._updateOutputs(addr);
                 target.removeClass('invalid');
             } else {
                 target.addClass('invalid');

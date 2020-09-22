@@ -50,12 +50,12 @@ export const GateSVG = Gate.define('GateSVG', {
             selector: 'body'
         }
     ]),
-    gateParams: Gate.prototype.gateParams.concat(['bits'])
+    _gateParams: Gate.prototype._gateParams.concat(['bits'])
 });
 
 // Single-input gate model
 export const Gate11 = GateSVG.define('Gate11', {}, {
-    initialize: function() {
+    initialize() {
         const bits = this.get('bits');
         this.get('ports').items = [
             { id: 'in', group: 'in', dir: 'in', bits: bits },
@@ -65,14 +65,14 @@ export const Gate11 = GateSVG.define('Gate11', {}, {
         GateSVG.prototype.initialize.apply(this, arguments);
         
         this.on('change:bits', (_, bits) => {
-            this.setPortsBits({ in: bits, out: bits });
+            this._setPortsBits({ in: bits, out: bits });
         });
     }
 });
 
 // Two-input gate model
 export const Gate21 = GateSVG.define('Gate21', {}, {
-    initialize: function() {
+    initialize() {
         const bits = this.get('bits');
         this.get('ports').items = [
             { id: 'in1', group: 'in', dir: 'in', bits: bits },
@@ -83,14 +83,14 @@ export const Gate21 = GateSVG.define('Gate21', {}, {
         GateSVG.prototype.initialize.apply(this, arguments);
         
         this.on('change:bits', (_, bits) => {
-            this.setPortsBits({ in1: bits, in2: bits, out: bits });
+            this._setPortsBits({ in1: bits, in2: bits, out: bits });
         });
     }
 });
 
 // Reducing gate model
 export const GateReduce = GateSVG.define('GateReduce', {}, {
-    initialize: function() {
+    initialize() {
         const bits = this.get('bits');
         this.get('ports').items = [
             { id: 'in', group: 'in', dir: 'in', bits: bits },
@@ -100,7 +100,7 @@ export const GateReduce = GateSVG.define('GateReduce', {}, {
         GateSVG.prototype.initialize.apply(this, arguments);
         
         this.on('change:bits', (_, bits) => {
-            this.setPortsBits({ in: bits });
+            this._setPortsBits({ in: bits });
         });
     }
 });
@@ -109,7 +109,7 @@ export const GateReduce = GateSVG.define('GateReduce', {}, {
 export const Repeater = Gate11.define('Repeater', {
     attrs: { body: { d: buf_path }}
 }, {
-    operation: function(data) {
+    operation(data) {
         return { out: data.in };
     }
 });
@@ -119,7 +119,7 @@ export const RepeaterView = GateView;
 export const Not = Gate11.define('Not', {
     attrs: { body: { d: buf_path }}
 }, {
-    operation: function(data) {
+    operation(data) {
         return { out: data.in.not() };
     },
     markup: Gate11.prototype.markup.concat([neg_markup])
@@ -130,7 +130,7 @@ export const NotView = GateView;
 export const Or = Gate21.define('Or', {
     attrs: { body: { d: or_path }}
 }, {
-    operation: function(data) {
+    operation(data) {
         return { out: data.in1.or(data.in2) };
     }
 });
@@ -140,7 +140,7 @@ export const OrView = GateView;
 export const And = Gate21.define('And', {
     attrs: { body: { d: and_path }}
 }, {
-    operation: function(data) {
+    operation(data) {
         return { out: data.in1.and(data.in2) };
     }
 });
@@ -150,7 +150,7 @@ export const AndView = GateView;
 export const Nor = Gate21.define('Nor', {
     attrs: { body: { d: or_path }}
 }, {
-    operation: function(data) {
+    operation(data) {
         return { out: data.in1.nor(data.in2) };
     },
     markup: Gate21.prototype.markup.concat([neg_markup])
@@ -161,7 +161,7 @@ export const NorView = GateView;
 export const Nand = Gate21.define('Nand', {
     attrs: { body: { d: and_path }}
 }, {
-    operation: function(data) {
+    operation(data) {
         return { out: data.in1.nand(data.in2) };
     },
     markup: Gate21.prototype.markup.concat([neg_markup])
@@ -172,7 +172,7 @@ export const NandView = GateView;
 export const Xor = Gate21.define('Xor', {
     attrs: { body: { d: or_path }}
 }, {
-    operation: function(data) {
+    operation(data) {
         return { out: data.in1.xor(data.in2) };
     },
     markup: Gate21.prototype.markup.concat([xor_arc_path_markup])
@@ -183,7 +183,7 @@ export const XorView = GateView;
 export const Xnor = Gate21.define('Xnor', {
     attrs: { body: { d: or_path }}
 }, {
-    operation: function(data) {
+    operation(data) {
         return { out: data.in1.xnor(data.in2) };
     },
     markup: Gate21.prototype.markup.concat([xor_arc_path_markup, neg_markup])
@@ -194,7 +194,7 @@ export const XnorView = GateView;
 export const OrReduce = GateReduce.define('OrReduce', {
     attrs: { body: { d: or_path }}
 }, {
-    operation: function(data) {
+    operation(data) {
         return { out: data.in.reduceOr() };
     }
 });
@@ -204,7 +204,7 @@ export const OrReduceView = GateView;
 export const NorReduce = GateReduce.define('NorReduce', {
     attrs: { body: { d: or_path }}
 }, {
-    operation: function(data) {
+    operation(data) {
         return { out: data.in.reduceNor() };
     },
     markup: GateReduce.prototype.markup.concat([neg_markup])
@@ -215,7 +215,7 @@ export const NorReduceView = GateView;
 export const AndReduce = GateReduce.define('AndReduce', {
     attrs: { body: { d: and_path }}
 }, {
-    operation: function(data) {
+    operation(data) {
         return { out: data.in.reduceAnd() };
     }
 });
@@ -225,7 +225,7 @@ export const AndReduceView = GateView;
 export const NandReduce = GateReduce.define('NandReduce', {
     attrs: { body: { d: and_path }}
 }, {
-    operation: function(data) {
+    operation(data) {
         return { out: data.in.reduceNand() };
     },
     markup: GateReduce.prototype.markup.concat([neg_markup])
@@ -236,7 +236,7 @@ export const NandReduceView = GateView;
 export const XorReduce = GateReduce.define('XorReduce', {
     attrs: { body: { d: or_path }}
 }, {
-    operation: function(data) {
+    operation(data) {
         return { out: data.in.reduceXor() };
     },
     markup: GateReduce.prototype.markup.concat([xor_arc_path_markup])
@@ -247,7 +247,7 @@ export const XorReduceView = GateView;
 export const XnorReduce = GateReduce.define('XnorReduce', {
     attrs: { body: { d: or_path }}
 }, {
-    operation: function(data) {
+    operation(data) {
         return { out: data.in.reduceXnor() };
     },
     markup: GateReduce.prototype.markup.concat([xor_arc_path_markup, neg_markup])

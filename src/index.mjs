@@ -35,7 +35,7 @@ export class Circuit extends HeadlessCircuit {
         if (this.hasWarnings())
             return; //todo: print/show error
         this._interval = setInterval(() => {
-            this.updateGates();
+            this._updateGates();
         }, this._interval_ms);
         this.trigger('changeRunning');
     }
@@ -44,7 +44,7 @@ export class Circuit extends HeadlessCircuit {
             return; //todo: print/show error
         this._idle = requestIdleCallback((dd) => {
             while (dd.timeRemaining() > 0 && this.hasPendingEvents && this._idle !== null)
-                this.updateGatesNext();
+                this._updateGatesNext();
             if (this._idle !== null) {
                 if (!this.hasPendingEvents) {
                     this._idle = null;
@@ -103,9 +103,9 @@ export class Circuit extends HeadlessCircuit {
         });
     }
     displayOn(elem) {
-        return this.makePaper(elem, this._graph);
+        return this._makePaper(elem, this._graph);
     }
-    makePaper(elem, graph, opts) {
+    _makePaper(elem, graph, opts) {
         const circuit = this;
         opts = opts || {};
         const paper = new joint.dia.Paper({
@@ -133,7 +133,7 @@ export class Circuit extends HeadlessCircuit {
                 args: { radius: 10 }
             },
             cellViewNamespace: this._cells,
-            validateConnection: function(vs, ms, vt, mt, e, vl) {
+            validateConnection(vs, ms, vt, mt, e, vl) {
                 if (e === 'target') {
                     if (!mt) return false;
                     const pt = vt.model.getPort(vt.findAttribute('port', mt));
@@ -165,10 +165,10 @@ export class Circuit extends HeadlessCircuit {
                 edgeSep: 0,
                 rankSep: 110,
                 rankDir: "LR",
-                setPosition: function(element, position) {
+                setPosition(element, position) {
                     element.setLayoutPosition(position);
                 },
-                exportElement: function(element) {
+                exportElement(element) {
                     return element.getLayoutSize();
                 },
                 dagre: dagre,
@@ -194,7 +194,7 @@ export class Circuit extends HeadlessCircuit {
             }).appendTo('html > body');
             const pdiv = $('<div>').appendTo(div);
             const graph = model.get('graph');
-            const paper = this.makePaper(pdiv, graph);
+            const paper = this._makePaper(pdiv, graph);
             paper.once('render:done', function() {
                 circuit._windowCallback('Subcircuit', div, () => {
                     paper.remove();

@@ -22,15 +22,15 @@ export const FSM = Box.define('FSM', {
     ports: {
         groups: {
             'in': {
-                position: Box.prototype.getStackedPosition({ side: 'left' })
+                position: Box.prototype._getStackedPosition({ side: 'left' })
             },
             'out': {
-                position: Box.prototype.getStackedPosition({ side: 'right' })
+                position: Box.prototype._getStackedPosition({ side: 'right' })
             }
         }
     }
 }, {
-    initialize: function() {
+    initialize() {
         const bits = this.get('bits');
         const polarity = this.get('polarity');
         
@@ -104,7 +104,7 @@ export const FSM = Box.define('FSM', {
             }
         });
     },
-    operation: function(data) {
+    operation(data) {
         const bits = this.get('bits');
         const polarity = this.get('polarity');
         const next_trans = () => {
@@ -139,18 +139,18 @@ export const FSM = Box.define('FSM', {
         }
     },
     markup: Box.prototype.markup.concat(Box.prototype.markupZoom),
-    gateParams: Box.prototype.gateParams.concat(['bits', 'polarity', 'states', 'init_state', 'trans_table']),
-    unsupportedPropChanges: Box.prototype.unsupportedPropChanges.concat(['bits', 'polarity', 'states', 'init_state', 'trans_table'])
+    _gateParams: Box.prototype._gateParams.concat(['bits', 'polarity', 'states', 'init_state', 'trans_table']),
+    _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['bits', 'polarity', 'states', 'init_state', 'trans_table'])
 });
 
 export const FSMView = BoxView.extend({
-    autoResizeBox: true,
+    _autoResizeBox: true,
     events: {
         "click foreignObject.tooltip": "stopprop",
         "mousedown foreignObject.tooltip": "stopprop",
-        "click a.zoom": "displayEditor"
+        "click a.zoom": "_displayEditor"
     },
-    displayEditor(evt) {
+    _displayEditor(evt) {
         evt.stopPropagation();
         const div = $('<div>', {
             title: "FSM: " + this.model.get('label')
