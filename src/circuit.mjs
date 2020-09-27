@@ -90,10 +90,13 @@ export class HeadlessCircuit {
         const graph = new joint.dia.Graph();
         graph._display3vl = this._display3vl;
         graph._warnings = 0;
-        this.listenTo(graph, 'change:buttonState', (gate, sig) => {
+        this.listenTo(graph, 'change:buttonState', (gate) => {
             // buttonState is triggered for any user change on inputs
             this.enqueue(gate);
             this.trigger('userChange');
+        });
+        this.listenTo(graph, 'change:constantCache', (gate) => {
+            this.enqueue(gate);
         });
         this.listenTo(graph, 'change:inputSignals', (gate, sigs) => {
             if (gate.changeInputSignals) {
@@ -118,6 +121,7 @@ export class HeadlessCircuit {
             if (cell.previous('warning') === warn)
                 return;
             graph._warnings += warn ? 1 : -1;
+            console.assert(graph._warnings >= 0);
 
             //todo: better handling for stopping simulation
             if (graph._warnings > 0 && this.running)

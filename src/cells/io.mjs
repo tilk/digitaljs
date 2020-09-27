@@ -167,8 +167,6 @@ export const NumEntry = NumBase.define('NumEntry', {
         this.on('change:bits', (_, bits) => {
             this.setPortsBits({ out: bits });
         });
-        
-        this.set('buttonState', this.get('outputSignals').out);
     },
     operation: function() {
         return { out: this.get('buttonState') };
@@ -257,7 +255,8 @@ export const Lamp = Box.define('Lamp', {
     ]),
     getLogicValue: function() {
         return this.get('inputSignals').in;
-    }
+    },
+    unsupportedPropChanges: Box.prototype.unsupportedPropChanges.concat(['bits'])
 });
 export const LampView = BoxView.extend({
     attrs: _.merge({}, BoxView.prototype.attrs, {
@@ -323,7 +322,8 @@ export const Button = Box.define('Button', {
         if (sig.bits != 1) 
             throw new Error("setLogicValue: wrong number of bits");
         this.set('buttonState', sig.isHigh);
-    }
+    },
+    unsupportedPropChanges: Box.prototype.unsupportedPropChanges.concat(['bits'])
 });
 export const ButtonView = BoxView.extend({
     attrs: _.merge({}, BoxView.prototype.attrs, {
@@ -391,6 +391,15 @@ export const IO = Box.define('IO', {
             this.setPortsBits(b);
         });
         this.bindAttrToProp('text.ioname/text', 'net');
+    },
+    setPortsBits: function(portsBits) {
+        Box.prototype.setPortsBits.apply(this, arguments);
+        
+        const subcir = this.graph.get('subcircuit');
+        if (subcir == null) return; // not inside a subcircuit
+        const portsBitsSubcir = {};
+        portsBitsSubcir[this.get('net')] = portsBits[this.io_dir];
+        subcir.setPortsBits(portsBitsSubcir);
     },
     markup: Box.prototype.markup.concat([{
             tagName: 'text',
@@ -479,14 +488,17 @@ export const Constant = NumBase.define('Constant', {
     numbaseType: 'show'
 });
 export const ConstantView = NumBaseView.extend({
+    presentationAttributes: NumBaseView.addPresentationAttributes({
+        constantCache: 'CONSTANT'
+    }),
     confirmUpdate(flags) {
         NumBaseView.prototype.confirmUpdate.apply(this, arguments);
-        if (this.hasFlag(flags, 'SIGNAL2') ||
+        if (this.hasFlag(flags, 'CONSTANT') ||
             this.hasFlag(flags, 'NUMBASE')) this.settext();
     },
     settext() {
         const display3vl = this.model.graph._display3vl;
-        this.$('text.value tspan').text(display3vl.show(this.model.get('numbase'), this.model.get('outputSignals').out));
+        this.$('text.value tspan').text(display3vl.show(this.model.get('numbase'), this.model.get('constantCache')));
     },
     update() {
         NumBaseView.prototype.update.apply(this, arguments);
@@ -534,7 +546,8 @@ export const Clock = Box.define('Clock', {
                 }]
             }]
         }
-    ])
+    ]),
+    unsupportedPropChanges: Box.prototype.unsupportedPropChanges.concat(['bits'])
 });
 export const ClockView = BoxView.extend({
     presentationAttributes: BoxView.addPresentationAttributes({

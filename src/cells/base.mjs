@@ -96,13 +96,14 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
         
         this.bindAttrToProp('label/text', 'label');
         if (this.unsupportedPropChanges.length > 0) {
-            this.on(this.unsupportedPropChanges.map(prop => 'change:'+prop).join(' '), function(model, _, opt) {
+            this.on(this.unsupportedPropChanges.map(prop => 'change:'+prop).join(' '), (__, ___, opt) => {
                 if (opt.init) return;
                 
-                if (opt.propertyPath)
-                    console.warn('Beta property change support: "' + opt.propertyPath + '" changes on ' + model.prop('type') + ' are currently not reflected.');
-                else
-                    console.warn('Beta property change support: changes on ' + model.prop('type') + ' are currently not reflected. Also consider using Cell.prop() instead of Model.set().');
+                const changed = _.intersection(Object.keys(this.changed), this.unsupportedPropChanges);
+                changed.forEach(attr => {
+                    this.set(attr, this.previous(attr), {init: true});
+                });
+                console.warn('Beta property change support: "' + changed + '" changes on ' + this.get('type') + ' are (currently) not supported.');
             });
         }
     },
@@ -127,11 +128,8 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
         this.on('change:' + prop, (_, val) => this.attr(attr, val));
     },
     _preprocessPorts: function(ports) {
+        this.resetPortsSignals(ports);
         for (const port of ports) {
-            const signame = port.dir === 'in' ? 'inputSignals' : 'outputSignals';
-            this.get(signame)[port.id] = Vector3vl.xes(port.bits);
-            console.assert(port.bits > 0);
-            
             port.attrs = {};
             port.attrs['bits'] = { text: this.getBitsText(port.bits) }
             if (port.labelled) {
@@ -150,7 +148,8 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
         }
     },
     setPortsBits: function(portsBits) {
-        const ports = this.get('ports');
+        const ports = _.cloneDeep(this.get('ports'));
+        const portsReset = [];
         for (const portid in portsBits) {
             const bits = portsBits[portid];
             const port = ports.items.find(function(port) {
@@ -158,26 +157,47 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
             });
             port.bits = bits;
             port.attrs['bits'].text = this.getBitsText(bits);
-            
-            const signame = port.dir === 'in' ? 'inputSignals' : 'outputSignals';
-            const signals = this.get(signame);
-            signals[portid] = Vector3vl.xes(bits);
-            this.set(signame, signals);
-            
-            this.graph.getConnectedLinks(this, { outbound: port.dir === 'out', inbound: port.dir === 'in' })
-                .filter((wire) => wire.get(port.dir === 'out' ? 'source' : 'target').port === portid)
-                .forEach((wire) => wire.checkConnection());
+            portsReset.push(port);
         }
+        this.resetPortsSignals(portsReset);
         //trigger port changes on model and view
-        this.trigger('change:ports', this, ports);
+        this.set('ports', ports);
+        this.graph.getConnectedLinks(this, { outbound: true })
+            .filter((wire) => wire.get('source').port in portsBits)
+            .forEach((wire) => wire.changeSource(wire.get('source')));
+        this.graph.getConnectedLinks(this, { inbound: true })
+            .filter((wire) => wire.get('target').port in portsBits)
+            .forEach((wire) => wire.changeTarget(wire.get('target')));
     },
     getBitsText: function(bits) {
         return bits > 1 ? bits : '';
     },
-    removePortSignals: function(port) {
-        port = port.id !== undefined ? port : this.getPort(port);
-        const signame = port.dir === 'in' ? 'inputSignals' : 'outputSignals';
-        this.removeProp([signame, port.id]);
+    resetPortsSignals: function(ports) {
+        const signals = {
+            in: this.get('inputSignals'),
+            out: this.get('outputSignals')
+        }
+        
+        for (const port of ports) {
+            console.assert(port.bits > 0);
+            signals[port.dir][port.id] = Vector3vl.xes(port.bits);
+        }
+        
+        this.set('inputSignals', signals.in);
+        this.set('outputSignals', signals.out);
+    },
+    removePortsSignals: function(ports) {
+        const signals = {
+            in: this.get('inputSignals'),
+            out: this.get('outputSignals')
+        }
+        
+        for (const port of ports) {
+            delete signals[port.dir][port.id];
+        }
+        
+        this.set('inputSignals', signals.in);
+        this.set('outputSignals', signals.out);
     },
     addPort: function(port) {
         this.addPorts([port]);
@@ -187,11 +207,10 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
         joint.shapes.basic.Generic.prototype.addPorts.apply(this, arguments);
     },
     removePort: function(port, opt) {
-        this.removePortSignals(port);
-        joint.shapes.basic.Generic.prototype.removePort.apply(this, arguments);
+        this.removePorts([port]);
     },
     removePorts: function(ports, opt) {
-        ports.forEach((port) => this.removePortSignals(port), this);
+        this.removePortsSignals(ports);
         joint.shapes.basic.Generic.prototype.removePorts.apply(this, arguments);
     },
     getStackedPosition: function(opt) {
@@ -306,9 +325,11 @@ export const GateView = joint.dia.ElementView.extend({
         }
     },
     applyPortAttrs(port, attrs) {
-        for (const selector in attrs) {
-            const node = this._portElementsCache[port].portSelectors[selector];
-            this.setNodeAttributes(node, attrs[selector]);
+        if (port in this._portElementsCache) {
+            for (const selector in attrs) {
+                const node = this._portElementsCache[port].portSelectors[selector];
+                this.setNodeAttributes(node, attrs[selector]);
+            }
         }
     },
     _updatePorts() {
@@ -372,12 +393,20 @@ export const Wire = joint.shapes.standard.Link.define('Wire', {
         }
         joint.shapes.standard.Link.prototype.remove.apply(this, arguments);
     },
-    changeSignal(sig) {
+    propagateSignal(tar, sig) {
         const target = this.getTargetElement();
-        if (target) target.setInput(sig, this.get('target').port);
+        if (target) {
+            if (this.get('warning'))
+                target.clearInput(tar.port);
+            else
+                target.setInput(sig, tar.port);
+        }
+    },
+    changeSignal(sig) {
+        this.propagateSignal(this.get('target'), sig);
     },
     changeSource(src) {
-        const source = this.graph.getCell(src.id);
+        const source = this.getSourceElement();
         if (source && 'port' in src) {
             this.set('bits', source.getPort(src.port).bits);
             this.checkConnection();
@@ -388,11 +417,11 @@ export const Wire = joint.shapes.standard.Link.define('Wire', {
         }
     },
     changeTarget(tar) {
-        const target = this.graph.getCell(tar.id);
-        if (target && 'port' in tar) {
-            target.setInput(this.get('signal'), tar.port);
-        }
         this.checkConnection();
+        if ('port' in tar) {
+            this.propagateSignal(tar, this.get('signal'));
+        }
+        if (!this.hasChanged('target')) return;
         const preTar = this.previous('target');
         const preTarget = this.graph.getCell(preTar.id);
         if (preTarget && 'port' in preTar) {
@@ -402,7 +431,7 @@ export const Wire = joint.shapes.standard.Link.define('Wire', {
     checkConnection() {
         const tar = this.get('target');
         const target = this.graph.getCell(tar.id);
-        this.set('warning', target && target.getPort(tar.port).bits !== this.get('bits'));
+        this.set('warning', (target && target.getPort(tar.port).bits !== this.get('bits')) || false);
     },
     getWireParams: function(layout) {
         const connector = {

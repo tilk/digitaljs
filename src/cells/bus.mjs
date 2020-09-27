@@ -96,7 +96,7 @@ export const BusSlice = Box.define('BusSlice', {
         
         Box.prototype.initialize.apply(this, arguments);
         
-        this.on('change:extend', (_, extend) => {
+        this.on('change:slice', (_, slice) => {
             this.setPortsBits({ in: slice.total, out: slice.count });
         });
     },
