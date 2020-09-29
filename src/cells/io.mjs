@@ -161,6 +161,7 @@ export const NumEntry = NumBase.define('NumEntry', {
         this.get('ports').items = [
             { id: 'out', group: 'out', dir: 'out', bits: bits }
         ];
+        this.setLogicValue(Vector3vl.xes(bits));
         
         NumBase.prototype.initialize.apply(this, arguments);
         
