@@ -68,7 +68,7 @@ export const Dff = Box.define('Dff', {
         if ('clock' in polarity) {
             last_clk = this.last_clk;
             this.last_clk = data.clk.get(0);
-        };
+        }
         if ('enable' in polarity && data.en.get(0) != pol('enable'))
             return this.get('outputSignals');
         if ('arst' in polarity && data.arst.get(0) == pol('arst'))

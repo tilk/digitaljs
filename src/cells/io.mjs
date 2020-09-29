@@ -161,6 +161,7 @@ export const NumEntry = NumBase.define('NumEntry', {
         this.get('ports').items = [
             { id: 'out', group: 'out', dir: 'out', bits: bits }
         ];
+        this.setLogicValue(Vector3vl.xes(bits));
         
         NumBase.prototype.initialize.apply(this, arguments);
         
@@ -422,7 +423,7 @@ export const IOView = BoxView.extend({
 export const Input = IO.define('Input', {}, {
     io_dir: 'out',
     setLogicValue: function(sig) {
-        if (sig.bits != this.get('bits')) 
+        if (sig.bits != this.get('bits'))
             throw new Error("setLogicValue: wrong number of bits");
         this.set('outputSignals', { out: sig });
     }
