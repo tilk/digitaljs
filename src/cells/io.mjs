@@ -423,7 +423,7 @@ export const IOView = BoxView.extend({
 export const Input = IO.define('Input', {}, {
     io_dir: 'out',
     setLogicValue: function(sig) {
-        if (sig.bits != this.get('bits')) 
+        if (sig.bits != this.get('bits'))
             throw new Error("setLogicValue: wrong number of bits");
         this.set('outputSignals', { out: sig });
     }
