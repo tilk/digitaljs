@@ -13,7 +13,7 @@ export const NumBase = Box.define('NumBase', {
     numbase: 'hex',
     bits: 1
 }, {
-    initialize: function(args) {
+    initialize() {
         Box.prototype.initialize.apply(this, arguments);
 
         this.on('change:bits', (_, bits) => {
@@ -38,23 +38,23 @@ export const NumBase = Box.define('NumBase', {
             }]
         }
     ]),
-    gateParams: Box.prototype.gateParams.concat(['numbase'])
+    _gateParams: Box.prototype._gateParams.concat(['numbase'])
 });
 export const NumBaseView = BoxView.extend({
     presentationAttributes: BoxView.addPresentationAttributes({
         bits: 'BITS',
         numbase: 'NUMBASE'
     }),
-    autoResizeBox: true,
+    _autoResizeBox: true,
     events: {
         "click select.numbase": "stopprop",
         "mousedown select.numbase": "stopprop",
-        "change select.numbase": "changeNumbase"
+        "change select.numbase": "_changeNumbase"
     },
-    changeNumbase: function(evt) {
+    _changeNumbase(evt) {
         this.model.set('numbase', evt.target.value || 'bin');
     },
-    calculateBoxWidth: function() {
+    _calculateBoxWidth() {
         const testtext = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         $(testtext).text(Array(this.model.get('bits')).fill('0').join(''))
             .attr('class', 'numvalue')
@@ -66,11 +66,11 @@ export const NumBaseView = BoxView.extend({
     confirmUpdate(flags) {
         BoxView.prototype.confirmUpdate.apply(this, arguments);
         if (this.hasFlag(flags, 'BITS') || this.hasFlag(flags, 'RENDER'))
-            this.makeNumBaseSelector();
+            this._makeNumBaseSelector();
         if (this.hasFlag(flags, 'NUMBASE'))
-            this.updateNumBaseSelector();
+            this._updateNumBaseSelector();
     },
-    makeNumBaseSelector() {
+    _makeNumBaseSelector() {
         this.$('select.numbase').empty();
         const numbase = this.model.get('numbase');
         const display3vl = this.model.graph._display3vl;
@@ -82,7 +82,7 @@ export const NumBaseView = BoxView.extend({
                 .appendTo(this.$('select.numbase'));
         }
     },
-    updateNumBaseSelector() {
+    _updateNumBaseSelector() {
         this.$('select.numbase').val(this.model.get('numbase'));
     }
 });
@@ -101,7 +101,7 @@ export const NumDisplay = NumBase.define('NumDisplay', {
         },
     }
 }, {
-    initialize: function(args) {
+    initialize() {
         const bits = this.get('bits');
         this.get('ports').items = [
             { id: 'in', group: 'in', dir: 'in', bits: bits }
@@ -110,7 +110,7 @@ export const NumDisplay = NumBase.define('NumDisplay', {
         NumBase.prototype.initialize.apply(this, arguments);
         
         this.on('change:bits', (_, bits) => {
-            this.setPortsBits({ in: bits });
+            this._setPortsBits({ in: bits });
         });
     },
     markup: NumBase.prototype.markup.concat([{
@@ -119,25 +119,25 @@ export const NumDisplay = NumBase.define('NumDisplay', {
             selector: 'value'
         }
     ]),
-    getLogicValue: function() {
+    getLogicValue() {
         return this.get('inputSignals').in;
     },
-    gateParams: NumBase.prototype.gateParams.concat(['bits']),
+    _gateParams: NumBase.prototype._gateParams.concat(['bits']),
     numbaseType: 'show'
 });
 export const NumDisplayView = NumBaseView.extend({
     confirmUpdate(flags) {
         NumBaseView.prototype.confirmUpdate.apply(this, arguments);
         if (this.hasFlag(flags, 'SIGNAL') ||
-            this.hasFlag(flags, 'NUMBASE')) this.settext();
+            this.hasFlag(flags, 'NUMBASE')) this._showText();
     },
-    settext() {
+    _showText() {
         const display3vl = this.model.graph._display3vl;
         this.$('text.value tspan').text(display3vl.show(this.model.get('numbase'), this.model.get('inputSignals').in));
     },
     update() {
         NumBaseView.prototype.update.apply(this, arguments);
-        this.settext();
+        this._showText();
     }
 });
 
@@ -156,7 +156,7 @@ export const NumEntry = NumBase.define('NumEntry', {
         }
     }
 }, {
-    initialize: function(args) {
+    initialize() {
         const bits = this.get('bits');
         this.get('ports').items = [
             { id: 'out', group: 'out', dir: 'out', bits: bits }
@@ -166,10 +166,10 @@ export const NumEntry = NumBase.define('NumEntry', {
         NumBase.prototype.initialize.apply(this, arguments);
         
         this.on('change:bits', (_, bits) => {
-            this.setPortsBits({ out: bits });
+            this._setPortsBits({ out: bits });
         });
     },
-    operation: function() {
+    operation() {
         return { out: this.get('buttonState') };
     },
     markup: NumBase.prototype.markup.concat([{
@@ -185,12 +185,12 @@ export const NumEntry = NumBase.define('NumEntry', {
             }]
         }
     ]),
-    setLogicValue: function(sig) {
+    setLogicValue(sig) {
         if (sig.bits != this.get('bits')) 
             throw new Error("setLogicValue: wrong number of bits");
         this.set('buttonState', sig);
     },
-    gateParams: NumBase.prototype.gateParams.concat(['bits']),
+    _gateParams: NumBase.prototype._gateParams.concat(['bits']),
     numbaseType: 'read'
 });
 export const NumEntryView = NumBaseView.extend({
@@ -200,19 +200,19 @@ export const NumEntryView = NumBaseView.extend({
     events: _.merge({
         "click input": "stopprop",
         "mousedown input": "stopprop",
-        "change input": "change"
+        "change input": "_onChange"
     }, NumBaseView.prototype.events),
     confirmUpdate(flags) {
         NumBaseView.prototype.confirmUpdate.apply(this, arguments);
         if (this.hasFlag(flags, 'SIGNAL') ||
-            this.hasFlag(flags, 'NUMBASE')) this.settext();
+            this.hasFlag(flags, 'NUMBASE')) this._showText();
     },
-    settext() {
+    _showText() {
         const display3vl = this.model.graph._display3vl;
         this.$('input').val(display3vl.show(this.model.get('numbase'), this.model.get('buttonState')));
         this.$('input').removeClass('invalid');
     },
-    change(evt) {
+    _onChange(evt) {
         const numbase = this.model.get('numbase');
         const bits = this.model.get('bits');
         const display3vl = this.model.graph._display3vl;
@@ -225,7 +225,7 @@ export const NumEntryView = NumBaseView.extend({
     },
     update() {
         NumBaseView.prototype.update.apply(this, arguments);
-        this.settext();
+        this._showText();
     }
 });
 
@@ -254,10 +254,10 @@ export const Lamp = Box.define('Lamp', {
             selector: 'led'
         }
     ]),
-    getLogicValue: function() {
+    getLogicValue() {
         return this.get('inputSignals').in;
     },
-    unsupportedPropChanges: Box.prototype.unsupportedPropChanges.concat(['bits'])
+    _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['bits'])
 });
 export const LampView = BoxView.extend({
     attrs: _.merge({}, BoxView.prototype.attrs, {
@@ -270,20 +270,20 @@ export const LampView = BoxView.extend({
     confirmUpdate(flags) {
         BoxView.prototype.confirmUpdate.apply(this, arguments);
         if (this.hasFlag(flags, 'SIGNAL')) {
-            this.updateLamp();
+            this._updateLamp();
         };
     },
-    updateLamp() {
+    _updateLamp() {
         const signal = this.model.get('inputSignals').in;
         const attrs = this.attrs.lamp[
             signal.isHigh ? 'high' :
             signal.isLow ? 'low' : 'undef'
         ];
-        this.applyAttrs(attrs);
+        this._applyAttrs(attrs);
     },
     update() {
         BoxView.prototype.update.apply(this, arguments);
-        this.updateLamp();
+        this._updateLamp();
     }
 });
 
@@ -310,7 +310,7 @@ export const Button = Box.define('Button', {
         }
     }
 }, {
-    operation: function() {
+    operation() {
         return { out: this.get('buttonState') ? Vector3vl.ones(1) : Vector3vl.zeros(1) };
     },
     markup: Box.prototype.markup.concat([{
@@ -319,12 +319,12 @@ export const Button = Box.define('Button', {
             selector: 'btnface'
         }
     ]),
-    setLogicValue: function(sig) {
+    setLogicValue(sig) {
         if (sig.bits != 1) 
             throw new Error("setLogicValue: wrong number of bits");
         this.set('buttonState', sig.isHigh);
     },
-    unsupportedPropChanges: Box.prototype.unsupportedPropChanges.concat(['bits'])
+    _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['bits'])
 });
 export const ButtonView = BoxView.extend({
     attrs: _.merge({}, BoxView.prototype.attrs, {
@@ -339,25 +339,25 @@ export const ButtonView = BoxView.extend({
     confirmUpdate(flags) {
         BoxView.prototype.confirmUpdate.apply(this, arguments);
         if (this.hasFlag(flags, 'SIGNAL')) {
-            this.updateButton();
+            this._updateButton();
         }
     },
-    updateButton() {
+    _updateButton() {
         const buttonState = this.model.get('buttonState');
         const attrs = this.attrs.button[
             buttonState ? 'high' : 'low'
         ];
-        this.applyAttrs(attrs);
+        this._applyAttrs(attrs);
     },
     update() {
         BoxView.prototype.update.apply(this, arguments);
-        this.updateButton();
+        this._updateButton();
     },
     events: {
-        "click .btnface": "activateButton",
+        "click .btnface": "_activateButton",
         "mousedown .btnface": "stopprop"
     },
-    activateButton() {
+    _activateButton() {
         this.model.set('buttonState', !this.model.get('buttonState'));
     }
 });
@@ -378,7 +378,7 @@ export const IO = Box.define('IO', {
         }
     }
 }, {
-    initialize: function(args) {
+    initialize() {
         const bits = this.get('bits');
         this.get('ports').items = [
             { id: this.io_dir, group: this.io_dir, dir: this.io_dir, bits: bits }
@@ -389,18 +389,18 @@ export const IO = Box.define('IO', {
         this.on('change:bits', (_, bits) => {
             const b = {};
             b[this.io_dir] = bits;
-            this.setPortsBits(b);
+            this._setPortsBits(b);
         });
         this.bindAttrToProp('text.ioname/text', 'net');
     },
-    setPortsBits: function(portsBits) {
-        Box.prototype.setPortsBits.apply(this, arguments);
+    _setPortsBits(portsBits) {
+        Box.prototype._setPortsBits.apply(this, arguments);
         
         const subcir = this.graph.get('subcircuit');
         if (subcir == null) return; // not inside a subcircuit
         const portsBitsSubcir = {};
         portsBitsSubcir[this.get('net')] = portsBits[this.io_dir];
-        subcir.setPortsBits(portsBitsSubcir);
+        subcir._setPortsBits(portsBitsSubcir);
     },
     markup: Box.prototype.markup.concat([{
             tagName: 'text',
@@ -408,11 +408,11 @@ export const IO = Box.define('IO', {
             selector: 'ioname'
         }
     ]),
-    gateParams: Box.prototype.gateParams.concat(['bits','net'])
+    _gateParams: Box.prototype._gateParams.concat(['bits','net'])
 });
 export const IOView = BoxView.extend({
-    autoResizeBox: true,
-    calculateBoxWidth: function() {
+    _autoResizeBox: true,
+    _calculateBoxWidth() {
         const text = this.el.querySelector('text.ioname');
         if (text.getAttribute('display') !== 'none') return text.getBBox().width + 10;
         return 20;
@@ -422,7 +422,7 @@ export const IOView = BoxView.extend({
 // Input model
 export const Input = IO.define('Input', {}, {
     io_dir: 'out',
-    setLogicValue: function(sig) {
+    setLogicValue(sig) {
         if (sig.bits != this.get('bits'))
             throw new Error("setLogicValue: wrong number of bits");
         this.set('outputSignals', { out: sig });
@@ -433,12 +433,12 @@ export const InputView = IOView;
 // Output model
 export const Output = IO.define('Output', {}, {
     io_dir: 'in',
-    changeInputSignals: function(sigs) {
+    _changeInputSignals(sigs) {
         const subcir = this.graph.get('subcircuit');
         if (subcir == null) return; // not inside a subcircuit
-        subcir.setOutput(sigs.in, this.get('net'));
+        subcir._setOutput(sigs.in, this.get('net'));
     },
-    getLogicValue: function() {
+    getLogicValue() {
         return this.get('inputSignals').in;
     }
 });
@@ -458,7 +458,7 @@ export const Constant = NumBase.define('Constant', {
         }
     }
 }, {
-    initialize: function(args) {
+    initialize() {
         const constant = this.get('constant');
         const bits = constant.length;
         this.set('bits', bits);
@@ -471,12 +471,12 @@ export const Constant = NumBase.define('Constant', {
        
         this.on('change:constant', (_, constant) => {
             const bits = constant.length;
-            this.setPortsBits({ out: bits });
+            this._setPortsBits({ out: bits });
             this.set('bits', bits);
             this.set('constantCache', Vector3vl.fromBin(constant, bits));
         });
     },
-    operation: function() {
+    operation() {
         return { out: this.get('constantCache') };
     },
     markup: NumBase.prototype.markup.concat([{
@@ -485,7 +485,7 @@ export const Constant = NumBase.define('Constant', {
             selector: 'value'
         }
     ]),
-    gateParams: NumBase.prototype.gateParams.concat(['constant']),
+    _gateParams: NumBase.prototype._gateParams.concat(['constant']),
     numbaseType: 'show'
 });
 export const ConstantView = NumBaseView.extend({
@@ -495,15 +495,15 @@ export const ConstantView = NumBaseView.extend({
     confirmUpdate(flags) {
         NumBaseView.prototype.confirmUpdate.apply(this, arguments);
         if (this.hasFlag(flags, 'CONSTANT') ||
-            this.hasFlag(flags, 'NUMBASE')) this.settext();
+            this.hasFlag(flags, 'NUMBASE')) this._showText();
     },
-    settext() {
+    _showText() {
         const display3vl = this.model.graph._display3vl;
         this.$('text.value tspan').text(display3vl.show(this.model.get('numbase'), this.model.get('constantCache')));
     },
     update() {
         NumBaseView.prototype.update.apply(this, arguments);
-        this.settext();
+        this._showText();
     }
 });
 
@@ -520,11 +520,11 @@ export const Clock = Box.define('Clock', {
 
     size: { width: 30, height: 30 }
 }, {
-    initialize: function(args) {
+    initialize() {
         Box.prototype.initialize.apply(this, arguments);
         this.set('outputSignals', { out: Vector3vl.zeros(1) });
     },
-    operation: function() {
+    operation() {
         // trigger next clock edge
         this.trigger("change:inputSignals", this, {});
         return { out: this.get('outputSignals').out.not() };
@@ -548,7 +548,7 @@ export const Clock = Box.define('Clock', {
             }]
         }
     ]),
-    unsupportedPropChanges: Box.prototype.unsupportedPropChanges.concat(['bits'])
+    _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['bits'])
 });
 export const ClockView = BoxView.extend({
     presentationAttributes: BoxView.addPresentationAttributes({
@@ -557,8 +557,8 @@ export const ClockView = BoxView.extend({
     events: {
         "click input": "stopprop",
         "mousedown input": "stopprop",
-        "change input": "changePropagation",
-        "input input": "changePropagation"
+        "change input": "_changePropagation",
+        "input input": "_changePropagation"
     },
     render(args) {
         BoxView.prototype.render.apply(this, arguments);
@@ -568,7 +568,7 @@ export const ClockView = BoxView.extend({
         BoxView.prototype.confirmUpdate.apply(this, arguments);
         if (this.hasFlag(flags, 'SIGNAL')) this.updatePropagation();
     },
-    changePropagation(evt) {
+    _changePropagation(evt) {
         const val = evt.target.value;
         const valid = String(val) == String(Number(val));
         if (valid) this.model.set('propagation', Number(val) || 1);

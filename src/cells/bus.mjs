@@ -19,7 +19,7 @@ export const BitExtend = Box.define('BitExtend', {
         }
     }
 }, {
-    initialize: function() {
+    initialize() {
         const extend = this.get('extend');
         console.assert(extend.input <= extend.output);
         this.get('ports').items = [
@@ -30,12 +30,12 @@ export const BitExtend = Box.define('BitExtend', {
         Box.prototype.initialize.apply(this, arguments);
         
         this.on('change:extend', (_, extend) => {
-            this.setPortsBits({ in: extend.input, out: extend.output });
+            this._setPortsBits({ in: extend.input, out: extend.output });
         });
     },
-    operation: function(data) {
+    operation(data) {
         const ex = this.get('extend');
-        return { out: data.in.concat(Vector3vl.make(ex.output - ex.input, this.extbit(data.in))) };
+        return { out: data.in.concat(Vector3vl.make(ex.output - ex.input, this._extBit(data.in))) };
     },
     markup: Box.prototype.markup.concat([{
             tagName: 'text',
@@ -43,11 +43,11 @@ export const BitExtend = Box.define('BitExtend', {
             selector: 'value'
         }
     ]),
-    gateParams: Box.prototype.gateParams.concat(['extend'])
+    _gateParams: Box.prototype._gateParams.concat(['extend'])
 });
 export const BitExtendView = BoxView.extend({
-    autoResizeBox: true,
-    calculateBoxWidth: function() {
+    _autoResizeBox: true,
+    _calculateBoxWidth() {
         const text = this.el.querySelector('text.value');
         return text.getBBox().width + 10;
     }
@@ -58,7 +58,7 @@ export const ZeroExtend = BitExtend.define('ZeroExtend', {
         value: { text: 'zero-extend' }
     }
 }, {
-    extbit: function(i) {
+    _extBit(i) {
         return -1;
     }
 });
@@ -69,7 +69,7 @@ export const SignExtend = BitExtend.define('SignExtend', {
         value: { text: 'sign-extend' }
     }
 }, {
-    extbit: function(i) {
+    _extBit(i) {
         return i.get(i.bits - 1);
     }
 });
@@ -83,7 +83,7 @@ export const BusSlice = Box.define('BusSlice', {
     
     size: { width: 40, height: 24 }
 }, {
-    initialize: function() {
+    initialize() {
         const slice = this.get('slice');
         
         const val = slice.count == 1 ? slice.first : 
@@ -97,17 +97,17 @@ export const BusSlice = Box.define('BusSlice', {
         Box.prototype.initialize.apply(this, arguments);
         
         this.on('change:slice', (_, slice) => {
-            this.setPortsBits({ in: slice.total, out: slice.count });
+            this._setPortsBits({ in: slice.total, out: slice.count });
         });
     },
-    operation: function(data) {
+    operation(data) {
         const s = this.get('slice');
         return { out: data.in.slice(s.first, s.first + s.count) };
     },
-    gateParams: Box.prototype.gateParams.concat(['slice'])
+    _gateParams: Box.prototype._gateParams.concat(['slice'])
 });
 export const BusSliceView = BoxView.extend({
-    autoResizeBox: true
+    _autoResizeBox: true
 });
 
 // Bus grouping
@@ -118,7 +118,7 @@ export const BusRegroup = Box.define('BusRegroup', {
 
     size: { width: 40, height: undefined }
 }, {
-    initialize: function() {
+    initialize() {
         var bits = 0;
         const ports = [];
         const groups = this.get('groups');
@@ -138,17 +138,17 @@ export const BusRegroup = Box.define('BusRegroup', {
         
         Box.prototype.initialize.apply(this, arguments);
     },
-    gateParams: Box.prototype.gateParams.concat(['groups']),
-    unsupportedPropChanges: Box.prototype.unsupportedPropChanges.concat(['groups'])
+    _gateParams: Box.prototype._gateParams.concat(['groups']),
+    _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['groups'])
 });
 export const BusRegroupView = BoxView.extend({
-    autoResizeBox: true
+    _autoResizeBox: true
 });
 
 export const BusGroup = BusRegroup.define('BusGroup', {
 }, {
     group_dir : 'in',
-    operation: function(data) {
+    operation(data) {
         const outdata = [];
         for (const num of this.get('groups').keys()) {
             outdata.push(data['in' + num]);
@@ -161,7 +161,7 @@ export const BusGroupView = BusRegroupView;
 export const BusUngroup = BusRegroup.define('BusUngroup', {
 }, {
     group_dir : 'out',
-    operation: function(data) {
+    operation(data) {
         const outdata = {};
         let pos = 0;
         for (const [num, gbits] of this.get('groups').entries()) {

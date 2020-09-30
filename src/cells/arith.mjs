@@ -34,8 +34,8 @@ export const Arith = Gate.define('Arith', {
             selector: 'oper'
         }
     ]),
-    gateParams: Gate.prototype.gateParams.concat(['bits', 'signed']),
-    unsupportedPropChanges: Gate.prototype.unsupportedPropChanges.concat(['signed'])
+    _gateParams: Gate.prototype._gateParams.concat(['bits', 'signed']),
+    _unsupportedPropChanges: Gate.prototype._unsupportedPropChanges.concat(['signed'])
 });
 
 // Unary arithmetic operations
@@ -44,7 +44,7 @@ export const Arith11 = Arith.define('Arith11', {
     bits: { in: 1, out: 1 },
     signed: false
 }, {
-    initialize: function() {
+    initialize() {
         const bits = this.get('bits');
         this.get('ports').items = [
             { id: 'in', group: 'in', dir: 'in', bits: bits.in },
@@ -54,10 +54,10 @@ export const Arith11 = Arith.define('Arith11', {
         Arith.prototype.initialize.apply(this, arguments);
         
         this.on('change:bits', (_,bits) => {
-            this.setPortsBits(bits);
+            this._setPortsBits(bits);
         });
     },
-    operation: function(data) {
+    operation(data) {
         const bits = this.get('bits');
         if (!data.in.isFullyDefined)
             return { out: Vector3vl.xes(bits.out) };
@@ -73,7 +73,7 @@ export const Arith21 = Arith.define('Arith21', {
     bits: { in1: 1, in2: 1, out: 1 },
     signed: { in1: false, in2: false }
 }, {
-    initialize: function() {
+    initialize() {
         const bits = this.get('bits');
         this.get('ports').items = [
             { id: 'in1', group: 'in', dir: 'in', bits: bits.in1 },
@@ -84,10 +84,10 @@ export const Arith21 = Arith.define('Arith21', {
         Arith.prototype.initialize.apply(this, arguments);
         
         this.on('change:bits', (_, bits) => {
-            this.setPortsBits(bits);
+            this._setPortsBits(bits);
         });
     },
-    operation: function(data) {
+    operation(data) {
         const bits = this.get('bits');
         const sgn = this.get('signed');
         if (!data.in1.isFullyDefined || !data.in2.isFullyDefined)
@@ -107,7 +107,7 @@ export const Shift = Arith.define('Shift', {
     signed: { in1: false, in2: false, out: false },
     fillx: false
 }, {
-    initialize: function() {
+    initialize() {
         const bits = this.get('bits');
         this.get('ports').items = [
             { id: 'in1', group: 'in', dir: 'in', bits: bits.in1 },
@@ -118,10 +118,10 @@ export const Shift = Arith.define('Shift', {
         Arith.prototype.initialize.apply(this, arguments);
         
         this.on('change:bits', (_, bits) => {
-            this.setPortsBits(bits);
+            this._setPortsBits(bits);
         });
     },
-    operation: function(data) {
+    operation(data) {
         const bits = this.get('bits');
         const sgn = this.get('signed');
         const fillx = this.get('fillx');
@@ -137,8 +137,8 @@ export const Shift = Arith.define('Shift', {
             : my_in.slice(am).concat(Vector3vl.make(am, fillx ? 0 : sgn.out ? my_in.get(my_in.bits-1) : -1));
         return { out: out.slice(0, bits.out) };
     },
-    gateParams: Arith.prototype.gateParams.concat(['fillx']),
-    unsupportedPropChanges: Arith.prototype.unsupportedPropChanges.concat(['fillx'])
+    _gateParams: Arith.prototype._gateParams.concat(['fillx']),
+    _unsupportedPropChanges: Arith.prototype._unsupportedPropChanges.concat(['fillx'])
 });
 
 // Comparison operations
@@ -147,7 +147,7 @@ export const Compare = Arith.define('Compare', {
     bits: { in1: 1, in2: 1 },
     signed: { in1: false, in2: false }
 }, {
-    initialize: function() {
+    initialize() {
         const bits = this.get('bits');
         this.get('ports').items = [
             { id: 'in1', group: 'in', dir: 'in', bits: bits.in1 },
@@ -158,10 +158,10 @@ export const Compare = Arith.define('Compare', {
         Arith.prototype.initialize.apply(this, arguments);
         
         this.on('change:bits', (_, bits) => {
-            this.setPortsBits(bits);
+            this._setPortsBits(bits);
         });
     },
-    operation: function(data) {
+    operation(data) {
         const bits = this.get('bits');
         const sgn = this.get('signed');
         if (!data.in1.isFullyDefined || !data.in2.isFullyDefined)
@@ -176,7 +176,7 @@ export const Compare = Arith.define('Compare', {
 
 // Equality operations
 export const EqCompare = Compare.define('EqCompare', {}, {
-    operation: function(data) {
+    operation(data) {
         const bits = this.get('bits');
         const sgn = this.get('signed');
         const in1 = bits.in1 >= bits.in2 ? data.in1 : 

@@ -17,15 +17,15 @@ export const Dff = Box.define('Dff', {
     ports: {
         groups: {
             'in': {
-                position: Box.prototype.getStackedPosition({ side: 'left' })
+                position: Box.prototype._getStackedPosition({ side: 'left' })
             },
             'out': {
-                position: Box.prototype.getStackedPosition({ side: 'right' })
+                position: Box.prototype._getStackedPosition({ side: 'right' })
             }
         }
     }
 }, {
-    initialize: function() {
+    initialize() {
         const bits = this.get('bits');
         const initial = this.get('initial');
         const polarity = this.get('polarity');
@@ -61,7 +61,7 @@ export const Dff = Box.define('Dff', {
         
         Box.prototype.initialize.apply(this, arguments);
     },
-    operation: function(data) {
+    operation(data) {
         const polarity = this.get('polarity');
         const pol = what => polarity[what] ? 1 : -1
         let last_clk;
@@ -80,10 +80,10 @@ export const Dff = Box.define('Dff', {
                 return this.get('outputSignals');
         } else return { out: data.in };
     },
-    gateParams: Box.prototype.gateParams.concat(['polarity', 'bits', 'initial']),
-    unsupportedPropChanges: Box.prototype.unsupportedPropChanges.concat(['polarity', 'bits', 'initial'])
+    _gateParams: Box.prototype._gateParams.concat(['polarity', 'bits', 'initial']),
+    _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['polarity', 'bits', 'initial'])
 });
 export const DffView = BoxView.extend({
-    autoResizeBox: true
+    _autoResizeBox: true
 });
 
