@@ -13,7 +13,7 @@
     "default": "lib/circuit.js"
   },
   "scripts": {
-    "prepare": "npm run prod && npm build-lib",
+    "prepare": "npm run prod && npm run build-lib",
     "dev": "webpack --mode development",
     "prod": "webpack --mode production",
     "watch": "webpack --mode development --watch",
