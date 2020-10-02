@@ -2,18 +2,29 @@
   "name": "digitaljs",
   "version": "0.6.6",
   "description": "Digital logic simulator",
-  "main": "src/index.mjs",
+  "main": "lib/circuit.js",
+  "browser": "src/index.mjs",
+  "exports": {
+    "node": {
+      "import": "./src/circuit.mjs",
+      "require": "./lib/circuit.js"
+    },
+    "browser": "src/index.mjs",
+    "default": "./lib/circuit.js"
+  },
   "scripts": {
-    "prepare": "npm run prod",
+    "prepare": "npm run prod && npm build-lib",
     "dev": "webpack --mode development",
     "prod": "webpack --mode production",
     "watch": "webpack --mode development --watch",
     "test": "jest",
+    "build-lib": "mkdir -p lib && babel src -d lib",
     "gh-pages": "webpack --mode production && gh-pages -a -d dist"
   },
   "author": "Marek Materzok",
   "license": "BSD-2-Clause",
   "devDependencies": {
+    "@babel/cli": "^7.10.2",
     "@babel/core": "^7.10.2",
     "@babel/preset-env": "^7.10.2",
     "acorn": "^6.4.0",
