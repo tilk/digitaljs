@@ -10,10 +10,10 @@ import Backbone from 'backbone';
 import { Vector3vl } from '3vl';
 import 'jquery-ui/ui/widgets/dialog';
 import 'jquery-ui/themes/base/all.css';
-import * as cells from './cells.mjs';
-import { HeadlessCircuit, getCellType } from './circuit.mjs';
-import { MonitorView, Monitor } from './monitor.mjs';
-import { IOPanelView } from './iopanel.mjs';
+import * as cells from './cells';
+import { HeadlessCircuit, getCellType } from './circuit';
+import { MonitorView, Monitor } from './monitor';
+import { IOPanelView } from './iopanel';
 import './style.css';
 
 // polyfill ResizeObserver for e.g. Firefox ESR 68.8

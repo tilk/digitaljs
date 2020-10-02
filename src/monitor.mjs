@@ -4,7 +4,7 @@ import joint from 'jointjs';
 import _ from 'lodash';
 import $ from 'jquery';
 import Backbone from 'backbone';
-import * as help from './help.mjs';
+import * as help from './help';
 import { Vector3vl } from '3vl';
 import { Waveform, drawWaveform, defaultSettings, extendSettings, calcGridStep } from 'wavecanvas';
 import ResizeObserver from 'resize-observer-polyfill';
