@@ -4,9 +4,9 @@ import * as joint from 'jointjs';
 import _ from 'lodash';
 import Backbone from 'backbone';
 import { Vector3vl, Display3vl } from '3vl';
-import * as cells from './cells.mjs';
+import * as cells from './cells';
 import FastPriorityQueue from 'fastpriorityqueue';
-import * as help from './help.mjs';
+import * as help from './help';
     
 export function getCellType(tp) {
     const types = {

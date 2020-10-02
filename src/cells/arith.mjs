@@ -3,7 +3,7 @@
 import * as joint from 'jointjs';
 import { Gate, GateView } from './base';
 import bigInt from 'big-integer';
-import * as help from '../help.mjs';
+import * as help from '../help';
 import { Vector3vl } from '3vl';
 
 // base class for arithmetic operations displayed with a circle

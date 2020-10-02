@@ -3,7 +3,7 @@
 import * as joint from 'jointjs';
 import { Gate, GateView } from './base';
 import bigInt from 'big-integer';
-import * as help from '../help.mjs';
+import * as help from '../help';
 import { Vector3vl } from '3vl';
 
 const and_path = "M19 4v32h16c9 0 16-7 16-16S44 4 35 4H20z";
