@@ -2,8 +2,8 @@
   "name": "digitaljs",
   "version": "0.6.6",
   "description": "Digital logic simulator",
-  "main": "lib/circuit.js",
-  "browser": "src/index.mjs",
+  "main": "./lib/circuit.js",
+  "browser": "./src/index.mjs",
   "exports": {
     "node": {
       "import": "./src/circuit.mjs",
