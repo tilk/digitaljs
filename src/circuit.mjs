@@ -86,13 +86,13 @@ export class HeadlessCircuit {
     hasWarnings() {
         return this._graph._warnings > 0;
     }
-    _makeGraph(data, subcircuits) {
+    _makeGraph(data, subcircuits, opt) {
+        opt = opt || {};
         const graph = new joint.dia.Graph();
         graph._display3vl = this._display3vl;
         graph._warnings = 0;
-        this.listenTo(graph, 'change:buttonState', (gate) => {
-            // buttonState is triggered for any user change on inputs
-            this._enqueue(gate);
+        if (opt.nested) graph.set('subcircuit', true);
+        this.listenTo(graph, 'userChange', () => {
             this.trigger('userChange');
         });
         this.listenTo(graph, 'change:constantCache', (gate) => {
@@ -147,7 +147,7 @@ export class HeadlessCircuit {
             const cellArgs = _.clone(dev);
             cellArgs.id = devid;
             if (cellType == this._cells.Subcircuit)
-                cellArgs.graph = this._makeGraph(subcircuits[dev.celltype], subcircuits);
+                cellArgs.graph = this._makeGraph(subcircuits[dev.celltype], subcircuits, { nested: true });
             const cell = new cellType(cellArgs);
             graph.addCell(cell);
             this._enqueue(cell);
@@ -215,19 +215,19 @@ export class HeadlessCircuit {
         return this._tick;
     }
     getInputCells() {
-        return this._graph.getElements().filter(x => x.setLogicValue);
+        return this._graph.getElements().filter(x => x.isInput);
     }
     getOutputCells() {
-        return this._graph.getElements().filter(x => x.getLogicValue);
+        return this._graph.getElements().filter(x => x.isOutput);
     }
     setInput(name, sig) {
         const cell = this._graph.getCell(name);
-        if (cell.setLogicValue) cell.setLogicValue(sig);
+        if (cell.isInput) cell.setInput(sig);
         else throw new Error('Invalid call to setInput');
     }
     getOutput(name) {
         const cell = this._graph.getCell(name);
-        if (cell.getLogicValue) return cell.getLogicValue();
+        if (cell.isOutput) return cell.getOutput();
         else throw new Error('Invalid call to getOutput');
     }
     makeLabelIndex() {
@@ -243,9 +243,9 @@ export class HeadlessCircuit {
             };
             for (const elem of graph.getElements()) {
                 if (elem.has('net')) {
-                    if (elem.setLogicValue) 
+                    if (elem.isInput)
                         ret.inputs[elem.get('net')] = elem;
-                    if (elem.getLogicValue) 
+                    if (elem.isOutput)
                         ret.outputs[elem.get('net')] = elem;
                 }
                 if (!elem.has('label')) continue;
