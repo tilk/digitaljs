@@ -241,50 +241,36 @@
       "type": "Clock"
     },
     "044f875f-1926-4911-8336-5d91ad3edf67": {
-      "label": "Button",
+      "label": "1-bit input (Button)",
       "position": {
         "x": 800,
         "y": 200
       },
-      "type": "Button"
+      "type": "Input"
     },
     "5cb2f869-4852-4447-b4cd-fdcd01442c93": {
-      "label": "Lamp",
+      "label": "1-bit output (Lamp)",
       "position": {
         "x": 800,
         "y": 300
       },
-      "type": "Lamp"
+      "type": "Output"
     },
     "d81f4f5f-16dd-4fae-954d-db6666e070ac": {
-      "label": "NumEntry",
+      "label": "4-bit input (NumEntry)",
+      "bits": 4,
       "position": {
         "x": 800,
         "y": 400
       },
-      "type": "NumEntry"
+      "type": "Input"
     },
     "383468e5-fb2f-47a1-8beb-87df81cf9916": {
-      "label": "NumDisplay",
+      "label": "4-bit output (NumDisplay)",
+      "bits": 4,
       "position": {
         "x": 800,
         "y": 500
-      },
-      "type": "NumDisplay"
-    },
-    "30bc9df9-69e9-41e3-b230-3d999dc48330": {
-      "label": "Input",
-      "position": {
-        "x": 800,
-        "y": 600
-      },
-      "type": "Input"
-    },
-    "469d38ad-9177-433c-ab62-9d82f914fc1a": {
-      "label": "Output",
-      "position": {
-        "x": 800,
-        "y": 700
       },
       "type": "Output"
     },
