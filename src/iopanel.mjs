@@ -42,8 +42,8 @@ export class IOPanelView extends Backbone.View {
         return 'iopanel-' + text + '-' + this._idnum;
     }
     _handleAdd(cell) {
-        if (cell.setLogicValue) this._handleAddInput(cell);
-        else if (cell.getLogicValue) this.handleAddOutput(cell);
+        if (cell.isInput) this._handleAddInput(cell);
+        else if (cell.isOutput) this.handleAddOutput(cell);
     }
     _addLabel(row, cell) {
         const label = $(this._labelMarkup)
@@ -62,13 +62,13 @@ export class IOPanelView extends Backbone.View {
         this._addLabelFor(row, cell);
         const col = $(this._colMarkup)
             .appendTo(row);
-        if (cell.get('bits') == 1) {
+        if (cell.get('mode') == 1) {
             const ui = $(this._buttonMarkup)
                 .appendTo(col);
             const inp = ui.find('input').addBack('input')
                 .attr('id', this._id(cell.id))
                 .on('click', (evt) => {
-                    cell.setLogicValue(Vector3vl.fromBool(evt.target.checked));
+                    cell.setInput(Vector3vl.fromBool(evt.target.checked));
                 });
             const updater = (cell, sigs) => {
                 inp.prop("checked", sigs.out.isHigh);
@@ -89,7 +89,7 @@ export class IOPanelView extends Backbone.View {
                 .prop('pattern', display3vl.pattern(base))
                 .on('change', (e) => {
                     if (!display3vl.validate(base, e.target.value, bits)) return;
-                    cell.setLogicValue(display3vl.read(base, e.target.value, bits));
+                    cell.setInput(display3vl.read(base, e.target.value, bits));
                 });
             const updater = (cell, sigs) => {
                 ui.val(display3vl.show(base, sigs.out));
@@ -119,7 +119,7 @@ export class IOPanelView extends Backbone.View {
             const inp = ui.find('input').addBack('input')
                 .prop('disabled', true);
             const updater = (cell, sigs) => {
-                const val = cell.getLogicValue();
+                const val = cell.getOutput();
                 inp.prop("checked", val.isHigh);
                 inp.prop("indeterminate", !val.isDefined);
             };
@@ -138,7 +138,7 @@ export class IOPanelView extends Backbone.View {
 //                .prop('maxlength', sz)
 //                .prop('pattern', display3vl.pattern(base));
             const updater = (cell, sigs) => {
-                const val = cell.getLogicValue();
+                const val = cell.getOutput();
                 ui.val(display3vl.show(base, val));
             };
             this.listenTo(cell, 'change:inputSignals', updater);

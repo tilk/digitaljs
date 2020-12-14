@@ -767,9 +767,9 @@ export const Box = Gate.define('Box', {
 export const BoxView = GateView.extend({
     _autoResizeBox: false,
     render() {
+        //todo: resize Box after port label / IO name / mode / bit size change
         GateView.prototype.render.apply(this, arguments);
-        if (this._autoResizeBox) {
-            if (this.model.get('box_resized')) return;
+        if (this._autoResizeBox && !this.model.get('box_resized')) {
             this.model.set('box_resized', true);
             this.model.prop('size/width', this._calculateBoxWidth());
         }

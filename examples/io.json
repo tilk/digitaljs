@@ -1,0 +1,119 @@
+{
+  "devices": {
+    "inSingle": {
+      "label": "1-bit input",
+      "bits": 1,
+      "type": "Input"
+    },
+    "inBus": {
+      "label": "4-bit input",
+      "bits": 4,
+      "type": "Input"
+    },
+    "outSingle": {
+      "label": "1-bit output",
+      "bits": 1,
+      "type": "Output"
+    },
+    "outBus": {
+      "label": "4-bit output",
+      "bits": 4,
+      "type": "Output"
+    },
+    "subcir": {
+      "label": "Subcircuit with I/O",
+      "type": "Subcircuit",
+      "celltype": "pipes"
+    }
+  },
+  "connectors": [
+    {
+      "from": {
+        "id": "inSingle",
+        "port": "out"
+      },
+      "to": {
+        "id": "subcir",
+        "port": "i1"
+      }
+    },
+    {
+      "from": {
+        "id": "inBus",
+        "port": "out"
+      },
+      "to": {
+        "id": "subcir",
+        "port": "i4"
+      }
+    },
+    {
+      "from": {
+        "id": "subcir",
+        "port": "o1"
+      },
+      "to": {
+        "id": "outSingle",
+        "port": "in"
+      }
+    },
+    {
+      "from": {
+        "id": "subcir",
+        "port": "o4"
+      },
+      "to": {
+        "id": "outBus",
+        "port": "in"
+      }
+    }
+  ],
+  "subcircuits": {
+    "pipes": {
+      "devices": {
+        "inSingle": {
+          "type": "Input",
+          "bits": 1,
+          "net": "i1"
+        },
+        "inBus": {
+          "type": "Input",
+          "bits": 4,
+          "net": "i4"
+        },
+        "outSingle": {
+          "type": "Output",
+          "bits": 1,
+          "net": "o1"
+        },
+        "outBus": {
+          "type": "Output",
+          "bits": 4,
+          "net": "o4"
+        }
+      },
+      "connectors": [
+        {
+          "from": {
+            "id": "inSingle",
+            "port": "out"
+          },
+          "to": {
+            "id": "outSingle",
+            "port": "in"
+          }
+        },
+        {
+          "from": {
+            "id": "inBus",
+            "port": "out"
+          },
+          "to": {
+            "id": "outBus",
+            "port": "in"
+          }
+        }
+      ]
+    }
+  }
+}

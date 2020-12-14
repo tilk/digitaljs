@@ -24,20 +24,19 @@ export const NumBase = Box.define('NumBase', {
         });
     },
     tooltipMinWidth: 70,
-    markup: Box.prototype.markup.concat([{
-            tagName: 'foreignObject',
-            className: 'tooltip',
-            selector: 'tooltip',
+    markupTooltip: [{
+        tagName: 'foreignObject',
+        className: 'tooltip',
+        selector: 'tooltip',
+        children: [{
+            tagName: 'body',
+            namespaceURI: 'http://www.w3.org/1999/xhtml',
             children: [{
-                tagName: 'body',
-                namespaceURI: 'http://www.w3.org/1999/xhtml',
-                children: [{
-                    tagName: 'select',
-                    className: 'numbase'
-                }]
+                tagName: 'select',
+                className: 'numbase'
             }]
-        }
-    ]),
+        }]
+    }],
     _gateParams: Box.prototype._gateParams.concat(['numbase'])
 });
 export const NumBaseView = BoxView.extend({
@@ -87,287 +86,15 @@ export const NumBaseView = BoxView.extend({
     }
 });
 
-// Numeric display -- displays a number
-export const NumDisplay = NumBase.define('NumDisplay', {
-    /* default properties */
-    bits: 1,
-    propagation: 0,
-
-    attrs: {
-        value: { 
-            refX: .5, refY: .5,
-            textVerticalAnchor: 'middle',
-            text: '0'
-        },
-    }
-}, {
-    initialize() {
-        const bits = this.get('bits');
-        this.get('ports').items = [
-            { id: 'in', group: 'in', dir: 'in', bits: bits }
-        ];
-        
-        NumBase.prototype.initialize.apply(this, arguments);
-        
-        this.on('change:bits', (_, bits) => {
-            this._setPortsBits({ in: bits });
-        });
-    },
-    markup: NumBase.prototype.markup.concat([{
-            tagName: 'text',
-            className: 'value numvalue',
-            selector: 'value'
-        }
-    ]),
-    getLogicValue() {
-        return this.get('inputSignals').in;
-    },
-    _gateParams: NumBase.prototype._gateParams.concat(['bits']),
-    numbaseType: 'show'
-});
-export const NumDisplayView = NumBaseView.extend({
-    confirmUpdate(flags) {
-        NumBaseView.prototype.confirmUpdate.apply(this, arguments);
-        if (this.hasFlag(flags, 'SIGNAL') ||
-            this.hasFlag(flags, 'NUMBASE')) this._showText();
-    },
-    _showText() {
-        const display3vl = this.model.graph._display3vl;
-        this.$('text.value tspan').text(display3vl.show(this.model.get('numbase'), this.model.get('inputSignals').in));
-    },
-    update() {
-        NumBaseView.prototype.update.apply(this, arguments);
-        this._showText();
-    }
-});
-
-// Numeric entry -- parses a number from a text box
-export const NumEntry = NumBase.define('NumEntry', {
-    /* default properties */
-    bits: 1,
-    propagation: 0,
-    buttonState: Vector3vl.xes(1),
-
-    attrs: {
-        'foreignObject.valinput': {
-            refX: .5, refY: .5,
-            refWidth: -10, refHeight: -10,
-            xAlignment: 'middle', yAlignment: 'middle',
-        }
-    }
-}, {
-    initialize() {
-        const bits = this.get('bits');
-        this.get('ports').items = [
-            { id: 'out', group: 'out', dir: 'out', bits: bits }
-        ];
-        this.setLogicValue(Vector3vl.xes(bits));
-        
-        NumBase.prototype.initialize.apply(this, arguments);
-        
-        this.on('change:bits', (_, bits) => {
-            this._setPortsBits({ out: bits });
-        });
-    },
-    operation() {
-        return { out: this.get('buttonState') };
-    },
-    markup: NumBase.prototype.markup.concat([{
-            tagName: 'foreignObject',
-            className: 'valinput',
-            children: [{
-                tagName: 'body',
-                namespaceURI: 'http://www.w3.org/1999/xhtml',
-                children: [{
-                    tagName: 'input',
-                    attributes: { type: 'text' }
-                }]
-            }]
-        }
-    ]),
-    setLogicValue(sig) {
-        if (sig.bits != this.get('bits')) 
-            throw new Error("setLogicValue: wrong number of bits");
-        this.set('buttonState', sig);
-    },
-    _gateParams: NumBase.prototype._gateParams.concat(['bits']),
-    numbaseType: 'read'
-});
-export const NumEntryView = NumBaseView.extend({
-    presentationAttributes: NumBaseView.addPresentationAttributes({
-        buttonState: 'SIGNAL'
-    }),
-    events: _.merge({
-        "click input": "stopprop",
-        "mousedown input": "stopprop",
-        "change input": "_onChange"
-    }, NumBaseView.prototype.events),
-    confirmUpdate(flags) {
-        NumBaseView.prototype.confirmUpdate.apply(this, arguments);
-        if (this.hasFlag(flags, 'SIGNAL') ||
-            this.hasFlag(flags, 'NUMBASE')) this._showText();
-    },
-    _showText() {
-        const display3vl = this.model.graph._display3vl;
-        this.$('input').val(display3vl.show(this.model.get('numbase'), this.model.get('buttonState')));
-        this.$('input').removeClass('invalid');
-    },
-    _onChange(evt) {
-        const numbase = this.model.get('numbase');
-        const bits = this.model.get('bits');
-        const display3vl = this.model.graph._display3vl;
-        if (display3vl.validate(numbase, evt.target.value, bits)) {
-            const val = display3vl.read(numbase, evt.target.value, bits);
-            this.model.set('buttonState', val);
-        } else {
-            this.$('input').addClass('invalid');
-        }
-    },
-    update() {
-        NumBaseView.prototype.update.apply(this, arguments);
-        this._showText();
-    }
-});
-
-// Lamp model -- displays a single-bit input
-export const Lamp = Box.define('Lamp', {
-    bits: 1,
-    
-    ports: {
-        items: [
-            { id: 'in', group: 'in', dir: 'in', bits: 1 }
-        ]
-    },
-
-    size: { width: 30, height: 30 },
-    attrs: {
-        led: {
-            refX: .5, refY: .5,
-            refR: .35,
-            fill: '#bfc5c6'
-        }
-    }
-}, {
-    markup: Box.prototype.markup.concat([{
-            tagName: 'circle',
-            className: 'led',
-            selector: 'led'
-        }
-    ]),
-    getLogicValue() {
-        return this.get('inputSignals').in;
-    },
-    _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['bits'])
-});
-export const LampView = BoxView.extend({
-    attrs: _.merge({}, BoxView.prototype.attrs, {
-        lamp: {
-            high: { led: { 'fill': '#03c03c' } },
-            low: { led: { 'fill': '#fc7c68' } },
-            undef: { led: { 'fill': '#bfc5c6' } }
-        }
-    }),
-    confirmUpdate(flags) {
-        BoxView.prototype.confirmUpdate.apply(this, arguments);
-        if (this.hasFlag(flags, 'SIGNAL')) {
-            this._updateLamp();
-        };
-    },
-    _updateLamp() {
-        const signal = this.model.get('inputSignals').in;
-        const attrs = this.attrs.lamp[
-            signal.isHigh ? 'high' :
-            signal.isLow ? 'low' : 'undef'
-        ];
-        this._applyAttrs(attrs);
-    },
-    update() {
-        BoxView.prototype.update.apply(this, arguments);
-        this._updateLamp();
-    }
-});
-
-// Button model -- single-bit clickable input
-export const Button = Box.define('Button', {
-    /* default properties */
-    bits: 1,
-    buttonState: false,
-    propagation: 0,
-
-    ports: {
-        items: [
-            { id: 'out', group: 'out', dir: 'out', bits: 1 }
-        ]
-    },
-
-    size: { width: 30, height: 30 },
-    attrs: {
-        btnface: { 
-            stroke: 'black', strokeWidth: 2,
-            refX: .2, refY: .2,
-            refHeight: .6, refWidth: .6,
-            cursor: 'pointer'
-        }
-    }
-}, {
-    operation() {
-        return { out: this.get('buttonState') ? Vector3vl.ones(1) : Vector3vl.zeros(1) };
-    },
-    markup: Box.prototype.markup.concat([{
-            tagName: 'rect',
-            className: 'btnface',
-            selector: 'btnface'
-        }
-    ]),
-    setLogicValue(sig) {
-        if (sig.bits != 1) 
-            throw new Error("setLogicValue: wrong number of bits");
-        this.set('buttonState', sig.isHigh);
-    },
-    _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['bits'])
-});
-export const ButtonView = BoxView.extend({
-    attrs: _.merge({}, BoxView.prototype.attrs, {
-        button: {
-            high: { btnface: { 'fill': 'black' } },
-            low: { btnface: { 'fill': 'white' } }
-        }
-    }),
-    presentationAttributes: BoxView.addPresentationAttributes({
-        buttonState: 'SIGNAL',
-    }),
-    confirmUpdate(flags) {
-        BoxView.prototype.confirmUpdate.apply(this, arguments);
-        if (this.hasFlag(flags, 'SIGNAL')) {
-            this._updateButton();
-        }
-    },
-    _updateButton() {
-        const buttonState = this.model.get('buttonState');
-        const attrs = this.attrs.button[
-            buttonState ? 'high' : 'low'
-        ];
-        this._applyAttrs(attrs);
-    },
-    update() {
-        BoxView.prototype.update.apply(this, arguments);
-        this._updateButton();
-    },
-    events: {
-        "click .btnface": "_activateButton",
-        "mousedown .btnface": "stopprop"
-    },
-    _activateButton() {
-        this.model.set('buttonState', !this.model.get('buttonState'));
-    }
-});
-
 // Input/output model
-export const IO = Box.define('IO', {
+export const IO = NumBase.define('IO', {
     /* default properties */
     bits: 1,
     net: '',
+    //as I/O has no delay, this is even not taken into account at all
     propagation: 0,
+    /* 0 - within subcircuit, 1 - single-line, 2 - bus-line */
+    mode: -1,
 
     attrs: {
         ioname: {
@@ -381,68 +108,281 @@ export const IO = Box.define('IO', {
     initialize() {
         const bits = this.get('bits');
         this.get('ports').items = [
-            { id: this.io_dir, group: this.io_dir, dir: this.io_dir, bits: bits }
+            { id: this._portDirection, group: this._portDirection, dir: this._portDirection, bits: bits }
         ];
-        
-        Box.prototype.initialize.apply(this, arguments);
-        
+
+        NumBase.prototype.initialize.apply(this, arguments);
+
         this.on('change:bits', (_, bits) => {
             const b = {};
-            b[this.io_dir] = bits;
+            b[this._portDirection] = bits;
             this._setPortsBits(b);
+            if (this.get('mode') != 0) this._checkMode();
         });
         this.bindAttrToProp('text.ioname/text', 'net');
     },
+    onAdd() {
+        this._checkMode();
+    },
+    _checkMode() {
+        // assumes graph to have subcircuit property before adding elements
+        const withinSubcircuit = this.graph && this.graph.has('subcircuit');
+        const bits = this.get('bits');
+        const mode = withinSubcircuit ? 0 : bits == 1 ? 1 : 2;
+
+        this.set('mode', mode);
+        this.set('box_resized', false);
+        this.set('markup', mode == 0 ? this.markupInSubcircuit :
+            mode == 1 ? this.markupSingle : this.markupBus
+        );
+        return mode;
+    },
     _setPortsBits(portsBits) {
-        Box.prototype._setPortsBits.apply(this, arguments);
-        
+        NumBase.prototype._setPortsBits.apply(this, arguments);
+
+        if (this.get('mode') != 0) return; // not inside a subcircuit
         const subcir = this.graph.get('subcircuit');
-        if (subcir == null) return; // not inside a subcircuit
+        console.assert(subcir != null);
         const portsBitsSubcir = {};
-        portsBitsSubcir[this.get('net')] = portsBits[this.io_dir];
+        portsBitsSubcir[this.get('net')] = portsBits[this._portDirection];
         subcir._setPortsBits(portsBitsSubcir);
     },
-    markup: Box.prototype.markup.concat([{
+    markupSingle: NumBase.prototype.markup,
+    markupBus: NumBase.prototype.markup.concat(NumBase.prototype.markupTooltip),
+    markupInSubcircuit: NumBase.prototype.markup.concat([{
             tagName: 'text',
             className: 'ioname',
             selector: 'ioname'
         }
     ]),
-    _gateParams: Box.prototype._gateParams.concat(['bits','net'])
+    _gateParams: NumBase.prototype._gateParams.concat(['bits','net'])
 });
-export const IOView = BoxView.extend({
-    _autoResizeBox: true,
+export const IOView = NumBaseView.extend({
     _calculateBoxWidth() {
-        const text = this.el.querySelector('text.ioname');
-        if (text.getAttribute('display') !== 'none') return text.getBBox().width + 10;
-        return 20;
+        switch (this.model.get('mode')) {
+            case 0:
+                // resize based on io name
+                const text = this.selectors['ioname'];
+                if (text.getAttribute('display') !== 'none') return text.getBBox().width + 10;
+                return 20;
+            case 1:
+                // resize to width = 30 (assumes height == 30 too)
+                return 30;
+            case 2:
+                // resize based on binary string
+                return NumBaseView.prototype._calculateBoxWidth.call(this);
+        }
     }
 });
 
 // Input model
-export const Input = IO.define('Input', {}, {
-    io_dir: 'out',
-    setLogicValue(sig) {
-        if (sig.bits != this.get('bits'))
-            throw new Error("setLogicValue: wrong number of bits");
+export const Input = IO.define('Input', {
+    attrs: {
+        btnface: {
+            stroke: 'black', strokeWidth: 2,
+            refX: .2, refY: .2,
+            refHeight: .6, refWidth: .6,
+            cursor: 'pointer'
+        },
+        'foreignObject.valinput': {
+            refX: .5, refY: .5,
+            refWidth: -10, refHeight: -10,
+            xAlignment: 'middle', yAlignment: 'middle',
+        }
+    }
+}, {
+    isInput: true,
+    _portDirection: 'out',
+    _checkMode() {
+        IO.prototype._checkMode.call(this);
+
+        const bits = this.get('bits');
+        const mode = this.get('mode');
+        this.set('outputSignals', { out: mode == 1 ? Vector3vl.zeros(bits) : Vector3vl.xes(bits) });
+    },
+    setInput(sig) {
+        this._setInput(sig);
+        this.trigger('userChange');
+    },
+    toggleInput() {
+        this.setInput(this.get('outputSignals').out.not());
+    },
+    _setInput(sig) {
         this.set('outputSignals', { out: sig });
+    },
+    markupSingle: IO.prototype.markupSingle.concat([{
+            tagName: 'rect',
+            className: 'btnface',
+            selector: 'btnface'
+        }
+    ]),
+    markupBus: IO.prototype.markupBus.concat([{
+            tagName: 'foreignObject',
+            className: 'valinput',
+            children: [{
+                tagName: 'body',
+                namespaceURI: 'http://www.w3.org/1999/xhtml',
+                children: [{
+                    tagName: 'input',
+                    attributes: { type: 'text' }
+                }]
+            }]
+        }
+    ]),
+    numbaseType: 'read'
+});
+export const InputView = IOView.extend({
+    attrs: _.merge({
+        button: {
+            high: { btnface: { 'fill': 'black' } },
+            low: { btnface: { 'fill': 'white' } }
+        }
+    }, IOView.prototype.attrs),
+    confirmUpdate(flags) {
+        IOView.prototype.confirmUpdate.apply(this, arguments);
+        if (this.hasFlag(flags, 'SIGNAL2') ||
+            this.hasFlag(flags, 'NUMBASE')) this._updateView();
+    },
+    _updateView() {
+        switch (this.model.get('mode')) {
+            case 1: this._updateButton(); break;
+            case 2: this._updateNumEntry(); break;
+        }
+    },
+    _updateButton() {
+        const signal = this.model.get('outputSignals').out;
+        const attrs = this.attrs.button[
+            signal.isHigh ? 'high' : 'low'
+        ];
+        this._applyAttrs(attrs);
+    },
+    _updateNumEntry() {
+        const display3vl = this.model.graph._display3vl;
+        this.$('input').val(display3vl.show(this.model.get('numbase'), this.model.get('outputSignals').out));
+        this.$('input').removeClass('invalid');
+    },
+    render() {
+        IOView.prototype.render.apply(this, arguments);
+        this._updateView();
+    },
+    events: _.merge({
+        //button
+        "click .btnface": "_onButton",
+        "mousedown .btnface": "stopprop",
+        //numEntry
+        "click input": "stopprop",
+        "mousedown input": "stopprop",
+        "change input": "_onNumEntry"
+    }, NumBaseView.prototype.events),
+    _onButton() {
+        this.model.toggleInput();
+    },
+    _onNumEntry(evt) {
+        const numbase = this.model.get('numbase');
+        const bits = this.model.get('bits');
+        const display3vl = this.model.graph._display3vl;
+        if (display3vl.validate(numbase, evt.target.value, bits)) {
+            const val = display3vl.read(numbase, evt.target.value, bits);
+            this.model.setInput(val);
+        } else {
+            this.$('input').addClass('invalid');
+        }
     }
 });
-export const InputView = IOView;
+
+// legacy special input models, now replaced by Input
+export const Button = Input;
+export const ButtonView = InputView;
+export const NumEntry = Input;
+export const NumEntryView = InputView;
 
 // Output model
-export const Output = IO.define('Output', {}, {
-    io_dir: 'in',
+export const Output = IO.define('Output', {
+    attrs: {
+        led: {
+            refX: .5, refY: .5, refR: .35
+        },
+        value: {
+            refX: .5, refY: .5,
+            textVerticalAnchor: 'middle',
+            text: '0'
+        }
+    }
+}, {
+    isOutput: true,
+    _portDirection: 'in',
     _changeInputSignals(sigs) {
+        if (this.get('mode') != 0) return; // not inside a subcircuit
+
         const subcir = this.graph.get('subcircuit');
-        if (subcir == null) return; // not inside a subcircuit
+        console.assert(subcir != null);
         subcir._setOutput(sigs.in, this.get('net'));
     },
-    getLogicValue() {
+    _setPortsBits(portsBits) {
+        IO.prototype._setPortsBits.apply(this, arguments);
+
+        this._changeInputSignals(this.get('inputSignals'));
+    },
+    getOutput() {
         return this.get('inputSignals').in;
+    },
+    markupSingle: IO.prototype.markupSingle.concat([{
+            tagName: 'circle',
+            className: 'led',
+            selector: 'led'
+        }
+    ]),
+    markupBus: IO.prototype.markupBus.concat([{
+            tagName: 'text',
+            className: 'value numvalue',
+            selector: 'value'
+        }
+    ]),
+    numbaseType: 'show'
+});
+export const OutputView = IOView.extend({
+    attrs: _.merge({
+        lamp: {
+            high: { led: { 'fill': '#03c03c' } },
+            low: { led: { 'fill': '#fc7c68' } },
+            undef: { led: { 'fill': '#bfc5c6' } }
+        }
+    }, IOView.prototype.attrs),
+    confirmUpdate(flags) {
+        IOView.prototype.confirmUpdate.apply(this, arguments);
+        if (this.hasFlag(flags, 'SIGNAL') ||
+            this.hasFlag(flags, 'NUMBASE')) this._updateView();
+    },
+    _updateView() {
+        switch (this.model.get('mode')) {
+            case 1: this._updateLamp(); break;
+            case 2: this._updateNumDisplay(); break;
+        }
+    },
+    _updateLamp() {
+        const signal = this.model.get('inputSignals').in;
+        const attrs = this.attrs.lamp[
+            signal.isHigh ? 'high' :
+            signal.isLow ? 'low' : 'undef'
+        ];
+        this._applyAttrs(attrs);
+    },
+    _updateNumDisplay() {
+        const display3vl = this.model.graph._display3vl;
+        this.$('text.value tspan').text(display3vl.show(this.model.get('numbase'), this.model.get('inputSignals').in));
+    },
+    render() {
+        IOView.prototype.render.apply(this, arguments);
+        this._updateView();
     }
 });
-export const OutputView = IOView;
+
+// legacy special output models, now replaced by Output
+export const Lamp = Output;
+export const LampView = OutputView;
+
+export const NumDisplay = Output;
+export const NumDisplayView = OutputView;
 
 // Constant
 export const Constant = NumBase.define('Constant', {

@@ -68,8 +68,8 @@ export const Subcircuit = Box.define('Subcircuit', {
         Box.prototype._setInput.apply(this, arguments);
         const iomap = this.get('circuitIOmap');
         const input = this.get('graph').getCell(iomap[port]);
-        console.assert(input.setLogicValue);
-        input.setLogicValue(sig);
+        console.assert(input.isInput);
+        input._setInput(sig);
     },
     _setOutput(sig, port) {
         const signals = _.clone(this.get('outputSignals'));
