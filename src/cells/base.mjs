@@ -505,15 +505,13 @@ const CircleTargetArrowhead = joint.linkTools.TargetArrowhead.extend(_.merge({},
 
 const DoublyButton = joint.linkTools.Button.extend({
     update() {
-        if (this.relatedView.isShortWire())
+        if (this.relatedView.isShortWire()) {
             this.options.distance = this.options.distanceShort || this.options.distance;
-        else
+            if (this.options.secondary) this.hide();
+        } else {
             this.options.distance = this.options.distanceLong || this.options.distance;
+        }
         return joint.linkTools.Button.prototype.update.apply(this, arguments);
-    },
-    show() {
-        if (this.options.secondary && this.relatedView.isShortWire()) return;
-        joint.linkTools.Button.prototype.show.apply(this, arguments);
     }
 });
 const RemoveButton = DoublyButton.extend({
@@ -548,6 +546,20 @@ const MonitorButton = DoublyButton.extend({
         }
     }
 });
+
+// only instantiate toolsView in browser-environment
+const toolsView = (typeof window !== 'undefined') ? new joint.dia.ToolsView({
+    tools: [
+        new joint.linkTools.Vertices({ focusOpacity: 0.5 }),
+        //new joint.linkTools.Segments({ focusOpacity: 0.5 }), //todo: problem with signal reset ??,
+        new CircleSourceArrowhead(),
+        new CircleTargetArrowhead(),
+        new RemoveButton({ distanceShort: '75%', distanceLong: '50' }),
+        new RemoveButton({ distance: '-50', secondary: true }),
+        new MonitorButton({ distanceShort: '25%', distanceLong: '30' }),
+        new MonitorButton({ distance: '-30', secondary: true })
+    ]
+}) : null;
 
 export const WireView = joint.dia.LinkView.extend({
     initFlag: joint.dia.LinkView.prototype.initFlag.concat(['INIT']),
@@ -588,39 +600,10 @@ export const WireView = joint.dia.LinkView.extend({
         if (this.hasFlag(flags, 'WARNING')) {
             this._updateWarning();
         }
-        if (this.hasFlag(flags, 'INIT')) {
-            if (this.hasTools()) return;
-            this._addTools();
-        }
     },
 
     isShortWire() {
         return this.getConnectionLength() < this.longWireLength;
-    },
-    _addTools() {
-        const verticesTool = new joint.linkTools.Vertices({ focusOpacity: 0.5 });
-        //const segmentsTool = new joint.linkTools.Segments({ focusOpacity: 0.5 }); //todo: problem with signal reset ??
-        const sourceCircle = new CircleSourceArrowhead();
-        const targetCircle = new CircleTargetArrowhead();
-        const removeButton1 = new RemoveButton({ distanceShort: '75%', distanceLong: '50' });
-        const removeButton2 = new RemoveButton({ distance: '-50', secondary: true });
-        const monitorButton1 = new MonitorButton({ distanceShort: '25%', distanceLong: '30' });
-        const monitorButton2 = new MonitorButton({ distance: '-30', secondary: true });
-
-        const toolsView = new joint.dia.ToolsView({
-            tools: [
-                verticesTool,
-                //segmentsTool,
-                sourceCircle,
-                targetCircle,
-                removeButton1,
-                removeButton2,
-                monitorButton1,
-                monitorButton2
-            ]
-        });
-        this.addTools(toolsView);
-        this.hideTools();
     },
     _updateSignal() {
         const signal = this.model.get('signal');
@@ -665,12 +648,12 @@ export const WireView = joint.dia.LinkView.extend({
 
     mouseenter(evt) {
         joint.dia.LinkView.prototype.mouseenter.apply(this, arguments);
-        this.showTools();
+        this.addTools(toolsView);
         this._addTooltip({x: evt.clientX + 5, y: evt.clientY + 5 });
     },
     mouseleave(evt) {
         joint.dia.LinkView.prototype.mouseleave.apply(this, arguments);
-        this.hideTools();
+        this.removeTools();
         this._removeTooltip();
     },
 
