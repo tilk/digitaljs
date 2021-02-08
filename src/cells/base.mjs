@@ -183,7 +183,7 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
         }
         
         for (const port of ports) {
-            console.assert(port.bits > 0);
+            console.assert(port.bits >= 0);
             signals[port.dir][port.id] = Vector3vl.xes(port.bits);
         }
         
