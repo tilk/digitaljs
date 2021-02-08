@@ -5,6 +5,8 @@ import 'regenerator-runtime/runtime';
 import { HeadlessCircuit, getCellType } from '../src/circuit.mjs';
 import { Vector3vl } from '3vl';
 
+console.assert = (stmt, msg) => { if (!stmt) throw new Error(msg); };
+
 class SingleCellTestFixture {
     constructor(celldata) {
         this.inlist = [];
