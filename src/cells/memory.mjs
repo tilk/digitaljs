@@ -20,7 +20,7 @@ export const Memory = Box.define('Memory', {
     
     attrs: {
         portsplit: {
-            stroke: 'black', d: undefined
+            stroke: 'black'
         }
     },
     ports: {

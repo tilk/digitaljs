@@ -31,8 +31,7 @@ export const portGroupAttrs = {
     },
     decor: {
         stroke: 'black',
-        fill: 'transparent',
-        d: undefined
+        fill: 'transparent'
     }
 };
 
