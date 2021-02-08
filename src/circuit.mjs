@@ -175,7 +175,7 @@ export class HeadlessCircuit {
         })();
         sq.set(gate, gate.get('inputSignals'));
     }
-    _updateGatesNext() {
+    updateGatesNext() {
         const k = this._pq.poll() | 0;
         console.assert(k >= this._tick);
         this._tick = k;
@@ -198,8 +198,8 @@ export class HeadlessCircuit {
         this.trigger('postUpdateGates', k, count);
         return count;
     }
-    _updateGates() {
-        if (this._pq.peek() == this._tick) return this._updateGatesNext();
+    updateGates() {
+        if (this._pq.peek() == this._tick) return this.updateGatesNext();
         else {
             const k = this._tick | 0;
             this.trigger('preUpdateGates', k);

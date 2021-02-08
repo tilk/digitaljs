@@ -35,7 +35,7 @@ export class Circuit extends HeadlessCircuit {
         if (this.hasWarnings())
             return; //todo: print/show error
         this._interval = setInterval(() => {
-            this._updateGates();
+            this.updateGates();
         }, this._interval_ms);
         this.trigger('changeRunning');
     }
@@ -44,7 +44,7 @@ export class Circuit extends HeadlessCircuit {
             return; //todo: print/show error
         this._idle = requestIdleCallback((dd) => {
             while (dd.timeRemaining() > 0 && this.hasPendingEvents && this._idle !== null)
-                this._updateGatesNext();
+                this.updateGatesNext();
             if (this._idle !== null) {
                 if (!this.hasPendingEvents) {
                     this._idle = null;
