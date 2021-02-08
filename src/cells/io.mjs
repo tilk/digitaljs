@@ -208,6 +208,8 @@ export const Input = IO.define('Input', {
         this.setInput(this.get('outputSignals').out.not());
     },
     _setInput(sig) {
+        if (sig.bits != this.get('bits'))
+            throw new Error("setInput: wrong number of bits");
         this.set('outputSignals', { out: sig });
     },
     markupSingle: IO.prototype.markupSingle.concat([{
