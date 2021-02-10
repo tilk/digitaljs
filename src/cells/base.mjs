@@ -660,6 +660,7 @@ export const WireView = joint.dia.LinkView.extend({
      */
     _addTooltip(pos) {
         if (this.model.get('bits') == 1) return;
+        if (this.wire_hover) return;
         this.wire_hover = $('<div class="wire_hover">')
             .css('left', pos.x)
             .css('top', pos.y)
