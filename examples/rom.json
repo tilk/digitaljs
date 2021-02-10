@@ -5,7 +5,7 @@
       "label": "addr",
       "net": "addr",
       "order": 0,
-      "bits": 4
+      "bits": 5
     },
     "dev1": {
       "type": "NumDisplay",
@@ -18,7 +18,7 @@
       "label": "mem",
       "type": "Memory",
       "bits": 4,
-      "abits": 4,
+      "abits": 5,
       "words": 16,
       "offset": 0,
       "rdports": [

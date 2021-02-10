@@ -13,7 +13,7 @@
       "label": "addr",
       "net": "addr",
       "order": 1,
-      "bits": 4
+      "bits": 5
     },
     "dev2": {
       "type": "NumDisplay",
@@ -27,7 +27,7 @@
       "label": "wraddr",
       "net": "wraddr",
       "order": 3,
-      "bits": 4
+      "bits": 5
     },
     "dev4": {
       "type": "NumEntry",
@@ -40,7 +40,7 @@
       "label": "mem",
       "type": "Memory",
       "bits": 4,
-      "abits": 4,
+      "abits": 5,
       "words": 16,
       "offset": 0,
       "rdports": [
