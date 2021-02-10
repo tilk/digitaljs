@@ -88,7 +88,7 @@ export const Memory = Box.define('Memory', {
             );
             if ('enable_polarity' in port) {
                 num++;
-                ports.push({ id: portname + 'en', group: 'in', dir: 'in', bits: 1, portlabel: 'en', polarity: port.enable_polarity, labelled: true });
+                ports.push({ id: portname + 'en', group: 'in', dir: 'in', bits: bits, portlabel: 'en', polarity: port.enable_polarity, labelled: true });
             }
             if ('clock_polarity' in port) {
                 num++;
