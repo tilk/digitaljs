@@ -92,6 +92,19 @@ export class HeadlessCircuit {
         graph._display3vl = this._display3vl;
         graph._warnings = 0;
         if (opt.nested) graph.set('subcircuit', true);
+        const changeWarnings = (x) => {
+            graph._warnings += x;
+            console.assert(graph._warnings >= 0);
+
+            //todo: better handling for stopping simulation
+            if (graph._warnings > 0 && this.running)
+                this.stop();
+            
+            // bubble warning up in case of subcircuit
+            const subcir = graph.get('subcircuit');
+            if (subcir == null || subcir == true) return;
+            subcir.set('warning', graph._warnings > 0);
+        };
         this.listenTo(graph, 'userChange', () => {
             this.trigger('userChange');
         });
@@ -120,24 +133,16 @@ export class HeadlessCircuit {
         this.listenTo(graph, 'change:warning', (cell, warn) => {
             if (cell.previous('warning') === warn)
                 return;
-            graph._warnings += warn ? 1 : -1;
-            console.assert(graph._warnings >= 0);
-
-            //todo: better handling for stopping simulation
-            if (graph._warnings > 0 && this.running)
-                this.stop();
-
-            // bubble warning up in case of subcircuit
-            const subcir = graph.get('subcircuit');
-            if (subcir == null) return;
-            subcir.set('warning', graph._warnings > 0);
+            changeWarnings(warn ? 1 : -1);
         });
         this.listenTo(graph, 'add', (cell, coll, opt) => {
             this._labelIndex = null; // TODO: update index
             if (cell.onAdd) cell.onAdd();
+            if (cell.get('warning')) changeWarnings(1);
         });
         this.listenTo(graph, 'remove', (cell, coll, opt) => {
             this._labelIndex = null; // TODO: update index
+            if (cell.get('warning')) changeWarnings(-1);
         });
         let laid_out = false;
         for (const devid in data.devices) {

@@ -402,10 +402,9 @@ export const Wire = joint.shapes.standard.Link.define('Wire', {
     },
     onAdd() {
         this._changeSource(this.get('source'));
+        this._was_added = true; // hacky fix for warnings calculation
     },
     remove() {
-        //remove warning if inside subcircuit
-        this.set('warning', false);
         const tar = this.get('target');
         const target = this.graph.getCell(tar.id);
         if (target && 'port' in tar) {
@@ -455,7 +454,7 @@ export const Wire = joint.shapes.standard.Link.define('Wire', {
     _checkConnection() {
         const tar = this.get('target');
         const target = this.graph.getCell(tar.id);
-        this.set('warning', (target && target.getPort(tar.port).bits !== this.get('bits')) || false);
+        this.set('warning', (target && target.getPort(tar.port).bits !== this.get('bits')) || false, {silent: !this._was_added});
     },
 
     /*
