@@ -16,7 +16,7 @@
     },
     "subcir": {
       "type": "Subcircuit",
-      "celltype": "subcir"
+      "celltype": "subcir2"
     },
     "display": {
       "type": "NumDisplay",
@@ -66,6 +66,45 @@
     }
   ],
   "subcircuits": {
+    "subcir2": {
+      "devices": {
+        "in": {
+          "type": "Input",
+          "net": "in"
+        },
+        "out": {
+          "type": "Output",
+          "net": "out",
+          "bits": 2
+        },
+        "subcir": {
+          "type": "Subcircuit",
+          "celltype": "subcir"
+        }
+      },
+      "connectors": [
+        {
+          "to": {
+            "id": "out",
+            "port": "in"
+          },
+          "from": {
+            "id": "subcir",
+            "port": "out"
+          }
+        },
+        {
+          "to": {
+            "id": "subcir",
+            "port": "in"
+          },
+          "from": {
+            "id": "in",
+            "port": "out"
+          }
+        }
+      ]
+    },
     "subcir": {
       "devices": {
         "in": {
