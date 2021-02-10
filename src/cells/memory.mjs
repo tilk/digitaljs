@@ -60,7 +60,7 @@ export const Memory = Box.define('Memory', {
         for (const [pnum, port] of rdports.entries()) {
             const portname = "rd" + pnum;
             ports.push(
-                { id: portname + 'addr', group: 'in', dir: 'in', bits: bits, portlabel: 'addr', labelled: true },
+                { id: portname + 'addr', group: 'in', dir: 'in', bits: abits, portlabel: 'addr', labelled: true },
                 { id: portname + 'data', group: 'out', dir: 'out', bits: bits, portlabel: 'data', labelled: true, args: { idxOffset: idxOffset } }
             );
             num += 1;
@@ -84,7 +84,7 @@ export const Memory = Box.define('Memory', {
             num += 2;
             ports.push(
                 { id: portname + 'data', group: 'in', dir: 'in', bits: bits, portlabel: 'data', labelled: true },
-                { id: portname + 'addr', group: 'in', dir: 'in', bits: bits, portlabel: 'addr', labelled: true }
+                { id: portname + 'addr', group: 'in', dir: 'in', bits: abits, portlabel: 'addr', labelled: true }
             );
             if ('enable_polarity' in port) {
                 num++;
