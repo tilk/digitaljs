@@ -57,8 +57,7 @@ export const Memory = Box.define('Memory', {
         let num = 0;
         let idxOffset = 0;
         const ports = [], portsplits = [];
-        for (const [pnum, port] of rdports.entries()) {
-            const portname = "rd" + pnum;
+        for (const [portname, port] of this._memrdports()) {
             ports.push(
                 { id: portname + 'addr', group: 'in', dir: 'in', bits: abits, portlabel: 'addr', labelled: true },
                 { id: portname + 'data', group: 'out', dir: 'out', bits: bits, portlabel: 'data', labelled: true, args: { idxOffset: idxOffset } }
@@ -79,8 +78,7 @@ export const Memory = Box.define('Memory', {
             }
             portsplits.push(num);
         }
-        for (const [pnum, port] of wrports.entries()) {
-            const portname = "wr" + pnum;
+        for (const [portname, port] of this._memwrports()) {
             num += 2;
             ports.push(
                 { id: portname + 'data', group: 'in', dir: 'in', bits: bits, portlabel: 'data', labelled: true },
@@ -132,7 +130,6 @@ export const Memory = Box.define('Memory', {
             }
             return true;
         };
-        const calc_addr = sig => help.sig2bigint(sig, false) - this.get('offset');
         const valid_addr = n => n >= 0 && n < this.get('words');
         const do_read = (portname, port) => {
             if (!check_enabled(portname, port)) {
@@ -142,20 +139,15 @@ export const Memory = Box.define('Memory', {
                     out[portname + 'data'] = Vector3vl.xes(this.get('bits'));
                 return;
             }
-            if (!data[portname + 'addr'].isFullyDefined)
+            const addr = this._calcaddr(data[portname + 'addr']);
+            if (valid_addr(addr))
+                out[portname + 'data'] = this.memdata.get(addr);
+            else
                 out[portname + 'data'] = Vector3vl.xes(this.get('bits'));
-            else {
-                const addr = calc_addr(data[portname + 'addr']);
-                if (valid_addr(addr))
-                    out[portname + 'data'] = this.memdata.get(addr);
-                else
-                    out[portname + 'data'] = Vector3vl.xes(this.get('bits'));
-            }
         };
         const do_write = (portname, port) => {
             if (!check_enabled(portname, port)) return;
-            if (!data[portname + 'addr'].isFullyDefined) return;
-            const addr = calc_addr(data[portname + 'addr']);
+            const addr = this._calcaddr(data[portname + 'addr']);
             if (valid_addr(addr)) {
                 const changed = !this.memdata.get(addr).eq(data[portname + 'data']);
                 this.memdata.set(addr, data[portname + 'data']);
@@ -163,26 +155,23 @@ export const Memory = Box.define('Memory', {
                     this.trigger("memChange", addr, data[portname + 'data']);
             }
         };
-        for (const [num, port] of this.get('rdports').entries())
-            if (!port.transparent) do_read('rd' + num, port);
-        for (const [num, port] of this.get('wrports').entries())
-            do_write('wr' + num, port);
-        for (const [num, port] of this.get('rdports').entries())
-            if (port.transparent) do_read('rd' + num, port);
+        for (const [portname, port] of this._memrdports())
+            if (!port.transparent) do_read(portname, port);
+        for (const [portname, port] of this._memwrports())
+            do_write(portname, port);
+        for (const [portname, port] of this._memrdports())
+            if (port.transparent) do_read(portname, port);
         return out;
     },
     _updateOutputs(addr) {
         if (addr < 0 || addr >= this.get('words')) return;
         const data = this.get('inputSignals');
-        const calc_addr = sig => help.sig2bigint(sig, false) - this.get('offset');
         const sigs = _.clone(this.get('outputSignals'));
         let changed = false;
-        for (const [num, port] of this.get('rdports').entries()) {
-            const portname = 'rd' + num;
+        for (const [portname, port] of this._memrdports()) {
             if (port.transparent
                     && !('clock_polarity' in port)
-                    && data[portname + 'addr'].isFullyDefined
-                    && calc_addr(data[portname + 'addr']) == addr) {
+                    && this._calcaddr(data[portname + 'addr']) == addr) {
                 if ('enable_polarity' in port && !data[portname + 'en'].toArray().some(x => x == pol('enable')))
                     continue;
                 changed = true;
@@ -190,6 +179,22 @@ export const Memory = Box.define('Memory', {
             }
         }
         if (changed) this.set('outputSignals', sigs);
+    },
+    _calcaddr(sig) {
+        if (!sig.isFullyDefined) return -1;
+        return help.sig2bigint(sig, false) - this.get('offset');
+    },
+    * _memrdports() {
+        for (const [num, port] of this.get('rdports').entries())
+            yield ["rd" + num, port];
+    },
+    * _memwrports() {
+        for (const [num, port] of this.get('wrports').entries())
+            yield ["wr" + num, port];
+    },
+    * _memports() {
+        yield* this._memrdports();
+        yield* this._memwrports();
     },
     markup: Box.prototype.markup.concat([{
             tagName: 'path',
@@ -240,6 +245,27 @@ export const MemoryView = BoxView.extend({
         const rows = 8;
         let columns, address = 0;
         const get_numbase = () => div.find('select[name=base]').val();
+        const getCell = (addr) => {
+            const r = Math.floor((addr - address) / columns);
+            const c = addr - address - r * columns;
+            return div.find('table tr:nth-child('+(r+1)+') td:nth-child('+(c+2)+') input');
+        }
+        const clearMarkings = (sigs) => {
+            for (const [portname, port] of this.model._memrdports()) {
+                getCell(this.model._calcaddr(sigs[portname + 'addr'])).removeClass('isread');
+            }
+            for (const [portname, port] of this.model._memwrports()) {
+                getCell(this.model._calcaddr(sigs[portname + 'addr'])).removeClass('iswrite');
+            }
+        }
+        const displayMarkings = (sigs) => {
+            for (const [portname, port] of this.model._memrdports()) {
+                getCell(this.model._calcaddr(sigs[portname + 'addr'])).addClass('isread');
+            }
+            for (const [portname, port] of this.model._memwrports()) {
+                getCell(this.model._calcaddr(sigs[portname + 'addr'])).addClass('iswrite');
+            }
+        }
         const updateStuff = () => {
             const numbase = get_numbase();
             div.find('button[name=prev]').prop('disabled', address <= 0);
@@ -258,6 +284,7 @@ export const MemoryView = BoxView.extend({
                                      .removeClass('invalid');
                 }
             }
+            displayMarkings(this.model.get('inputSignals'));
         };
         const redraw = () => {
             const numbase = get_numbase();
@@ -288,10 +315,12 @@ export const MemoryView = BoxView.extend({
         redraw();
         div.find("select[name=base]").on('change', redraw);
         div.find("button[name=prev]").on('click', () => {
+            clearMarkings(this.model.get('inputSignals'));
             address = Math.max(0, address - rows * columns);
             updateStuff();
         });
         div.find("button[name=next]").on('click', () => {
+            clearMarkings(this.model.get('inputSignals'));
             address = Math.min(words - rows * columns, address + rows * columns);
             updateStuff();
         });
@@ -314,15 +343,17 @@ export const MemoryView = BoxView.extend({
         const changeCallback = (addr, data) => {
             if (addr < address || addr > address + rows * columns) return;
             const numbase = get_numbase();
-            const r = Math.floor((addr - address) / columns);
-            const c = addr - address - r * columns;
-            const z = div.find('table tr:nth-child('+(r+1)+') td:nth-child('+(c+2)+') input')
-                .val(display3vl.show(numbase, memdata.get(address + r * columns + c)))
+            const z = getCell(addr)
+                .val(display3vl.show(numbase, memdata.get(addr)))
                 .removeClass('invalid')
                 .removeClass('flash');
             setTimeout(() => { z.addClass('flash') }, 10);
         };
         this.model.on("memChange", changeCallback);
+        this.model.on("change:inputSignals", (gate, sigs) => {
+            clearMarkings(this.model.previous('inputSignals'));
+            displayMarkings(sigs);
+        });
         this.paper.trigger('open:memorycontent', div, () => {
             div.remove();
             this.model.off("memChange", changeCallback);

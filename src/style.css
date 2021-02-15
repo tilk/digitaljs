@@ -270,6 +270,19 @@ table.memeditor input.flash {
     animation-duration: 1s;
 }
 
+table.memeditor input.isread {
+    box-shadow: 0px 0px 5px green;
+}
+
+table.memeditor input.iswrite {
+    box-shadow: 0px 0px 5px red;
+}
+
+table.memeditor input.iswrite.isread {
+    box-shadow: 1px 1px 5px -1px red,
+                -1px -1px 5px -1px green;
+}
+
 @keyframes flash-animation {
     from { background-color: yellow; }
     to   { background-color: default; }
