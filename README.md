@@ -178,7 +178,6 @@ Some ideas for further developing the simulator.
 
  * Use JointJS elementTools for configuring/removing gates.
  * RAM/ROM import/export for Verilog format and Intel HEX.
- * Scripting language for writing testbenches. (Maybe Lua?)
  * Framebuffer element with character/bitmap display.
  * More editing capability: adding and removing blocks, modifying some of blocks' properties.
  * Undo-redo capability.
