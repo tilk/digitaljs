@@ -11,6 +11,7 @@ import { Vector3vl } from '3vl';
 import 'jquery-ui/ui/widgets/dialog';
 import 'jquery-ui/themes/base/all.css';
 import * as cells from './cells';
+import * as tools from './tools';
 import { HeadlessCircuit, getCellType } from './circuit';
 import { MonitorView, Monitor } from './monitor';
 import { IOPanelView } from './iopanel';
@@ -21,7 +22,52 @@ import './style.css';
 // see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#Browser_compatibility
 import ResizeObserver from 'resize-observer-polyfill';
 
-export { HeadlessCircuit, getCellType, cells, MonitorView, Monitor, IOPanelView };
+export { HeadlessCircuit, getCellType, cells, tools, MonitorView, Monitor, IOPanelView };
+
+export const paperOptions = {
+    async: true,
+    sorting: joint.dia.Paper.sorting.APPROX, //needed for async paper, see https://github.com/clientIO/joint/issues/1320
+    width: 100, height: 100, gridSize: 5,
+    magnetThreshold: 'onleave',
+    snapLinks: true,
+    linkPinning: false,
+    markAvailable: true,
+    defaultLink: new cells.Wire,
+    defaultConnectionPoint: { name: 'anchor' },
+    defaultRouter: {
+        name: 'metro',
+        args: {
+            startDirections: ['right'],
+            endDirections: ['left'],
+            maximumLoops: 200
+        }
+    },
+    defaultConnector: {
+        name: 'rounded',
+        args: { radius: 10 }
+    },
+    cellViewNamespace: cells,
+    validateConnection(vs, ms, vt, mt, e, vl) {
+        if (e === 'target') {
+            if (!mt) return false;
+            const pt = vt.model.getPort(vt.findAttribute('port', mt));
+            if (typeof pt !== 'object' || pt.dir !== 'in' || pt.bits !== vl.model.get('bits'))
+                return false;
+            const link = this.model.getConnectedLinks(vt.model).find((l) =>
+                l.id !== vl.model.id &&
+                l.get('target').id === vt.model.id &&
+                l.get('target').port === vt.findAttribute('port', mt)
+            );
+            return !link;
+        } else if (e === 'source') {
+            if (!ms) return false;
+            const ps = vs.model.getPort(vs.findAttribute('port', ms));
+            if (typeof ps !== 'object' || ps.dir !== 'out' || ps.bits !== vl.model.get('bits'))
+                return false;
+            return true;
+        }
+    }
+};
 
 export class Circuit extends HeadlessCircuit {
     constructor(data, windowCallback, cellsNamespace) {
@@ -105,55 +151,10 @@ export class Circuit extends HeadlessCircuit {
     displayOn(elem) {
         return this._makePaper(elem, this._graph);
     }
-    _makePaper(elem, graph, opts) {
+    _makePaper(elem, graph) {
         const circuit = this;
-        opts = opts || {};
-        const paper = new joint.dia.Paper({
-            async: true,
-            sorting: joint.dia.Paper.sorting.APPROX, //needed for async paper, see https://github.com/clientIO/joint/issues/1320
-            el: elem,
-            model: graph,
-            width: 100, height: 100, gridSize: 5,
-            magnetThreshold: 'onleave',
-            snapLinks: true,
-            linkPinning: false,
-            markAvailable: true,
-            defaultLink: new this._cells.Wire,
-            defaultConnectionPoint: { name: 'anchor' },
-            defaultRouter: {
-                name: 'metro',
-                args: {
-                    startDirections: ['right'],
-                    endDirections: ['left'],
-                    maximumLoops: 200
-                }
-            },
-            defaultConnector: {
-                name: 'rounded',
-                args: { radius: 10 }
-            },
-            cellViewNamespace: this._cells,
-            validateConnection(vs, ms, vt, mt, e, vl) {
-                if (e === 'target') {
-                    if (!mt) return false;
-                    const pt = vt.model.getPort(vt.findAttribute('port', mt));
-                    if (typeof pt !== 'object' || pt.dir !== 'in' || pt.bits !== vl.model.get('bits'))
-                        return false;
-                    const link = this.model.getConnectedLinks(vt.model).find((l) =>
-                        l.id !== vl.model.id &&
-                        l.get('target').id === vt.model.id &&
-                        l.get('target').port === vt.findAttribute('port', mt)
-                    );
-                    return !link;
-                } else if (e === 'source') { 
-                    if (!ms) return false;
-                    const ps = vs.model.getPort(vs.findAttribute('port', ms));
-                    if (typeof ps !== 'object' || ps.dir !== 'out' || ps.bits !== vl.model.get('bits'))
-                        return false;
-                    return true;
-                }
-            }
-        });
+        const opts = _.merge({ el: elem, model: graph }, paperOptions);
+        const paper = new joint.dia.Paper(opts);
         paper.$el.addClass('djs');
         paper.freeze();
         // required for the paper to visualize the graph (jointjs bug?)
