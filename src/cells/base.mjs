@@ -4,6 +4,7 @@ import * as joint from 'jointjs';
 import _ from 'lodash';
 import bigInt from 'big-integer';
 import { Vector3vl } from '3vl';
+import * as tools from '../tools';
 
 export const portGroupAttrs = {
     wire: {
@@ -487,78 +488,6 @@ export const Wire = joint.shapes.standard.Link.define('Wire', {
     }
 });
 
-const circleArrowhead = {
-    tagName: 'circle',
-    attributes: {
-        'r': 7,
-        'fill': 'black',
-        'fill-opacity': 0.3,
-        'stroke': 'black',
-        'stroke-width': 2,
-        'cursor': 'move'
-    }
-};
-const CircleSourceArrowhead = joint.linkTools.SourceArrowhead.extend(_.merge({}, circleArrowhead));
-const CircleTargetArrowhead = joint.linkTools.TargetArrowhead.extend(_.merge({}, circleArrowhead));
-
-const DoublyButton = joint.linkTools.Button.extend({
-    update() {
-        if (this.relatedView.isShortWire()) {
-            this.options.distance = this.options.distanceShort || this.options.distance;
-            if (this.options.secondary) this.hide();
-        } else {
-            this.options.distance = this.options.distanceLong || this.options.distance;
-        }
-        return joint.linkTools.Button.prototype.update.apply(this, arguments);
-    }
-});
-const RemoveButton = DoublyButton.extend({
-    name: 'remove',
-    children: joint.linkTools.Remove.prototype.children,
-    options: joint.linkTools.Remove.prototype.options
-});
-const MonitorButton = DoublyButton.extend({
-    name: 'monitor',
-    children: [{
-        tagName: 'circle',
-        selector: 'button',
-        attributes: {
-            'r': 7,
-            'fill': '#001DFF',
-            'cursor': 'pointer'
-        }
-    }, {
-        tagName: 'path',
-        selector: 'icon',
-        attributes: {
-            'd': 'm -2.5,-0.5 a 2,2 0 1 0 4,0 2,2 0 1 0 -4,0 M 1,1 3,3',
-            'fill': 'none',
-            'stroke': '#FFFFFF',
-            'stroke-width': 2,
-            'pointer-events': 'none'
-        }
-    }],
-    options: {
-        action(evt) {
-            this.notify('link:monitor');
-        }
-    }
-});
-
-// only instantiate toolsView in browser-environment
-const toolsView = (typeof window !== 'undefined') ? new joint.dia.ToolsView({
-    tools: [
-        new joint.linkTools.Vertices({ focusOpacity: 0.5 }),
-        //new joint.linkTools.Segments({ focusOpacity: 0.5 }), //todo: problem with signal reset ??,
-        new CircleSourceArrowhead(),
-        new CircleTargetArrowhead(),
-        new RemoveButton({ distanceShort: '75%', distanceLong: '50' }),
-        new RemoveButton({ distance: '-50', secondary: true }),
-        new MonitorButton({ distanceShort: '25%', distanceLong: '30' }),
-        new MonitorButton({ distance: '-30', secondary: true })
-    ]
-}) : null;
-
 export const WireView = joint.dia.LinkView.extend({
     initFlag: joint.dia.LinkView.prototype.initFlag.concat(['INIT']),
     longWireLength: 400,
@@ -578,6 +507,19 @@ export const WireView = joint.dia.LinkView.extend({
             none: { wrapper: { 'stroke-opacity': '0' } }
         }
     },
+    // only instantiate toolsView in browser-environment
+    _wireToolsView: (typeof window !== 'undefined') ? new joint.dia.ToolsView({
+        tools: [
+            new joint.linkTools.Vertices({ focusOpacity: 0.5 }),
+            //new joint.linkTools.Segments({ focusOpacity: 0.5 }), //todo: problem with signal reset ??,
+            new tools.CircleSourceArrowhead(),
+            new tools.CircleTargetArrowhead(),
+            new tools.RemoveButton({ distanceShort: '75%', distanceLong: '50' }),
+            new tools.RemoveButton({ distance: '-50', secondary: true }),
+            new tools.MonitorButton({ distanceShort: '25%', distanceLong: '30' }),
+            new tools.MonitorButton({ distance: '-30', secondary: true })
+        ]
+    }) : null,
     presentationAttributes: joint.dia.LinkView.addPresentationAttributes({
         signal: 'SIGNAL',
         bits: 'BITS',
@@ -646,7 +588,7 @@ export const WireView = joint.dia.LinkView.extend({
 
     mouseenter(evt) {
         joint.dia.LinkView.prototype.mouseenter.apply(this, arguments);
-        this.addTools(toolsView);
+        this.addTools(this._wireToolsView);
         this._addTooltip({x: evt.clientX + 5, y: evt.clientY + 5 });
     },
     mouseleave(evt) {
