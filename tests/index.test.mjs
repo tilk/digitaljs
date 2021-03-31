@@ -343,3 +343,15 @@ describe('$busslice', () => {
     });
 });
 
+// TODO: better tests for stateful cells
+
+describe('$dff as a latch', () => {
+    const t = new SingleCellTestFixture({celltype: '$dff', "polarity": {"enable":true}});
+    test("transparency", () => {
+        t.expectComb({en: Vector3vl.fromBool(true), in: Vector3vl.fromBool(true)}, {out: Vector3vl.fromBool(true)});
+        t.expectComb({en: Vector3vl.fromBool(true), in: Vector3vl.fromBool(false)}, {out: Vector3vl.fromBool(false)});
+    });
+});
+
+// TODO: tests for public circuit interface
+

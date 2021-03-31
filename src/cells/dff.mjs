@@ -10,7 +10,6 @@ import { Vector3vl } from '3vl';
 export const Dff = Box.define('Dff', {
     /* default properties */
     bits: 1,
-    polarity: { clock: true },
     initial: 'x',
 
     size: { width: 80, height: undefined },

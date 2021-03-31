@@ -17,6 +17,7 @@ const tests = [
     {name: 'gates', title: 'All available gates'},
     {name: 'io', title: 'Input/Output types'},
     {name: 'horner', title: 'Benchmark example'},
+    {name: 'latch', title: 'Level-triggered D-latch example'},
     {name: 'warnings', title: 'Warnings example'}
 ];
 
