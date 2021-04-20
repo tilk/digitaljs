@@ -111,12 +111,20 @@ export class HeadlessCircuit {
         this.listenTo(graph, 'change:constantCache', (gate) => {
             this._enqueue(gate);
         });
+        const eqSigs = (sigs1, sigs2) => {
+            for (const k in sigs1) {
+                if (!sigs1[k].eq(sigs2[k])) return false;
+            }
+            return true;
+        };
         this.listenTo(graph, 'change:inputSignals', (gate, sigs) => {
+            if (eqSigs(sigs, gate.previous("inputSignals"))) return;
             if (gate._changeInputSignals) {
                 gate._changeInputSignals(sigs);
             } else this._enqueue(gate);
         });
         this.listenTo(graph, 'change:outputSignals', (gate, sigs) => {
+            if (eqSigs(sigs, gate.previous("outputSignals"))) return;
             gate._changeOutputSignals(sigs);
         });
         this.listenTo(graph, 'change:signal', (wire, signal) => {
