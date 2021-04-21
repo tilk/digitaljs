@@ -37,7 +37,7 @@ export const Dff = Box.define('Dff', {
         );
         this.set('outputSignals', { out: Vector3vl.fromBin(initial, bits) });
         
-        if ('arst' in polarity && this.get('arst_value'))
+        if ('arst' in polarity && !this.get('arst_value'))
             this.set('arst_value', Array(bits).fill('0').join(''));
         
         let num = 1;
