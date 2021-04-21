@@ -468,7 +468,7 @@ export const Clock = Box.define('Clock', {
     },
     operation() {
         // trigger next clock edge
-        this.trigger("change:inputSignals", this, {});
+        this.trigger("change:inputSignals", this, { _clock_hack: true });
         return { out: this.get('outputSignals').out.not() };
     },
     tooltipMinWidth: 55,
