@@ -122,8 +122,8 @@ instance.
     * Inputs: `in0` ... `inN` (`bits.in`-bit, `N` = `bits.sel`), `sel` (`bits.sel`-bit)
     * Outputs: `out` (`bits.in`-bit)
  * D flip-flop: `Dff`
-    * Attributes: `bits` (natural number), `polarity.clock`, `polarity.arst`, `polarity.enable` (optional booleans), `initial` (optional binary string)
-    * Inptus: `in` (`bits`-bit), `clk` (1-bit, if `polarity.clock` is present), `arst` (1-bit, if `polarity.arst` is present), `en` (1-bit, if `polarity.enable` is present)
+    * Attributes: `bits` (natural number), `polarity.clock`, `polarity.arst`, `polarity.enable` (optional booleans), `initial` (optional binary string), `arst_value` (optional binary string)
+    * Inputs: `in` (`bits`-bit), `clk` (1-bit, if `polarity.clock` is present), `arst` (1-bit, if `polarity.arst` is present), `en` (1-bit, if `polarity.enable` is present)
     * Outputs: `out` (`bits`-bit)
  * Memory: `Memory`
     * Attributes: `bits`, `abits`, `words`, `offset` (natural number), `rdports` (array of read port descriptors), `wrports` (array of write port descriptors), `memdata` (memory contents description)
