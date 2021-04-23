@@ -79,8 +79,8 @@ export const Dff = Box.define('Dff', {
                 return this.get('outputSignals');
         } else return { out: data.in };
     },
-    _gateParams: Box.prototype._gateParams.concat(['polarity', 'bits', 'initial']),
-    _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['polarity', 'bits', 'initial'])
+    _gateParams: Box.prototype._gateParams.concat(['polarity', 'bits', 'initial', 'arst_value']),
+    _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['polarity', 'bits', 'initial', 'arst_value'])
 });
 export const DffView = BoxView.extend({
     _autoResizeBox: true
