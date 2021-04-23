@@ -150,7 +150,7 @@ class SingleCellTestFixture {
             for (const [name, value] of Object.entries(ins)) {
                 this.circuit.setInput(name, value);
             }
-            this.clockPulse(opts.clock, timeout);
+            this.clockPulse(opts.clock, opts.clock_polarity, opts.timeout);
             for (const k in this.outlist) {
                 expect(this.circuit.getOutput(this.outlist[k].name).toBin())
                     .toEqual(outs[this.outlist[k].name].toBin());
@@ -184,11 +184,11 @@ class SingleCellTestFixture {
             this.circuit.updateGates();
         expect(this.circuit.hasPendingEvents).toBeFalsy();
     }
-    clockPulse(clk, timeout) {
+    clockPulse(clk, polarity, timeout) {
         this.waitUntilStable(timeout);
-        this.circuit.setInput(this.net2name[clk], Vector3vl.zero);
+        this.circuit.setInput(clk, Vector3vl.fromBool(!polarity));
         this.waitUntilStable(timeout);
-        this.circuit.setInput(this.net2name[clk], Vector3vl.one);
+        this.circuit.setInput(clk, Vector3vl.fromBool(polarity));
         this.waitUntilStable(timeout);        
     }
 };
@@ -423,9 +423,16 @@ describe('$dff', () => {
                         .testFun((s, old) => ({out: s.arst.eq(Vector3vl.fromBool(arst_pol)) ? Vector3vl.fromBool(arst_val, bits) : s.en.eq(Vector3vl.fromBool(en_pol)) ? s.in : old.out }));
                 });
             });
+            describe.each([true, false])('clock polarity %s', (clk_pol) => {
+                new SingleCellTestFixture({celltype: '$dff', bits: bits, polarity: {clock: clk_pol, enable: en_pol}})
+                    .testFun((s, old) => ({out: s.en.eq(Vector3vl.fromBool(en_pol)) ? s.in : old.out }), {clock: 'clk', clock_polarity: clk_pol});
+            });
+        });
+        describe.each([true, false])('clock polarity %s', (clk_pol) => {
+            new SingleCellTestFixture({celltype: '$dff', bits: bits, polarity: {clock: clk_pol}})
+                .testFun((s, old) => ({out: s.in}), {clock: 'clk', clock_polarity: clk_pol});
         });
     });
-    // TODO: tests for edge-triggered Dff
 });
 
 // TODO: tests for public circuit interface
