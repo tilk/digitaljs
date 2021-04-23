@@ -68,10 +68,10 @@ export const Dff = Box.define('Dff', {
             last_clk = this.last_clk;
             this.last_clk = data.clk.get(0);
         }
-        if ('enable' in polarity && data.en.get(0) != pol('enable'))
-            return this.get('outputSignals');
         if ('arst' in polarity && data.arst.get(0) == pol('arst'))
             return { out: Vector3vl.fromBin(this.get('arst_value'), this.get('bits')) };
+        if ('enable' in polarity && data.en.get(0) != pol('enable'))
+            return this.get('outputSignals');
         if ('clock' in polarity) {
             if (data.clk.get(0) == pol('clock') && last_clk == -pol('clock'))
                 return { out: data.in };
