@@ -35,7 +35,6 @@ export const Dff = Box.define('Dff', {
             { id: 'in', group: 'in', dir: 'in', bits: bits, portlabel: 'D', labelled: true },
             { id: 'out', group: 'out', dir: 'out', bits: bits, portlabel: 'Q', labelled: true }
         );
-        this.set('outputSignals', { out: Vector3vl.fromBin(initial, bits) });
         
         if ('arst' in polarity && !this.get('arst_value'))
             this.set('arst_value', Array(bits).fill('0').join(''));
@@ -59,6 +58,11 @@ export const Dff = Box.define('Dff', {
         this.last_clk = 0;
         
         Box.prototype.initialize.apply(this, arguments);
+    },
+    _resetPortValue(port) {
+        if (port.id == "out" && port.dir == "out")
+            return Vector3vl.fromBin(this.get('initial'), port.bits);
+        else return Box.prototype._resetPortValue.call(this, port);
     },
     operation(data) {
         const polarity = this.get('polarity');

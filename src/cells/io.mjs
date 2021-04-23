@@ -193,12 +193,16 @@ export const Input = IO.define('Input', {
 }, {
     isInput: true,
     _portDirection: 'out',
+    _resetPortValue(port) {
+        if (port.id == "out" && port.dir == "out") {
+            const bits = this.get('bits');
+            const mode = this.get('mode');
+            return mode == 1 ? Vector3vl.zeros(bits) : Vector3vl.xes(bits);
+        } else return IO.prototype._resetPortValue.call(this, port);
+    },
     _checkMode() {
         IO.prototype._checkMode.call(this);
-
-        const bits = this.get('bits');
-        const mode = this.get('mode');
-        this.set('outputSignals', { out: mode == 1 ? Vector3vl.zeros(bits) : Vector3vl.xes(bits) });
+        this._resetPortsSignals([this.get('ports').items[0]]);
     },
     setInput(sig) {
         this._setInput(sig);
@@ -462,9 +466,10 @@ export const Clock = Box.define('Clock', {
 
     size: { width: 30, height: 30 }
 }, {
-    initialize() {
-        Box.prototype.initialize.apply(this, arguments);
-        this.set('outputSignals', { out: Vector3vl.zeros(1) });
+    _resetPortValue(port) {
+        if (port.id == "out" && port.dir == "out") {
+            return Vector3vl.zero;
+        } else return Box.prototype._resetPortValue(port);
     },
     operation() {
         // trigger next clock edge

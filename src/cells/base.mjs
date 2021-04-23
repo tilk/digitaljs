@@ -176,6 +176,9 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
     _getBitsText(bits) {
         return bits > 1 ? bits : '';
     },
+    _resetPortValue(port) {
+        return Vector3vl.xes(port.bits);
+    },
     _resetPortsSignals(ports) {
         const signals = {
             in: this.get('inputSignals'),
@@ -184,7 +187,7 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
         
         for (const port of ports) {
             console.assert(port.bits >= 0);
-            signals[port.dir][port.id] = Vector3vl.xes(port.bits);
+            signals[port.dir][port.id] = this._resetPortValue(port);
         }
         
         this.set('inputSignals', signals.in);
