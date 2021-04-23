@@ -55,10 +55,17 @@ class SingleCellTestFixture {
         }
         this.circuit = new HeadlessCircuit(circ);
     }
+    circuitOutputs() {
+        let ret = {};
+        for (const k in this.outlist) {
+            ret[this.outlist[k].name] = this.circuit.getOutput(this.outlist[k].name);
+        }
+        return ret;
+    }
     test(testname, f) {
         test(testname, () => { f(this.circuit) });
     }
-    testFunRandomized(fun, opts) {
+    testFunRandomized(fun, opts = {}) {
         const me = this;
         const randtrit = x => Math.floor(3 * Math.random() - 1);
         const randbit  = x => 2 * Math.floor(2 * Math.random()) - 1;
@@ -66,7 +73,9 @@ class SingleCellTestFixture {
         function randtest() {
             const ret = {};
             for (const x of me.inlist) {
-                ret[x.name] = Vector3vl.fromArray(Array(x.bits).fill(0).map(rand));
+                if (x.name == opts.clock) continue;
+                if (opts.fixed && opts.fixed[x.name]) ret[x.name] = opts.fixed[x.name];
+                else ret[x.name] = Vector3vl.fromArray(Array(x.bits).fill(0).map(rand));
             }
             return ret;
         }
@@ -77,11 +86,12 @@ class SingleCellTestFixture {
         }
         test("randomized logic table check", () => {
             for (const ins of gen(100)) {
-                this.expectComb(ins, fun(ins));
+                this.expect(ins, fun, opts);
             }
         });
+        return this;
     }
-    testFunComplete(fun, opts) {
+    testFunComplete(fun, opts = {}) {
         const me = this;
         const set = opts.no_random_x ? [-1, 1] : [-1, 0, 1];
         function bitgen(n) {
@@ -102,7 +112,12 @@ class SingleCellTestFixture {
             const ins = {};
             function* rec(level) {
                 if (level == me.inlist.length) yield ins;
-                else {
+                else if (me.inlist[level].name == opts.clock) {
+                    yield* rec(level+1);
+                } else if (opts.fixed && opts.fixed[me.inlist[level].name]) {
+                    ins[me.inlist[level].name] = opts.fixed[me.inlist[level].name];
+                    yield* rec(level+1);
+                } else {
                     for (const bits of bitgen(me.inlist[level].bits)) {
                         ins[me.inlist[level].name] = Vector3vl.fromArray(bits);
                         yield* rec(level+1);
@@ -113,36 +128,74 @@ class SingleCellTestFixture {
         }
         test("complete logic table check", () => {
             for (const ins of gen()) {
-                this.expectComb(ins, fun(ins));
+                this.expect(ins, fun, opts);
             }
         });
+        return this;
     }
     testFun(fun, opts = {}) {
         const totbits = this.inlist.reduce((a, b) => a + b.bits, 0);
-        if (totbits <= 6) this.testFunComplete(fun, opts);
-        else this.testFunRandomized(fun, opts);
+        if (totbits <= 6) return this.testFunComplete(fun, opts);
+        else return this.testFunRandomized(fun, opts);
     }
-    expectComb(ins, outs) {
+    expect(ins, outs, opts) {
+        if (opts.clock) this.expectSeq(ins, outs, opts);
+        return this.expectComb(ins, outs, opts);
+    }
+    expectSeq(ins, fun, opts = {}) {
+        let message = Object.entries(ins).map(([a, x]) => a + ':' + x.toBin()).join(' ');;
         try {
+            const outs = fun(ins, this.circuitOutputs());
+            message += ' ' + Object.entries(outs).map(([a, x]) => a + ':' + x.toBin()).join(' ');;
             for (const [name, value] of Object.entries(ins)) {
                 this.circuit.setInput(name, value);
             }
-            this.circuit.updateGates(); // propagate input change
-            this.circuit.updateGates(); // propagate gate delay
-            expect(this.circuit.hasPendingEvents).toBeFalsy();
+            this.clockPulse(opts.clock, timeout);
             for (const k in this.outlist) {
                 expect(this.circuit.getOutput(this.outlist[k].name).toBin())
                     .toEqual(outs[this.outlist[k].name].toBin());
             }
         } catch (e) {
-            e.message = Object.entries(ins).map(([a, x]) => a + ':' + x.toBin()).join(' ') + ' ' + Object.entries(outs).map(([a, x]) => a + ':' + x.toBin()).join(' ') + '\n' + e.message;
+            e.message = message + '\n' + e.message;
             throw e;
         }
+    }
+    expectComb(ins, fun, opts = {}) {
+        let message = Object.entries(ins).map(([a, x]) => a + ':' + x.toBin()).join(' ');;
+        try {
+            const outs = fun(ins, this.circuitOutputs());
+            message += ' ' + Object.entries(outs).map(([a, x]) => a + ':' + x.toBin()).join(' ');
+            for (const [name, value] of Object.entries(ins)) {
+                this.circuit.setInput(name, value);
+            }
+            this.waitUntilStable(opts.timeout);
+            for (const k in this.outlist) {
+                expect(this.circuit.getOutput(this.outlist[k].name).toBin())
+                    .toEqual(outs[this.outlist[k].name].toBin());
+            }
+        } catch (e) {
+            e.message = message + '\n' + e.message;
+            throw e;
+        }
+    }
+    waitUntilStable(timeout) {
+        timeout = timeout || 2;
+        for (let x = 0; x < timeout && this.circuit.hasPendingEvents; x++)
+            this.circuit.updateGates();
+        expect(this.circuit.hasPendingEvents).toBeFalsy();
+    }
+    clockPulse(clk, timeout) {
+        this.waitUntilStable(timeout);
+        this.circuit.setInput(this.net2name[clk], Vector3vl.zero);
+        this.waitUntilStable(timeout);
+        this.circuit.setInput(this.net2name[clk], Vector3vl.one);
+        this.waitUntilStable(timeout);        
     }
 };
 
 const testBits = [1, 2, 3, 4, 16, 32, 48, 64];
 const numTestBits = [1, 2, 3, 8, 32, 48];
+const smallTestBits = [1, 48];
 
 describe.each([
 ["$and",  s => ({ out: s.in1.and(s.in2) })],
@@ -345,12 +398,34 @@ describe('$busslice', () => {
 
 // TODO: better tests for stateful cells
 
-describe('$dff as a latch', () => {
-    const t = new SingleCellTestFixture({celltype: '$dff', "polarity": {"enable":true}});
-    test("transparency", () => {
-        t.expectComb({en: Vector3vl.fromBool(true), in: Vector3vl.fromBool(true)}, {out: Vector3vl.fromBool(true)});
-        t.expectComb({en: Vector3vl.fromBool(true), in: Vector3vl.fromBool(false)}, {out: Vector3vl.fromBool(false)});
+describe('$dff', () => {
+    describe.each(smallTestBits)('%i bits', (bits) => {
+        describe.each([true, false])('enable polarity %s', (en_pol) => {
+            describe("default initialization to undefined", () => {
+                new SingleCellTestFixture({celltype: '$dff', bits: bits, polarity: {enable: en_pol}})
+                    .testFun(s => ({out: Vector3vl.xes(bits)}), {fixed: {en: Vector3vl.fromBool(!en_pol)}});
+            });
+            describe.each([true, false])("initialization with %s", (initbit) => {
+                new SingleCellTestFixture({celltype: '$dff', bits: bits, initial: Vector3vl.fromBool(initbit, bits).toBin(), polarity: {enable: en_pol}})
+                    .testFun(s => ({out: Vector3vl.fromBool(initbit, bits)}), {fixed: {en: Vector3vl.fromBool(!en_pol)}});
+            });
+            describe("latching behavior", () => {
+                new SingleCellTestFixture({celltype: '$dff', bits: bits, polarity: {enable: en_pol}})
+                    .testFun((s, old) => ({out: s.en.eq(Vector3vl.fromBool(en_pol)) ? s.in : old.out }));
+            });
+            describe.each([true, false])('reset polarity %s', (arst_pol) => {
+                describe("latching behavior with default reset", () => {
+                    new SingleCellTestFixture({celltype: '$dff', bits: bits, polarity: {enable: en_pol, arst: arst_pol}})
+                        .testFun((s, old) => ({out: s.arst.eq(Vector3vl.fromBool(arst_pol)) ? Vector3vl.zeros(bits) : s.en.eq(Vector3vl.fromBool(en_pol)) ? s.in : old.out }));
+                });
+                describe.each([true, false])("latching behavior with reset to %s", (arst_val) => {
+                    new SingleCellTestFixture({celltype: '$dff', bits: bits, polarity: {enable: en_pol, arst: arst_pol}, arst_value: Vector3vl.fromBool(arst_val, bits).toBin()})
+                        .testFun((s, old) => ({out: s.arst.eq(Vector3vl.fromBool(arst_pol)) ? Vector3vl.fromBool(arst_val, bits) : s.en.eq(Vector3vl.fromBool(en_pol)) ? s.in : old.out }));
+                });
+            });
+        });
     });
+    // TODO: tests for edge-triggered Dff
 });
 
 // TODO: tests for public circuit interface
