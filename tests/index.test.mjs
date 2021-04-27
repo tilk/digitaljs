@@ -1,5 +1,6 @@
 "use strict";
 
+import _ from 'lodash';
 import 'core-js';
 import 'regenerator-runtime/runtime';
 import { HeadlessCircuit, getCellType } from '../src/circuit.mjs';
@@ -139,8 +140,8 @@ class SingleCellTestFixture {
         else return this.testFunRandomized(fun, opts);
     }
     expect(ins, outs, opts) {
-        if (opts.clock) this.expectSeq(ins, outs, opts);
-        return this.expectComb(ins, outs, opts);
+        if (opts.clock) return this.expectSeq(ins, outs, opts);
+        else return this.expectComb(ins, outs, opts);
     }
     expectSeq(ins, fun, opts = {}) {
         let message = Object.entries(ins).map(([a, x]) => a + ':' + x.toBin()).join(' ');;
@@ -431,6 +432,66 @@ describe('$dff', () => {
         describe.each([true, false])('clock polarity %s', (clk_pol) => {
             new SingleCellTestFixture({celltype: '$dff', bits: bits, polarity: {clock: clk_pol}})
                 .testFun((s, old) => ({out: s.in}), {clock: 'clk', clock_polarity: clk_pol});
+        });
+    });
+});
+
+describe('$fsm', () => {
+    const parity_moore = {
+        bits: {in: 1, out: 1},
+        init_state: 0,
+        states: 2,
+        trans_table: [
+            {state_in: 0, state_out: 0, ctrl_in: '0', ctrl_out: '0'},
+            {state_in: 0, state_out: 1, ctrl_in: '1', ctrl_out: '0'},
+            {state_in: 1, state_out: 1, ctrl_in: '0', ctrl_out: '1'},
+            {state_in: 1, state_out: 0, ctrl_in: '1', ctrl_out: '1'},
+        ]
+    };
+    const parity_moore_trans = (st, i) => (st + i.toNumber()) % 2;
+    const parity_moore_out   = (st, _) => Vector3vl.fromNumber(st, 1);
+    const parity_mealy = {
+        bits: {in: 1, out: 1},
+        init_state: 0,
+        states: 2,
+        trans_table: [
+            {state_in: 0, state_out: 0, ctrl_in: '0', ctrl_out: '0'},
+            {state_in: 0, state_out: 1, ctrl_in: '1', ctrl_out: '1'},
+            {state_in: 1, state_out: 1, ctrl_in: '0', ctrl_out: '1'},
+            {state_in: 1, state_out: 0, ctrl_in: '1', ctrl_out: '0'},
+        ]
+    };
+    const parity_mealy_trans = (st, i) => (st + i.toNumber()) % 2;
+    const parity_mealy_out   = (st, i) => Vector3vl.fromNumber(parity_mealy_trans(st, i), 1);
+    const parity2 = {
+        bits: {in: 2, out: 2},
+        init_state: 0,
+        states: 2,
+        trans_table: [
+            {state_in: 0, state_out: 0, ctrl_in: 'x0', ctrl_out: '00'},
+            {state_in: 0, state_out: 1, ctrl_in: 'x1', ctrl_out: '01'},
+            {state_in: 1, state_out: 1, ctrl_in: '0x', ctrl_out: '11'},
+            {state_in: 1, state_out: 0, ctrl_in: '1x', ctrl_out: '10'},
+        ]
+    };
+    const parity2_trans = (st, i) => (st + i.slice(st, st+1).toNumber()) % 2;
+    const parity2_out   = (st, i) => Vector3vl.fromNumber(parity2_trans(st, i), 1).concat(Vector3vl.fromNumber(st, 1));
+    describe.each([
+        ["parity_moore", parity_moore, parity_moore_trans, parity_moore_out],
+        ["parity_mealy", parity_mealy, parity_mealy_trans, parity_mealy_out],
+        ["parity2",      parity2,      parity2_trans,      parity2_out]
+    ])('automaton %s', (x, test_automaton, trans, out) => {
+        describe.each([true, false])('clock polarity %s', clk_pol => {
+            describe.each([true, false])('reset polarity %s', arst_pol => {
+                _.assign(test_automaton, {
+                    celltype: '$fsm',
+                    polarity: { clock: clk_pol, arst: arst_pol }
+                });
+                let state = test_automaton.init_state;
+                new SingleCellTestFixture(test_automaton)
+                    .testFunRandomized(s => ({out: out(test_automaton.init_state, s.in)}), {no_random_x: true, fixed: {arst: Vector3vl.fromBool(arst_pol)}})
+                    .testFunRandomized(s => { state = trans(state, s.in); return {out: out(state, s.in)}}, {no_random_x: true, fixed: {arst: Vector3vl.fromBool(!arst_pol)}, clock: 'clk', clock_polarity: clk_pol});
+            });
         });
     });
 });
