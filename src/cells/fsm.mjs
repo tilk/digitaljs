@@ -122,13 +122,13 @@ export const FSM = Box.define('FSM', {
             this.set('current_state', this.get('init_state'));
         } else {
             const last_clk = this.last_clk;
-            this.last_clk = data.clk.get(0);
             if (data.clk.get(0) == pol('clock') && last_clk == -pol('clock')) {
                 const trans = next_trans();
                 this.set('current_state',
                     trans ? trans.getTargetElement().get('stateNo') : this.get('init_state'));
             }
         }
+        this.last_clk = data.clk.get(0);
         const trans = next_trans();
         if (!trans) {
             this.set('next_trans', undefined);
