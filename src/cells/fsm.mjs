@@ -121,6 +121,26 @@ export const FSM = Box.define('FSM', {
                     return trans;
             }
         };
+        const next_output = () => {
+            const node = this.fsmgraph.getCell('state' + this.get('current_state'));
+            const links = this.fsmgraph.getConnectedLinks(node, { outbound: true });
+            const ixmask = data.in.xmask();
+            const results = [];
+            for (const trans of links) {
+                const ctrlIn = trans.get('ctrlIn');
+                const xmask = ctrlIn.xmask().or(ixmask);
+                if (data.in.or(xmask).eq(ctrlIn.or(xmask)))
+                    results.push(trans.get('ctrlOut'));
+            }
+            const xes = Vector3vl.xes(bits.out);
+            if (results.length == 0) return xes;
+            while (results.length > 1) {
+                const other = results.pop();
+                const eqs = results[0].xnor(other).or(xes);
+                results[0] = results[0].and(eqs).or(xes.and(eqs.xmask()));
+            };
+            return results[0];
+        };
         const pol = what => polarity[what] ? 1 : -1;
         if (data.arst.get(0) == pol('arst')) {
             this.set('current_state', this.get('init_state'));
@@ -136,11 +156,10 @@ export const FSM = Box.define('FSM', {
         const trans = next_trans();
         if (!trans) {
             this.set('next_trans', undefined);
-            return { out: Vector3vl.xes(bits.out) };
         } else {
             this.set('next_trans', trans.id);
-            return { out: trans.get('ctrlOut') };
         }
+        return { out: next_output() };
     },
     markup: Box.prototype.markup.concat(Box.prototype.markupZoom),
     _gateParams: Box.prototype._gateParams.concat(['bits', 'polarity', 'states', 'init_state', 'trans_table']),
