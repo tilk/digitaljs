@@ -58,6 +58,8 @@ export const FSM = Box.define('FSM', {
             const node = new joint.shapes.standard.Circle({stateNo: n, id: 'state' + n, isInit: n == init_state});
             node.attr('label/text', String(n));
             node.resize(100,50);
+            if (n == current_state)
+                node.attr('body/class', 'current_state');
             node.addTo(this.fsmgraph);
             statenodes.push(node);
         }
