@@ -53,13 +53,6 @@ module.exports = {
                 ]
             },
             {
-                test: /\.js/,
-                loader: 'babel-loader',
-                exclude: /node_modules/,
-                query: {
-                    presets: [babelenv],
-                }
-            }, {
                 test: require.resolve('jquery'),
                 use: [{
                     loader: 'expose-loader',

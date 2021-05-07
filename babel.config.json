@@ -6,7 +6,8 @@
         "targets": {
           "node": true
         },
-        "modules": "cjs"
+        "modules": "cjs",
+        "exclude": ["babel-plugin-transform-exponentiation-operator"]
       }
     ]
   ]
