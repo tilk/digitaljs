@@ -3,7 +3,6 @@
 import * as joint from 'jointjs';
 import _ from 'lodash';
 import { Gate, GateView, portGroupAttrs } from './base';
-import bigInt from 'big-integer';
 import * as help from '../help';
 import { Vector3vl } from '3vl';
 
@@ -112,7 +111,7 @@ export const GenMuxView = GateView.extend({
 export const Mux = GenMux.define('Mux', {
 }, {
     muxNumInputs: n => 1 << n,
-    muxInput: i => i.isFullyDefined ? help.sig2bigint(i).toString() : undefined
+    muxInput: i => i.isFullyDefined ? i.toBigInt().toString() : undefined
 });
 export const MuxView = GenMuxView;
 

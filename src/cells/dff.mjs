@@ -2,7 +2,6 @@
 
 import * as joint from 'jointjs';
 import { Box, BoxView } from './base';
-import bigInt from 'big-integer';
 import * as help from '../help';
 import { Vector3vl } from '3vl';
 

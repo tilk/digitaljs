@@ -2,7 +2,6 @@
 
 import * as joint from 'jointjs';
 import { Gate, GateView } from './base';
-import bigInt from 'big-integer';
 import * as help from '../help';
 import { Vector3vl } from '3vl';
 
@@ -62,7 +61,7 @@ export const Arith11 = Arith.define('Arith11', {
         if (!data.in.isFullyDefined)
             return { out: Vector3vl.xes(bits.out) };
         return {
-            out: help.bigint2sig(this.arithop(help.sig2bigint(data.in, this.get('signed'))), bits.out)
+            out: Vector3vl.fromNumber(this.arithop(data.in.toBigInt(this.get('signed'))), bits.out)
         };
     }
 });
@@ -93,9 +92,9 @@ export const Arith21 = Arith.define('Arith21', {
         if (!data.in1.isFullyDefined || !data.in2.isFullyDefined)
             return { out: Vector3vl.xes(bits.out) };
         return {
-            out: help.bigint2sig(this.arithop(
-                    help.sig2bigint(data.in1, sgn.in1 && sgn.in2),
-                    help.sig2bigint(data.in2, sgn.in1 && sgn.in2)), bits.out)
+            out: Vector3vl.fromNumber(this.arithop(
+                    data.in1.toBigInt(sgn.in1 && sgn.in2),
+                    data.in2.toBigInt(sgn.in1 && sgn.in2)), bits.out)
         };
     }
 });
@@ -138,7 +137,7 @@ export const Shift = Arith.define('Shift', {
         const fillx = this.get('fillx');
         if (!data.in2.isFullyDefined)
             return { out: Vector3vl.xes(bits.out) };
-        const am = help.sig2bigint(data.in2, sgn.in2) * this.shiftdir;
+        const am = data.in2.toNumber(sgn.in2) * this.shiftdir;
         return { out: shiftHelp(data.in1, am, bits.in1, bits.out, sgn.in1, sgn.out, fillx) };
     },
     _gateParams: Arith.prototype._gateParams.concat(['fillx']),
@@ -172,8 +171,8 @@ export const Compare = Arith.define('Compare', {
             return { out: Vector3vl.xes(1) };
         return {
             out: Vector3vl.fromBool(this.arithcomp(
-                    help.sig2bigint(data.in1, sgn.in1 && sgn.in2),
-                    help.sig2bigint(data.in2, sgn.in1 && sgn.in2)))
+                    data.in1.toBigInt(sgn.in1 && sgn.in2),
+                    data.in2.toBigInt(sgn.in1 && sgn.in2)))
         };
     }
 });
@@ -199,7 +198,7 @@ export const Negation = Arith11.define('Negation', {
         oper: { text: '-' }
     }
 }, {
-    arithop: i => bigInt.zero.minus(i)
+    arithop: i => -i
 });
 export const NegationView = GateView;
 
@@ -219,7 +218,7 @@ export const Addition = Arith21.define('Addition', {
         oper: { text: '+' }
     }
 }, {
-    arithop: (i, j) => i.plus(j)
+    arithop: (i, j) => i + j
 });
 export const AdditionView = GateView;
 
@@ -229,7 +228,7 @@ export const Subtraction = Arith21.define('Subtraction', {
         oper: { text: '-' }
     }
 }, {
-    arithop: (i, j) => i.minus(j)
+    arithop: (i, j) => i - j
 });
 export const SubtractionView = GateView;
 
@@ -239,7 +238,7 @@ export const Multiplication = Arith21.define('Multiplication', {
         oper: { text: '×' }
     }
 }, {
-    arithop: (i, j) => i.multiply(j)
+    arithop: (i, j) => i * j
 });
 export const MultiplicationView = GateView;
 
@@ -249,7 +248,7 @@ export const Division = Arith21.define('Division', {
         oper: { text: '÷' }
     }
 }, {
-    arithop: (i, j) => j.isZero() ? i : i.divide(j) // as in IEEE Verilog
+    arithop: (i, j) => j == 0n ? i : i / j // as in IEEE Verilog
 });
 export const DivisionView = GateView;
 
@@ -259,7 +258,7 @@ export const Modulo = Arith21.define('Modulo', {
         oper: { text: '%' }
     }
 }, {
-    arithop: (i, j) => j.isZero() ? i : i.mod(j) // as in IEEE Verilog
+    arithop: (i, j) => j == 0n ? i : i % j // as in IEEE Verilog
 });
 export const ModuloView = GateView;
 
@@ -269,7 +268,7 @@ export const Power = Arith21.define('Power', {
         oper: { text: '**' }
     }
 }, {
-    arithop: (i, j) => i.pow(j)
+    arithop: (i, j) => j >= 0n ? i ** j : i == 1n ? 1n : i == -1n ? (j % 2n ? -1n : 1n) : 0n
 });
 export const PowerView = GateView;
 
@@ -299,7 +298,7 @@ export const Lt = Compare.define('Lt', {
         oper: { text: '<' }
     }
 }, {
-    arithcomp: (i, j) => i.lt(j)
+    arithcomp: (i, j) => i < j
 });
 export const LtView = GateView;
 
@@ -309,7 +308,7 @@ export const Le = Compare.define('Le', {
         oper: { text: '≤' }
     }
 }, {
-    arithcomp: (i, j) => i.leq(j)
+    arithcomp: (i, j) => i <= j
 });
 export const LeView = GateView;
 
@@ -319,7 +318,7 @@ export const Gt = Compare.define('Gt', {
         oper: { text: '>' }
     }
 }, {
-    arithcomp: (i, j) => i.gt(j)
+    arithcomp: (i, j) => i > j
 });
 export const GtView = GateView;
 
@@ -329,7 +328,7 @@ export const Ge = Compare.define('Ge', {
         oper: { text: '≥' }
     }
 }, {
-    arithcomp: (i, j) => i.geq(j)
+    arithcomp: (i, j) => i >= j
 });
 export const GeView = GateView;
 
@@ -387,14 +386,14 @@ export const ArithConst = Arith.define('ArithConst', {
             return { out: Vector3vl.xes(bits.out) };
         if (this.get('leftOp'))
             return {
-                out: help.bigint2sig(this.arithop(
-                    bigInt(constant),
-                    help.sig2bigint(data.in, sgn.in)), bits.out)
+                out: Vector3vl.fromNumber(this.arithop(
+                    BigInt(constant),
+                    data.in.toBigInt(sgn.in)), bits.out)
             }
         else
             return {
-                out: help.bigint2sig(this.arithop(
-                    help.sig2bigint(data.in, sgn.in), bigInt(constant)), bits.out)
+                out: Vector3vl.fromNumber(this.arithop(
+                    data.in.toBigInt(sgn.in), BigInt(constant)), bits.out)
             };
     },
     _gateParams: Arith.prototype._gateParams.concat(['leftOp', 'constant'])
@@ -434,7 +433,7 @@ export const ShiftConst = Arith.define('ShiftConst', {
         if (this.get('leftOp')) {
             if (!data.in.isFullyDefined)
                 return { out: Vector3vl.xes(bits.out) };
-            const am = help.sig2bigint(data.in, sgn.in);
+            const am = data.in.toNumber(sgn.in);
             const sig = Vector3vl.fromNumber(constant);
             return { 
                 out: shiftHelp(sig, am * this.shiftdir, sig.bits, bits.out, constant < 0, sgn.out, fillx) 
@@ -482,14 +481,14 @@ export const CompareConst = Arith.define('CompareConst', {
         if (this.get('leftOp'))
             return {
                 out: Vector3vl.fromBool(this.arithcomp(
-                    bigInt(constant),
-                    help.sig2bigint(data.in, sgn.in)))
+                    BigInt(constant),
+                    data.in.toBigInt(sgn.in)))
             }
         else
             return {
                 out: Vector3vl.fromBool(this.arithcomp(
-                    help.sig2bigint(data.in, sgn.in), 
-                    bigInt(constant)))
+                    data.in.toBigInt(sgn.in), 
+                    BigInt(constant)))
             };
     },
     _gateParams: Arith.prototype._gateParams.concat(['leftOp', 'constant'])
@@ -515,42 +514,42 @@ export const EqCompareConst = CompareConst.define('EqCompare', {}, {
 // Addition with constant
 export const AdditionConst = ArithConst.define('AdditionConst', {}, {
     operSymbol: '+',
-    arithop: (i, j) => i.plus(j)
+    arithop: (i, j) => i + j
 });
 export const AdditionConstView = GateView;
 
 // Subtraction with constant
 export const SubtractionConst = ArithConst.define('SubtractionConst', {}, {
     operSymbol: '-',
-    arithop: (i, j) => i.minus(j)
+    arithop: (i, j) => i - j
 });
 export const SubtractionConstView = GateView;
 
 // Multiplication with constant
 export const MultiplicationConst = ArithConst.define('MultiplicationConst', {}, {
     operSymbol: '×',
-    arithop: (i, j) => i.multiply(j)
+    arithop: (i, j) => i * j
 });
 export const MultiplicationConstView = GateView;
 
 // Division with constant
 export const DivisionConst = ArithConst.define('DivisionConst', {}, {
     operSymbol: '÷',
-    arithop: (i, j) => j.isZero() ? i : i.divide(j) // as in IEEE Verilog
+    arithop: (i, j) => j == 0n ? i : i / j // as in IEEE Verilog
 });
 export const DivisionConstView = GateView;
 
 // Modulo with constant
 export const ModuloConst = ArithConst.define('ModuloConst', {}, {
     operSymbol: '%',
-    arithop: (i, j) => j.isZero() ? i : i.mod(j) // as in IEEE Verilog
+    arithop: (i, j) => j == 0n ? i : i % j // as in IEEE Verilog
 });
 export const ModuloConstView = GateView;
 
 // Power with constant
 export const PowerConst = ArithConst.define('PowerConst', {}, {
     operSymbol: '**',
-    arithop: (i, j) => i.pow(j)
+    arithop: (i, j) => j >= 0n ? i ** j : i == 1n ? 1n : i == -1n ? (j % 2n ? -1n : 1n) : 0n
 });
 export const PowerConstView = GateView;
 
@@ -571,28 +570,28 @@ export const ShiftRightConstView = GateView;
 // Less than operator
 export const LtConst = CompareConst.define('LtConst', {}, {
     operSymbol: '<',
-    arithcomp: (i, j) => i.lt(j)
+    arithcomp: (i, j) => i < j
 });
 export const LtConstView = GateView;
 
 // Less than operator
 export const LeConst = CompareConst.define('LeConst', {}, {
     operSymbol: '≤',
-    arithcomp: (i, j) => i.leq(j)
+    arithcomp: (i, j) => i <= j
 });
 export const LeConstView = GateView;
 
 // Less than operator
 export const GtConst = CompareConst.define('GtConst', {}, {
     operSymbol: '>',
-    arithcomp: (i, j) => i.gt(j)
+    arithcomp: (i, j) => i > j
 });
 export const GtConstView = GateView;
 
 // Less than operator
 export const GeConst = CompareConst.define('GeConst', {}, {
     operSymbol: '≥',
-    arithcomp: (i, j) => i.geq(j)
+    arithcomp: (i, j) => i >= j
 });
 export const GeConstView = GateView;
 

@@ -4,7 +4,6 @@ import * as joint from 'jointjs';
 import { Box, BoxView } from './base';
 import _ from 'lodash';
 import $ from 'jquery';
-import bigInt from 'big-integer';
 import { Vector3vl } from '3vl';
 
 // Things with numbers

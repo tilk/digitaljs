@@ -4,7 +4,6 @@ import $ from 'jquery';
 import _ from 'lodash';
 import * as joint from 'jointjs';
 import { Box, BoxView } from './base';
-import bigInt from 'big-integer';
 import * as help from '../help';
 import { Vector3vl, Mem3vl } from '3vl';
 
@@ -182,7 +181,7 @@ export const Memory = Box.define('Memory', {
     },
     _calcaddr(sig) {
         if (!sig.isFullyDefined) return -1;
-        return help.sig2bigint(sig, false) - this.get('offset');
+        return sig.toBigInt() - this.get('offset');
     },
     * _memrdports() {
         for (const [num, port] of this.get('rdports').entries())

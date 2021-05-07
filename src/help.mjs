@@ -1,6 +1,5 @@
 "use strict";
 
-import bigInt from 'big-integer';
 import { Vector3vl, Display3vlWithRegex, Display3vl } from '3vl';
 
 const controlCodes20 = [
@@ -61,19 +60,4 @@ export function baseSelectMarkupHTML(display3vl, bits, base) {
         .map(n => '<option value="' + n + '"' + (n == base ? ' selected="selected"' : '') +'>' + n + '</option>');
     return '<select name="base">' + markup.join("") + '</select>';
 };
-
-export function bigint2sig(i, bits) {
-    const j = i.isNegative() ? bigInt.one.shiftLeft(Math.max(i.bitLength().toJSNumber()+2, bits)).plus(i) : i;
-    return Vector3vl.fromArray(j.toArray(2).value
-        .reverse()
-        .map(x => (x<<1)-1)
-        .concat(Array(bits).fill(-1))
-        .slice(0, bits));
-}
-
-export function sig2bigint(sig, signed) {
-    const sign = signed && sig.get(sig.bits - 1) == 1;
-    const j = bigInt.fromArray(sig.toArray().slice().reverse().map(x => (x+1)>>1), 2);
-    return sign ? j.minus(bigInt.one.shiftLeft(sig.bits)) : j;
-}
 

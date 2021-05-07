@@ -2,7 +2,6 @@
 
 import * as joint from 'jointjs';
 import _ from 'lodash';
-import bigInt from 'big-integer';
 import { Vector3vl } from '3vl';
 import * as tools from '../tools';
 

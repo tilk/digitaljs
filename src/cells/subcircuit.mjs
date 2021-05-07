@@ -4,7 +4,6 @@ import * as joint from 'jointjs';
 import _ from 'lodash';
 import { Box, BoxView } from './base';
 import { IO, Input, Output } from './io';
-import bigInt from 'big-integer';
 import * as help from '../help';
 
 // Subcircuit model -- embeds a circuit graph in an element
