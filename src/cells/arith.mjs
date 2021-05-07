@@ -100,6 +100,17 @@ export const Arith21 = Arith.define('Arith21', {
     }
 });
 
+function shiftHelp(in1, am, bits_in, bits_out, sgn_in, sgn_out, fillx) {
+    const signbit = in1.get(in1.bits-1);
+    const ext = Vector3vl.make(Math.max(0, bits_out - bits_in),
+        fillx ? 0 : sgn_in ? signbit : -1);
+    const my_in = in1.concat(ext);
+    const out = am < 0
+        ? Vector3vl.make(-am, fillx ? 0 : -1).concat(my_in)
+        : my_in.slice(am).concat(Vector3vl.make(am, fillx ? 0 : sgn_out ? my_in.get(my_in.bits-1) : -1));
+    return out.slice(0, bits_out);
+}
+
 // Bit shift operations
 export const Shift = Arith.define('Shift', {
     /* default properties */
@@ -128,14 +139,7 @@ export const Shift = Arith.define('Shift', {
         if (!data.in2.isFullyDefined)
             return { out: Vector3vl.xes(bits.out) };
         const am = help.sig2bigint(data.in2, sgn.in2) * this.shiftdir;
-        const signbit = data.in1.get(data.in1.bits-1);
-        const ext = Vector3vl.make(Math.max(0, bits.out - bits.in1),
-            fillx ? 0 : sgn.in1 ? signbit : -1);
-        const my_in = data.in1.concat(ext);
-        const out = am < 0
-            ? Vector3vl.make(-am, fillx ? 0 : -1).concat(my_in)
-            : my_in.slice(am).concat(Vector3vl.make(am, fillx ? 0 : sgn.out ? my_in.get(my_in.bits-1) : -1));
-        return { out: out.slice(0, bits.out) };
+        return { out: shiftHelp(data.in1, am, bits.in1, bits.out, sgn.in1, sgn.out, fillx) };
     },
     _gateParams: Arith.prototype._gateParams.concat(['fillx']),
     _unsupportedPropChanges: Arith.prototype._unsupportedPropChanges.concat(['fillx'])
@@ -348,4 +352,261 @@ export const Ne = EqCompare.define('Ne', {
     bincomp: (i, j) => i.xor(j).reduceOr()
 });
 export const NeView = GateView;
+
+// Arithmetic operations fused with constants
+export const ArithConst = Arith.define('ArithConst', {
+    size: { width: 60, height: 60 },
+    /* default properties */
+    bits: { in: 1, out: 1 },
+    signed: false,
+    leftOp: false,
+    constant: 0
+}, {
+    initialize() {
+        const bits = this.get('bits');
+        this.get('ports').items = [
+            { id: 'in', group: 'in', dir: 'in', bits: bits.in },
+            { id: 'out', group: 'out', dir: 'out', bits: bits.out }
+        ];
+        
+        Arith.prototype.initialize.apply(this, arguments);
+
+        this.attr("oper/text", 
+            this.get('leftOp') ? this.get('constant') + this.operSymbol
+                               : this.operSymbol + this.get('constant'))
+        
+        this.on('change:bits', (_, bits) => {
+            this._setPortsBits(bits);
+        });
+    },
+    operation(data) {
+        const bits = this.get('bits');
+        const sgn = this.get('signed');
+        const constant = this.get('constant');
+        if (!data.in.isFullyDefined)
+            return { out: Vector3vl.xes(bits.out) };
+        if (this.get('leftOp'))
+            return {
+                out: help.bigint2sig(this.arithop(
+                    bigInt(constant),
+                    help.sig2bigint(data.in, sgn.in)), bits.out)
+            }
+        else
+            return {
+                out: help.bigint2sig(this.arithop(
+                    help.sig2bigint(data.in, sgn.in), bigInt(constant)), bits.out)
+            };
+    },
+    _gateParams: Arith.prototype._gateParams.concat(['leftOp', 'constant'])
+});
+
+// Bit shift operations fused with constants
+export const ShiftConst = Arith.define('ShiftConst', {
+    size: { width: 60, height: 60 },
+    /* default properties */
+    bits: { in: 1, out: 1 },
+    signed: { in: false, out: false },
+    leftOp: false,
+    constant: 0
+}, {
+    initialize() {
+        const bits = this.get('bits');
+        this.get('ports').items = [
+            { id: 'in', group: 'in', dir: 'in', bits: bits.in },
+            { id: 'out', group: 'out', dir: 'out', bits: bits.out }
+        ];
+        
+        Arith.prototype.initialize.apply(this, arguments);
+
+        this.attr("oper/text", 
+            this.get('leftOp') ? this.get('constant') + this.operSymbol
+                               : this.operSymbol + this.get('constant'))
+        
+        this.on('change:bits', (_, bits) => {
+            this._setPortsBits(bits);
+        });
+    },
+    operation(data) {
+        const bits = this.get('bits');
+        const sgn = this.get('signed');
+        const fillx = this.get('fillx');
+        const constant = this.get('constant');
+        if (this.get('leftOp')) {
+            if (!data.in.isFullyDefined)
+                return { out: Vector3vl.xes(bits.out) };
+            const am = help.sig2bigint(data.in, sgn.in);
+            const sig = Vector3vl.fromNumber(constant);
+            return { 
+                out: shiftHelp(sig, am * this.shiftdir, sig.bits, bits.out, constant < 0, sgn.out, fillx) 
+            };
+        } else
+            return { 
+                out: shiftHelp(data.in, constant * this.shiftdir, bits.in, bits.out, sgn.in, sgn.out, fillx) 
+            };
+    },
+    _gateParams: Arith.prototype._gateParams.concat(['leftOp', 'constant'])
+});
+
+// Comparison operations fused with constants
+export const CompareConst = Arith.define('CompareConst', {
+    size: { width: 60, height: 60 },
+    /* default properties */
+    bits: { in: 1 },
+    signed: false,
+    leftOp: false,
+    constant: 0
+}, {
+    initialize() {
+        const bits = this.get('bits');
+        this.get('ports').items = [
+            { id: 'in', group: 'in', dir: 'in', bits: bits.in },
+            { id: 'out', group: 'out', dir: 'out', bits: 1 }
+        ];
+        
+        Arith.prototype.initialize.apply(this, arguments);
+
+        this.attr("oper/text", 
+            this.get('leftOp') ? this.get('constant') + this.operSymbol
+                               : this.operSymbol + this.get('constant'))
+        
+        this.on('change:bits', (_, bits) => {
+            this._setPortsBits(bits);
+        });
+    },
+    operation(data) {
+        const bits = this.get('bits');
+        const sgn = this.get('signed');
+        const constant = this.get('constant');
+        if (!data.in.isFullyDefined)
+            return { out: Vector3vl.xes(bits.out) };
+        if (this.get('leftOp'))
+            return {
+                out: Vector3vl.fromBool(this.arithcomp(
+                    bigInt(constant),
+                    help.sig2bigint(data.in, sgn.in)))
+            }
+        else
+            return {
+                out: Vector3vl.fromBool(this.arithcomp(
+                    help.sig2bigint(data.in, sgn.in), 
+                    bigInt(constant)))
+            };
+    },
+    _gateParams: Arith.prototype._gateParams.concat(['leftOp', 'constant'])
+});
+
+// Equality operations fused with constants
+export const EqCompareConst = CompareConst.define('EqCompare', {}, {
+    operation(data) {
+        const bits = this.get('bits');
+        const sgn = this.get('signed');
+        const constant = this.get('constant');
+        if (this.get('leftOp'))
+            return {
+                out: this.bincomp(Vector3vl.fromNumber(constant, bits.in), data.in)
+            };
+        else
+            return {
+                out: this.bincomp(data.in, Vector3vl.fromNumber(constant, bits.in))
+            };
+    }
+});
+
+// Addition with constant
+export const AdditionConst = ArithConst.define('AdditionConst', {}, {
+    operSymbol: '+',
+    arithop: (i, j) => i.plus(j)
+});
+export const AdditionConstView = GateView;
+
+// Subtraction with constant
+export const SubtractionConst = ArithConst.define('SubtractionConst', {}, {
+    operSymbol: '-',
+    arithop: (i, j) => i.minus(j)
+});
+export const SubtractionConstView = GateView;
+
+// Multiplication with constant
+export const MultiplicationConst = ArithConst.define('MultiplicationConst', {}, {
+    operSymbol: '×',
+    arithop: (i, j) => i.multiply(j)
+});
+export const MultiplicationConstView = GateView;
+
+// Division with constant
+export const DivisionConst = ArithConst.define('DivisionConst', {}, {
+    operSymbol: '÷',
+    arithop: (i, j) => j.isZero() ? i : i.divide(j) // as in IEEE Verilog
+});
+export const DivisionConstView = GateView;
+
+// Modulo with constant
+export const ModuloConst = ArithConst.define('ModuloConst', {}, {
+    operSymbol: '%',
+    arithop: (i, j) => j.isZero() ? i : i.mod(j) // as in IEEE Verilog
+});
+export const ModuloConstView = GateView;
+
+// Power with constant
+export const PowerConst = ArithConst.define('PowerConst', {}, {
+    operSymbol: '**',
+    arithop: (i, j) => i.pow(j)
+});
+export const PowerConstView = GateView;
+
+// Shift left operator
+export const ShiftLeftConst = ShiftConst.define('ShiftLeftConst', {}, {
+    operSymbol: '≪',
+    shiftdir: -1
+});
+export const ShiftLeftConstView = GateView;
+
+// Shift right operator
+export const ShiftRightConst = ShiftConst.define('ShiftRightConst', {}, {
+    operSymbol: '≫',
+    shiftdir: 1
+});
+export const ShiftRightConstView = GateView;
+
+// Less than operator
+export const LtConst = CompareConst.define('LtConst', {}, {
+    operSymbol: '<',
+    arithcomp: (i, j) => i.lt(j)
+});
+export const LtConstView = GateView;
+
+// Less than operator
+export const LeConst = CompareConst.define('LeConst', {}, {
+    operSymbol: '≤',
+    arithcomp: (i, j) => i.leq(j)
+});
+export const LeConstView = GateView;
+
+// Less than operator
+export const GtConst = CompareConst.define('GtConst', {}, {
+    operSymbol: '>',
+    arithcomp: (i, j) => i.gt(j)
+});
+export const GtConstView = GateView;
+
+// Less than operator
+export const GeConst = CompareConst.define('GeConst', {}, {
+    operSymbol: '≥',
+    arithcomp: (i, j) => i.geq(j)
+});
+export const GeConstView = GateView;
+
+// Equality operator
+export const EqConst = EqCompareConst.define('EqConst', {}, {
+    operSymbol: '=',
+    bincomp: (i, j) => i.xnor(j).reduceAnd()
+});
+export const EqConstView = GateView;
+
+// Nonequality operator
+export const NeConst = EqCompareConst.define('NeConst', {}, {
+    operSymbol: '≠',
+    bincomp: (i, j) => i.xor(j).reduceOr()
+});
+export const NeConstView = GateView;
 

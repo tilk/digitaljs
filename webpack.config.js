@@ -9,6 +9,7 @@ const tests = [
     {name: 'fulladder', title: 'Full Adder'},
     {name: 'serialadder', title: 'Serial Adder'},
     {name: 'cycleadder', title: 'Accumulating Adder'},
+    {name: 'arithconst', title: 'Fused arithmetic with constants'},
     {name: 'lfsr', title: 'Linear Feedback Shift Register'},
     {name: 'sextium', title: 'Sextium III Processor'},
     {name: 'rom', title: 'Async ROM'},

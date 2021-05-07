@@ -1,0 +1,81 @@
+{
+  "devices": {
+    "dev0": {
+      "type": "NumEntry",
+      "label": "a",
+      "net": "a",
+      "bits": 4
+    },
+    "dev1": {
+      "type": "NumDisplay",
+      "label": "o",
+      "net": "o",
+      "bits": 4
+    },
+    "dev2": {
+      "type": "AdditionConst",
+      "label": "op",
+      "bits": {"in": 4, "out": 4},
+      "constant": 1
+    },
+    "dev3": {
+      "type": "Lamp",
+      "label": "o2",
+      "net": "o2"
+    },
+    "dev4": {
+      "type": "LtConst",
+      "label": "op",
+      "bits": {"in": 4},
+      "constant": 1
+    }
+  },
+  "connectors": [
+    {
+      "to": {
+        "id": "dev2",
+        "port": "in"
+      },
+      "from": {
+        "id": "dev0",
+        "port": "out"
+      },
+      "name": "a"
+    },
+    {
+      "to": {
+        "id": "dev1",
+        "port": "in"
+      },
+      "from": {
+        "id": "dev2",
+        "port": "out"
+      },
+      "name": "o"
+    },
+    {
+      "to": {
+        "id": "dev4",
+        "port": "in"
+      },
+      "from": {
+        "id": "dev0",
+        "port": "out"
+      },
+      "name": "a"
+    },
+    {
+      "to": {
+        "id": "dev3",
+        "port": "in"
+      },
+      "from": {
+        "id": "dev4",
+        "port": "out"
+      },
+      "name": "o2"
+    }
+  ],
+  "subcircuits": []
+}
+

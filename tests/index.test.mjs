@@ -5,6 +5,7 @@ import 'core-js';
 import 'regenerator-runtime/runtime';
 import { HeadlessCircuit, getCellType } from '../src/circuit.mjs';
 import { Vector3vl } from '3vl';
+import * as cells from '../src/cells';
 
 console.assert = (stmt, msg) => { if (!stmt) throw new Error(msg); };
 
@@ -12,7 +13,7 @@ class SingleCellTestFixture {
     constructor(celldata) {
         this.inlist = [];
         this.outlist = [];
-        const celltype = getCellType(celldata.celltype);
+        const celltype = celldata.type ? cells[celldata.type] : getCellType(celldata.celltype);
         const cell = new celltype(JSON.parse(JSON.stringify(celldata)));
         const circ = {
             "devices": {
@@ -273,12 +274,12 @@ const arithfun1 = f => (sgn, bits) => s => ({ out: s.in.isFullyDefined ? Vector3
 const shiftfun = f => (sgn1, sgn2, bits) => s => ({ out: s.in2.isFullyDefined ? Vector3vl.fromBin(f(s.in1.toBin(), parseIntSign(s.in2.toBin(), sgn2), sgn1, bits)) : Vector3vl.xes(bits) });
 
 describe.each([
-["$eq", comparefun((a, b) => a == b)],
-["$ne", comparefun((a, b) => a != b)],
-["$lt", comparefun((a, b) => a < b)],
-["$le", comparefun((a, b) => a <= b)],
-["$gt", comparefun((a, b) => a > b)],
-["$ge", comparefun((a, b) => a >= b)],
+["Eq", comparefun((a, b) => a == b)],
+["Ne", comparefun((a, b) => a != b)],
+["Lt", comparefun((a, b) => a < b)],
+["Le", comparefun((a, b) => a <= b)],
+["Gt", comparefun((a, b) => a > b)],
+["Ge", comparefun((a, b) => a >= b)],
 ])('%s', (name, fun) => {
     describe.each([
     [false, false],
@@ -287,12 +288,24 @@ describe.each([
     [true,  true],
     ])('%s %s', (sgn1, sgn2) => {
         describe.each(numTestBits)('%i bits', (bits) => {
-            new SingleCellTestFixture({celltype: name, bits: { in1: bits, in2: bits }, signed: { in1: sgn1, in2: sgn2 }})
+            new SingleCellTestFixture({type: name, bits: { in1: bits, in2: bits }, signed: { in1: sgn1, in2: sgn2 }})
                 .testFun(fun(sgn1, sgn2), { no_random_x : true });
         });
         describe.each([[3, 8], [8, 3]])('%i bits to %i bits', (bits1, bits2) => {
-            new SingleCellTestFixture({celltype: name, bits: { in1: bits1, in2: bits2 }, signed: { in1: sgn1, in2: sgn2 }})
+            new SingleCellTestFixture({type: name, bits: { in1: bits1, in2: bits2 }, signed: { in1: sgn1, in2: sgn2 }})
                 .testFun(fun(sgn1, sgn2), { no_random_x : true });
+        });
+    });
+    describe.each([0, 1, 2])('with constant %i', con => {
+        describe.each([false, true])('%s', sgn => {
+            describe.each(numTestBits)('%i bits', (bits) => {
+                if (sgn && con > 2**(bits-1)-1) return;
+                if (!sgn && con > 2**bits-1) return;
+                new SingleCellTestFixture({type: name + 'Const', leftOp: false, constant: con, bits: { in: bits }, signed: { in: sgn }})
+                    .testFun(s => fun(sgn, sgn)({in1: s.in, in2: Vector3vl.fromNumber(con, bits)}), { no_random_x : true });
+                new SingleCellTestFixture({type: name + 'Const', leftOp: true, constant: con, bits: { in: bits }, signed: { in: sgn }})
+                    .testFun(s => fun(sgn, sgn)({in2: s.in, in1: Vector3vl.fromNumber(con, bits)}), { no_random_x : true });
+            });
         });
     });
 });
@@ -300,12 +313,12 @@ describe.each([
 const truncate = x => x > 0 ? Math.floor(x) : Math.ceil(x);
 
 describe.each([
-["$add", arithfun((a, b) => a + b)],
-["$sub", arithfun((a, b) => a - b)],
-["$mul", arithfun((a, b) => a * b)],
-["$div", arithfun((a, b) => b == 0 ? a : truncate(a / b))],
-["$mod", arithfun((a, b) => b == 0 ? a : Math.sign(a) * (Math.abs(a) % Math.abs(b)))],
-["$pow", arithfun((a, b) => a == 1 ? 1 : a == -1 ? (b % 2 ? -1 : 1) : b < 0 ? 0 : a ** b)],
+["Addition", arithfun((a, b) => a + b)],
+["Subtraction", arithfun((a, b) => a - b)],
+["Multiplication", arithfun((a, b) => a * b)],
+["Division", arithfun((a, b) => b == 0 ? a : truncate(a / b))],
+["Modulo", arithfun((a, b) => b == 0 ? a : Math.sign(a) * (Math.abs(a) % Math.abs(b)))],
+["Power", arithfun((a, b) => a == 1 ? 1 : a == -1 ? (b % 2 ? -1 : 1) : b < 0 ? 0 : a ** b)],
 ])('%s', (name, fun) => {
     describe.each([
     [false, false],
@@ -314,15 +327,29 @@ describe.each([
     [true,  true],
     ])('%s %s', (sgn1, sgn2) => {
         describe.each(numTestBits)('%i bits', (bits) => {
-            if (name == '$mul' && bits >= 24) return; // tests use JS numbers
-            if (name == '$pow' && bits >= 4) return; // power grows crazy fast
-            new SingleCellTestFixture({celltype: name, bits: { in1: bits, in2: bits, out: bits }, signed: { in1: sgn1, in2: sgn2 }})
+            if (name == 'Multiplication' && bits >= 24) return; // tests use JS numbers
+            if (name == 'Power' && bits >= 4) return; // power grows crazy fast
+            new SingleCellTestFixture({type: name, bits: { in1: bits, in2: bits, out: bits }, signed: { in1: sgn1, in2: sgn2 }})
                 .testFun(fun(sgn1, sgn2, bits), { no_random_x : true });
         });
         describe.each([[3, 8], [8, 3]])('%i bits to %i bits', (bits1, bits2) => {
-            if (name == '$pow' && bits1 >= 4) return; // power grows crazy fast
-            new SingleCellTestFixture({celltype: name, bits: { in1: bits1, in2: bits1, out: bits2 }, signed: { in1: sgn1, in2: sgn2 }})
+            if (name == 'Power' && bits1 >= 4) return; // power grows crazy fast
+            new SingleCellTestFixture({type: name, bits: { in1: bits1, in2: bits1, out: bits2 }, signed: { in1: sgn1, in2: sgn2 }})
                 .testFun(fun(sgn1, sgn2, bits2), { no_random_x : true });
+        });
+    });
+    describe.each([0, 1, 2])('with constant %i', con => {
+        describe.each([false, true])('%s', sgn => {
+            describe.each(numTestBits)('%i bits', (bits) => {
+                if (sgn && con > 2**(bits-1)-1) return;
+                if (!sgn && con > 2**bits-1) return;
+                if (name == 'Multiplication' && bits >= 24) return; // tests use JS numbers
+                if (name == 'Power' && bits >= 4) return; // power grows crazy fast
+                new SingleCellTestFixture({type: name + 'Const', leftOp: false, constant: con, bits: { in: bits, out: bits }, signed: { in: sgn }})
+                    .testFun(s => fun(sgn, sgn, bits)({in1: s.in, in2: Vector3vl.fromNumber(con, bits)}), { no_random_x : true });
+                new SingleCellTestFixture({type: name + 'Const', leftOp: true, constant: con, bits: { in: bits, out: bits }, signed: { in: sgn }})
+                    .testFun(s => fun(sgn, sgn, bits)({in2: s.in, in1: Vector3vl.fromNumber(con, bits)}), { no_random_x : true });
+            });
         });
     });
 });
@@ -352,8 +379,8 @@ describe('$constant', () => {
 const standard_shift = (a, x, sgn, bits) => Array(Math.max(-x, 0, bits)).fill(sgn ? a[0] : '0').join('').concat(a.slice(0, x < 0 ? x : undefined)).concat(Array(Math.max(x, 0)).fill('0').join('')).slice(-bits);
 
 describe.each([
-["$shl", shiftfun(standard_shift)],
-["$shr", shiftfun((a, x, sgn, bits) => standard_shift(a, -x, sgn, bits))],
+["ShiftLeft", shiftfun(standard_shift)],
+["ShiftRight", shiftfun((a, x, sgn, bits) => standard_shift(a, -x, sgn, bits))],
 ])('%s', (name, fun) => {
     describe.each([
     [false, false],
@@ -362,12 +389,25 @@ describe.each([
     [true,  true],
     ])('%s %s', (sgn1, sgn2) => {
         describe.each(numTestBits)('%i bits', (bits) => {
-            new SingleCellTestFixture({celltype: name, bits: { in1: bits, in2: Math.ceil(Math.log2(bits)) + 1, out: bits }, signed: { in1: sgn1, in2: sgn2, out: sgn1 }})
+            new SingleCellTestFixture({type: name, bits: { in1: bits, in2: Math.ceil(Math.log2(bits)) + 1, out: bits }, signed: { in1: sgn1, in2: sgn2, out: sgn1 }})
                 .testFun(fun(sgn1, sgn2, bits), { no_random_x : true });
         });
         describe.each([[3, 8], [8, 3]])('%i bits to %i bits', (bits1, bits2) => {
-            new SingleCellTestFixture({celltype: name, bits: { in1: bits1, in2: Math.ceil(Math.log2(Math.max(bits1, bits2))) + 1, out: bits2 }, signed: { in1: sgn1, in2: sgn2, out: sgn1 }})
+            new SingleCellTestFixture({type: name, bits: { in1: bits1, in2: Math.ceil(Math.log2(Math.max(bits1, bits2))) + 1, out: bits2 }, signed: { in1: sgn1, in2: sgn2, out: sgn1 }})
                 .testFun(fun(sgn1, sgn2, bits2), { no_random_x : true });
+        });
+    });
+    describe.each([0, 1, 2])('with constant %i', con => {
+        describe.each([false, true])('%s', sgn => {
+            describe.each(numTestBits)('%i bits', (bits) => {
+                const bits2 = Math.ceil(Math.log2(bits)) + 1;
+                new SingleCellTestFixture({type: name + 'Const', leftOp: false, constant: con, bits: { in: bits, out: bits }, signed: { in: sgn, out: sgn }})
+                    .testFun(s => fun(sgn, false, bits)({in1: s.in, in2: Vector3vl.fromNumber(con)}), { no_random_x : true });
+                if (sgn && con > 2**(bits-1)-1) return;
+                if (!sgn && con > 2**bits-1) return;
+                new SingleCellTestFixture({type: name + 'Const', leftOp: true, constant: con, bits: { in: bits2, out: bits }, signed: { in: sgn, out: sgn }})
+                    .testFun(s => fun(false, sgn, bits)({in2: s.in, in1: Vector3vl.fromNumber(con, bits2)}), { no_random_x : true });
+            });
         });
     });
 });
