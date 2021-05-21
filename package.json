@@ -3,6 +3,7 @@
   "version": "0.7.6",
   "description": "Digital logic simulator",
   "main": "./lib/circuit.js",
+  "files": ["lib", "dist"],
   "browser": "./src/index.mjs",
   "exports": {
     "node": {
