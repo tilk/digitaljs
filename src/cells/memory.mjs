@@ -181,7 +181,7 @@ export const Memory = Box.define('Memory', {
     },
     _calcaddr(sig) {
         if (!sig.isFullyDefined) return -1;
-        return sig.toBigInt() - this.get('offset');
+        return sig.toNumber() - this.get('offset');
     },
     * _memrdports() {
         for (const [num, port] of this.get('rdports').entries())
