@@ -320,6 +320,7 @@ export const Output = IO.define('Output', {
         if (this.get('mode') != 0) return; // not inside a subcircuit
 
         const subcir = this.graph.get('subcircuit');
+        if (subcir == true) return; // graph still under construction
         console.assert(subcir != null);
         subcir._setOutput(sigs.in, this.get('net'));
     },
