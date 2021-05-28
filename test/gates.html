@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+    <title>All available gates</title>
+  <script type="text/javascript" src="../main.js"></script></head>
+  <body>
+    <div>
+        <button name="start" type="button">▶️</button>
+        <button name="stop" type="button">⏹️</button>
+    </div>
+    <div id="paper">
+    </div>
+    <div>
+        <input name="fixed" type="checkbox">Fixed Mode</input>
+        <button name="json" type="button">Serialize and Reload</button>
+        <input name="layout" type="checkbox">Include layout information</button>
+    </div>
+    <div>
+        <button name="ppt_up" type="button">+</button><button name="ppt_down">-</button><button name="left">&lt;</button><button name="right">&gt;</button><button name="live">live</button>
+    </div>
+    <div id="monitor">
+    </div>
+    <div id="iopanel">
+    </div>
+    <script>
+      var circuit, monitor, monitorview, iopanel, paper;
+      var start = $('button[name=start]');
+      var stop = $('button[name=stop]');
+      var papers = {};
+      const fixed = function (fixed) {
+        Object.values(papers).forEach(p => p.fixed(fixed));
+      }
+      const loadCircuit = function (json) {
+        circuit = new digitaljs.Circuit(json);
+        monitor = new digitaljs.Monitor(circuit);
+        monitorview = new digitaljs.MonitorView({model: monitor, el: $('#monitor') });
+        iopanel = new digitaljs.IOPanelView({model: circuit, el: $('#iopanel') });
+        circuit.on('new:paper', function(paper) {
+          paper.fixed($('input[name=fixed]').prop('checked'));
+          papers[paper.cid] = paper;
+          paper.on('element:pointerdblclick', (cellView) => {
+            window.digitaljsCell = cellView.model;
+            console.info('You can now access the doubly clicked gate as digitaljsCell in your WebBrowser console!');
+          });
+        });
+        circuit.on('changeRunning', () => {
+          if (circuit.running) {
+            start.prop('disabled', true);
+            stop.prop('disabled', false);
+          } else {
+            start.prop('disabled', false);
+            stop.prop('disabled', true);
+          }
+        });
+        paper = circuit.displayOn($('#paper'));
+        fixed($('input[name=fixed]').prop('checked'));
+        circuit.on('remove:paper', function(paper) {
+          delete papers[paper.cid];
+        });
+        circuit.start();
+      }
+      start.on('click', (e) => { circuit.start(); });
+      stop.on('click', (e) => { circuit.stop(); });
+      $('button[name=json]').on('click', (e) => {
+        monitorview.shutdown();
+        iopanel.shutdown();
+        circuit.stop();
+        const json = circuit.toJSON($('input[name=layout]').prop('checked'));
+        console.log(json);
+        loadCircuit(json);
+      });
+      $('input[name=fixed]').change(function () {
+        fixed($(this).prop('checked'));
+      });
+      $('button[name=ppt_up]').on('click', (e) => { monitorview.pixelsPerTick *= 2; });
+      $('button[name=ppt_down]').on('click', (e) => { monitorview.pixelsPerTick /= 2; });
+      $('button[name=left]').on('click', (e) => { monitorview.live = false; monitorview.start -= monitorview._width / monitorview.pixelsPerTick / 4; });
+      $('button[name=right]').on('click', (e) => { monitorview.live = false; monitorview.start += monitorview._width / monitorview.pixelsPerTick / 4; });
+      $('button[name=live]').on('click', (e) => { monitorview.live = true; });
+      $(window).ready(function () { loadCircuit({"devices":{"54c9125d-c454-4f3f-9566-58687b2b23a9":{"label":"Not","position":{"x":0,"y":0},"type":"Not"},"a0cbdc4d-ff94-45ba-ad3f-7e43f676be85":{"label":"And","position":{"x":0,"y":100},"type":"And"},"f065d6ab-d1a0-48be-bb3f-7d6586f7371f":{"label":"Nand","position":{"x":0,"y":200},"type":"Nand"},"61535731-f2a0-402f-8a69-ecad4cb64d72":{"label":"Or","position":{"x":0,"y":300},"type":"Or"},"a51ea406-646a-44e1-ad5e-7089d96fcd3b":{"label":"Nor","position":{"x":0,"y":400},"type":"Nor"},"4695ee1e-866a-45ef-b239-c75804b73340":{"label":"Xor","position":{"x":0,"y":500},"type":"Xor"},"fccbd528-38e3-496c-b549-f954158ff5cf":{"label":"Xnor","position":{"x":0,"y":600},"type":"Xnor"},"687b7df3-2309-4bcb-9c6a-7d1d5355ff83":{"label":"ShiftLeft","position":{"x":0,"y":700},"type":"ShiftLeft"},"68fcf7ae-5e31-4971-a7e2-273bf7a7e9d5":{"label":"ShiftRight","position":{"x":0,"y":800},"type":"ShiftRight"},"9d48f119-ef4d-4f9c-a21d-677fcb8f4789":{"label":"AndReduce","position":{"x":200,"y":0},"type":"AndReduce"},"7e4da2be-dd9a-41ba-936a-313902652586":{"label":"NandReduce","position":{"x":200,"y":100},"type":"NandReduce"},"4b442584-606c-477b-8801-10dd9fc7d7f6":{"label":"OrReduce","position":{"x":200,"y":200},"type":"OrReduce"},"40ea5c1e-6e9d-41c7-89bf-98ece03152ca":{"label":"NorReduce","position":{"x":200,"y":300},"type":"NorReduce"},"990efdb0-e01d-48d5-bb2e-5232f67a9e97":{"label":"XorReduce","position":{"x":200,"y":400},"type":"XorReduce"},"9bdd77b2-6900-4d72-9c4d-ee5361826086":{"label":"Eq","position":{"x":400,"y":0},"type":"Eq"},"50a71b3d-7710-4825-8e7b-4c65b9ee3b6a":{"label":"Ne","position":{"x":400,"y":100},"type":"Ne"},"6d74067c-1145-4ef2-bfdb-e29212bf084c":{"label":"Lt","position":{"x":400,"y":200},"type":"Lt"},"89d471b0-8642-4496-b5f0-392edc190d3d":{"label":"Le","position":{"x":400,"y":300},"type":"Le"},"47490c62-6d66-48d8-ae22-a485de0569cc":{"label":"Gt","position":{"x":400,"y":400},"type":"Gt"},"e5b28efa-1b17-4b63-821b-39eac780d72a":{"label":"Ge","position":{"x":400,"y":500},"type":"Ge"},"36aba417-2dec-4264-b5db-5a1bade48911":{"label":"Negation","position":{"x":600,"y":0},"type":"Negation"},"f8a99ab4-567c-474d-b9bf-efc084adf59c":{"label":"UnaryPlus","position":{"x":600,"y":100},"type":"UnaryPlus"},"7b484788-c8b4-4f6a-9bd7-ffc52bf20410":{"label":"Addition","position":{"x":600,"y":200},"type":"Addition"},"7c04f2e1-e71c-4b7e-bd8f-8ec4a92d7346":{"label":"Subtraction","position":{"x":600,"y":300},"type":"Subtraction"},"a3b1073a-580e-41cf-aff3-91fc7583272b":{"label":"Multiplication","position":{"x":600,"y":400},"type":"Multiplication"},"261d9bb1-3207-4135-96db-3d24487754fd":{"label":"Division","position":{"x":600,"y":500},"type":"Division"},"ef4b605c-743f-4533-8d71-1236bdc3f1f3":{"label":"Modulo","position":{"x":600,"y":600},"type":"Modulo"},"5d39da66-996c-4624-8c2b-88978e4e1395":{"label":"Power","position":{"x":600,"y":700},"type":"Power"},"bcda2ceb-83c8-4ebc-aefe-57e2e98201aa":{"label":"Constant","position":{"x":800,"y":0},"type":"Constant"},"4d02d820-9a6a-4ba0-9e76-212be041414c":{"label":"Clock","position":{"x":800,"y":100},"type":"Clock"},"044f875f-1926-4911-8336-5d91ad3edf67":{"label":"1-bit input (Button)","position":{"x":800,"y":200},"type":"Input"},"5cb2f869-4852-4447-b4cd-fdcd01442c93":{"label":"1-bit output (Lamp)","position":{"x":800,"y":300},"type":"Output"},"d81f4f5f-16dd-4fae-954d-db6666e070ac":{"label":"4-bit input (NumEntry)","bits":4,"position":{"x":800,"y":400},"type":"Input"},"383468e5-fb2f-47a1-8beb-87df81cf9916":{"label":"4-bit output (NumDisplay)","bits":4,"position":{"x":800,"y":500},"type":"Output"},"635e6db5-8e90-4f37-864a-23ebbd21e398":{"label":"Repeater","position":{"x":1000,"y":0},"type":"Repeater"},"434adf98-f7ea-4355-82da-60dd1d1555ec":{"label":"BusGroup","position":{"x":1000,"y":100},"type":"BusGroup"},"10ddb9f6-850b-48e8-84f4-48c941cf1bb3":{"label":"BusUngroup","position":{"x":1000,"y":200},"type":"BusUngroup"},"161945c4-37aa-4f94-872a-97508a6771f9":{"label":"BusSlice","position":{"x":1000,"y":300},"type":"BusSlice"},"6228c4f1-3503-42cc-a015-4ca1257b7e20":{"label":"ZeroExtend","position":{"x":1000,"y":400},"type":"ZeroExtend"},"5742dc12-84d9-4f0f-b0df-1491cab43ae0":{"label":"SignExtend","position":{"x":1000,"y":500},"type":"SignExtend"},"63b6c98a-49c8-4f80-ab0b-008aa313f5e4":{"label":"Mux","position":{"x":1200,"y":0},"type":"Mux"},"34a53445-af90-411c-9179-01845e3b1d95":{"label":"Mux1Hot","position":{"x":1200,"y":100},"type":"Mux1Hot"},"f6f4a995-d6bb-4ef8-bc34-a568e193a8dc":{"label":"Dff","position":{"x":1200,"y":200},"type":"Dff"},"ba9dbbd7-8dd1-43ad-bd60-9f1a63656d84":{"label":"Subcircuit","position":{"x":1200,"y":300},"type":"Subcircuit","celltype":"pipe"},"0662e43f-477e-4140-a79b-6c3e38f173c9":{"label":"FSM","position":{"x":1200,"y":400},"type":"FSM"},"ecac6e41-deb2-4e34-94af-7e74f8b5047c":{"label":"Memory","position":{"x":1200,"y":500},"type":"Memory"}},"connectors":[],"subcircuits":{"pipe":{"devices":{"in":{"type":"Input","propagation":0,"bits":1,"net":"i"},"out":{"type":"Output","propagation":0,"bits":1,"net":"o"}},"connectors":[{"from":{"id":"in","port":"out"},"to":{"id":"out","port":"in"}}]}}}) });
+    </script>
+  </body>
+</html>

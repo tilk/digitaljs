@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+    <title>Fused arithmetic with constants</title>
+  <script type="text/javascript" src="../main.js"></script></head>
+  <body>
+    <div>
+        <button name="start" type="button">▶️</button>
+        <button name="stop" type="button">⏹️</button>
+    </div>
+    <div id="paper">
+    </div>
+    <div>
+        <input name="fixed" type="checkbox">Fixed Mode</input>
+        <button name="json" type="button">Serialize and Reload</button>
+        <input name="layout" type="checkbox">Include layout information</button>
+    </div>
+    <div>
+        <button name="ppt_up" type="button">+</button><button name="ppt_down">-</button><button name="left">&lt;</button><button name="right">&gt;</button><button name="live">live</button>
+    </div>
+    <div id="monitor">
+    </div>
+    <div id="iopanel">
+    </div>
+    <script>
+      var circuit, monitor, monitorview, iopanel, paper;
+      var start = $('button[name=start]');
+      var stop = $('button[name=stop]');
+      var papers = {};
+      const fixed = function (fixed) {
+        Object.values(papers).forEach(p => p.fixed(fixed));
+      }
+      const loadCircuit = function (json) {
+        circuit = new digitaljs.Circuit(json);
+        monitor = new digitaljs.Monitor(circuit);
+        monitorview = new digitaljs.MonitorView({model: monitor, el: $('#monitor') });
+        iopanel = new digitaljs.IOPanelView({model: circuit, el: $('#iopanel') });
+        circuit.on('new:paper', function(paper) {
+          paper.fixed($('input[name=fixed]').prop('checked'));
+          papers[paper.cid] = paper;
+          paper.on('element:pointerdblclick', (cellView) => {
+            window.digitaljsCell = cellView.model;
+            console.info('You can now access the doubly clicked gate as digitaljsCell in your WebBrowser console!');
+          });
+        });
+        circuit.on('changeRunning', () => {
+          if (circuit.running) {
+            start.prop('disabled', true);
+            stop.prop('disabled', false);
+          } else {
+            start.prop('disabled', false);
+            stop.prop('disabled', true);
+          }
+        });
+        paper = circuit.displayOn($('#paper'));
+        fixed($('input[name=fixed]').prop('checked'));
+        circuit.on('remove:paper', function(paper) {
+          delete papers[paper.cid];
+        });
+        circuit.start();
+      }
+      start.on('click', (e) => { circuit.start(); });
+      stop.on('click', (e) => { circuit.stop(); });
+      $('button[name=json]').on('click', (e) => {
+        monitorview.shutdown();
+        iopanel.shutdown();
+        circuit.stop();
+        const json = circuit.toJSON($('input[name=layout]').prop('checked'));
+        console.log(json);
+        loadCircuit(json);
+      });
+      $('input[name=fixed]').change(function () {
+        fixed($(this).prop('checked'));
+      });
+      $('button[name=ppt_up]').on('click', (e) => { monitorview.pixelsPerTick *= 2; });
+      $('button[name=ppt_down]').on('click', (e) => { monitorview.pixelsPerTick /= 2; });
+      $('button[name=left]').on('click', (e) => { monitorview.live = false; monitorview.start -= monitorview._width / monitorview.pixelsPerTick / 4; });
+      $('button[name=right]').on('click', (e) => { monitorview.live = false; monitorview.start += monitorview._width / monitorview.pixelsPerTick / 4; });
+      $('button[name=live]').on('click', (e) => { monitorview.live = true; });
+      $(window).ready(function () { loadCircuit({"devices":{"dev0":{"type":"NumEntry","label":"a","net":"a","bits":4},"dev1":{"type":"NumDisplay","label":"o","net":"o","bits":4},"dev2":{"type":"AdditionConst","label":"op","bits":{"in":4,"out":4},"constant":1},"dev3":{"type":"Lamp","label":"o2","net":"o2"},"dev4":{"type":"LtConst","label":"op","bits":{"in":4},"constant":1}},"connectors":[{"to":{"id":"dev2","port":"in"},"from":{"id":"dev0","port":"out"},"name":"a"},{"to":{"id":"dev1","port":"in"},"from":{"id":"dev2","port":"out"},"name":"o"},{"to":{"id":"dev4","port":"in"},"from":{"id":"dev0","port":"out"},"name":"a"},{"to":{"id":"dev3","port":"in"},"from":{"id":"dev4","port":"out"},"name":"o2"}],"subcircuits":[]}) });
+    </script>
+  </body>
+</html>
