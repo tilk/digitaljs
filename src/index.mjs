@@ -12,6 +12,7 @@ import 'jquery-ui/ui/widgets/dialog';
 import 'jquery-ui/themes/base/all.css';
 import * as cells from './cells';
 import * as tools from './tools';
+import * as transform from './transform';
 import { HeadlessCircuit, getCellType } from './circuit';
 import { MonitorView, Monitor } from './monitor';
 import { IOPanelView } from './iopanel';
@@ -22,7 +23,7 @@ import './style.css';
 // see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#Browser_compatibility
 import ResizeObserver from 'resize-observer-polyfill';
 
-export { HeadlessCircuit, getCellType, cells, tools, MonitorView, Monitor, IOPanelView };
+export { HeadlessCircuit, getCellType, cells, tools, transform, MonitorView, Monitor, IOPanelView };
 
 export const paperOptions = {
     async: true,
