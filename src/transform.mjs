@@ -1,6 +1,7 @@
 "use strict";
 
 import _ from 'lodash';
+import { Vector3vl } from '3vl';
 
 export function removeRepeater(model, dev, id) {
     if (dev.type != 'Repeater') return false;
@@ -53,7 +54,69 @@ export function integrateNegation(model, dev, id) {
     return true;
 }
 
-export const transformations = [removeRepeater, integrateNegation];
+const arith_constant = new Map([
+    ['Addition', 'AdditionConst'],
+    ['Subtraction', 'SubtractionConst'],
+    ['Multiplication', 'MultiplicationConst'],
+    ['Division', 'DivisionConst'],
+    ['Modulo', 'ModuloConst'],
+    ['Power', 'PowerConst'],
+    ['ShiftLeft', 'ShiftLeftConst'],
+    ['ShiftRight', 'ShiftRightConst'],
+    ['Lt', 'LtConst'],
+    ['Le', 'LeConst'],
+    ['Gt', 'GtConst'],
+    ['Ge', 'GeConst'],
+    ['Eq', 'EqConst'],
+    ['Ne', 'NeConst']]);
+
+export function integrateArithConstant(model, dev, id) {
+    if (!arith_constant.has(dev.type)) return false;
+    function help(inConnList, inConnList2, outConnList, sgn, in1, in2) {
+        if (inConnList.length != 1) return false;
+        const inId = inConnList[0].from.id;
+        const inDev = model.getDevice(inId);
+        if (inDev.type != 'Constant') return false;
+        const val = Vector3vl.fromBin(inDev.constant, inDev.constant.length);
+        if (!val.isFullyDefined) return false;
+        const i = val.toBigInt(sgn);
+        if (i > 99 || i < -9) return false;
+        const newDev = _.cloneDeep(dev);
+        if (newDev.bits) {
+            newDev.bits.in = newDev.bits[in2] || 1;
+            delete newDev.bits[in1];
+            delete newDev.bits[in2];
+        }
+        if (newDev.signed) {
+            newDev.signed.in = (newDev.signed[in1] && newDev.signed[in2]) || false;
+            delete newDev.signed[in1];
+            delete newDev.signed[in2];
+        }
+        newDev.leftOp = in1 == "in1";
+        newDev.type = arith_constant.get(newDev.type);
+        newDev.constant = i;
+        model.removeDevice(id);
+        const constOutConnList = Object.values(model.outputPortConnectors(inId, "out"));
+        if (constOutConnList.length == 0)
+            model.removeDevice(inId);
+        model.addDevice(newDev, id);
+        for (const conn of outConnList)
+            model.addConnector(conn);
+        for (const conn of inConnList2) {
+            const newConn = _.cloneDeep(conn);
+            newConn.to.port = "in";
+            model.addConnector(newConn);
+        }
+        return true;
+    }
+    const outConnList = Object.values(model.outputPortConnectors(id, "out"));
+    const in1ConnList = Object.values(model.inputPortConnectors(id, "in1"));
+    const in2ConnList = Object.values(model.inputPortConnectors(id, "in2"));
+    return help(in1ConnList, in2ConnList, outConnList, dev.signed.in1, "in1", "in2") 
+        || help(in2ConnList, in1ConnList, outConnList, dev.signed.in2, "in2", "in1");
+}
+
+export const transformations = [removeRepeater, integrateNegation, integrateArithConstant];
 
 export class CircuitModel {
     constructor(data) {
@@ -186,6 +249,7 @@ export function transformCircuit(circuit, fs)
             ret.subcircuits[id] = help(subcirc);
         }
     }
+    console.log(ret);
     return ret;
 }
 
