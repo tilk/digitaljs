@@ -405,6 +405,7 @@ export const ShiftConst = Arith.define('ShiftConst', {
     /* default properties */
     bits: { in: 1, out: 1 },
     signed: { in: false, out: false },
+    fillx: false,
     leftOp: false,
     constant: 0
 }, {
