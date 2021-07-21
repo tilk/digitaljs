@@ -5,10 +5,10 @@ import { Gate, GateView } from './base';
 import * as help from '../help';
 import { Vector3vl } from '3vl';
 
-const and_path = "M19 4v32h16c9 0 16-7 16-16S44 4 35 4H20z";
-const or_path = "M14.3 4l1.6 2s4.5 5.6 4.5 14-4.5 14-4.5 14l-1.6 2H28c3.8 0 16.6-.5 25-16h0A28 28 0 0028 4H16.8z";
-const buf_path = "M18 2v36l2-1 32-17h0L20 3z";
-const xor_arc_path = "M6.8 2.8L10 6.7S14.2 12 14.2 20 10 33.3 10 33.3l-3.2 3.9H10l1.7-2.4s4.8-6 4.8-14.8c0-8.9-4.8-14.8-4.8-14.8l-1.7-2.4z";
+const and_path = "M19 0v32h16c9 0 16-7 16-16S44 0 35 0H20z";
+const or_path = "M14.3 0l1.6 2s4.5 5.6 4.5 14s-4.5 14-4.5 14l-1.6 2H28c3.8 0 16.6-.5 25-16h0A28 28 0 0028 0H16.8z";
+const buf_path = "M18-2v36l2-1 32-17h0L20-1z";
+const xor_arc_path = "M6.8-1.2 10 2.7S14.2 8 14.2 16S10 29.3 10 29.3l-3.2 3.9H10l1.7-2.4s4.8-6 4.8-14.8c0-8.9-4.8-14.8-4.8-14.8l-1.7-2.4z";
     
 const xor_arc_path_markup = {
     tagName: 'path',
@@ -27,7 +27,7 @@ const neg_markup = {
         'stroke': "#000",
         'stroke-width': '2px',
         'cx': 56,
-        'cy': 20,
+        'cy': 16,
         'r': 4
     }
 };
@@ -51,11 +51,11 @@ export const GateSVG = Gate.define('GateSVG', {
     /* default properties */
     bits: 1,
 
-    size: { width: 60, height: 40 },
+    size: { width: 60, height: 32 },
     ports: {
         groups: {
-            'in': { position: { name: 'left', args: { dx: 40 } }, attrs: { wire: { x2: -60 }, port: { refX: -60 } }, z: -1 },
-            'out': { position: { name: 'right', args: { dx: -40 } }, attrs: { wire: { x2: 60 }, port: { refX: 60 } }, z: -1 }
+            'in': { position: { name: 'left', args: { dx: 30 } }, attrs: { wire: { x2: -50 }, port: { refX: -50 } }, z: -1 },
+            'out': { position: { name: 'right', args: { dx: -30 } }, attrs: { wire: { x2: 50 }, port: { refX: 50 } }, z: -1 }
         }
     }
 }, {
@@ -106,10 +106,16 @@ export const GateX1 = GateSVG.define('GateX1', {
             ports.push({ id: 'in' + i, group: 'in', dir: 'in', bits: bits });
         ports.push({ id: 'out', group: 'out', dir: 'out', bits: bits });
         this.get('ports').items = ports;
-        const scaling = (inputs * 16) / 40;
-        const svgscaling = (inputs * 16 + 8) / 40;
-        this.set('size', { width: 60 * svgscaling, height: 40 * scaling });
-        this.attr('body/transform', 'translate(-4, -4) scale('+svgscaling+')');
+        const scaling = inputs / 2;
+        this.set('size', { width: 60 * scaling, height: 32 * scaling });
+        this.attr('body/transform', 'translate(-4, 0) scale('+scaling+')');
+
+        this.prop('ports/groups/in/position/args/dx', 30 * scaling);
+        this.prop('ports/groups/in/attrs/wire/x2', -30 * scaling - 20);
+        this.prop('ports/groups/in/attrs/port/refX', -30 * scaling - 20);
+        this.prop('ports/groups/out/position/args/dx', -30 * scaling);
+        this.prop('ports/groups/out/attrs/wire/x2', 30 * scaling + 20);
+        this.prop('ports/groups/out/attrs/port/refX', 30 * scaling + 20);
 
         GateSVG.prototype.initialize.apply(this, arguments);
         
