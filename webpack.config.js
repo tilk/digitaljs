@@ -16,6 +16,7 @@ const tests = [
     {name: 'ram', title: 'Simple RAM'},
     {name: 'fsm', title: 'Finite State Machine'},
     {name: 'gates', title: 'All available gates'},
+    {name: 'biggate', title: 'N-ary gates'},
     {name: 'io', title: 'Input/Output types'},
     {name: 'horner', title: 'Benchmark example'},
     {name: 'latch', title: 'Level-triggered D-latch example'},
