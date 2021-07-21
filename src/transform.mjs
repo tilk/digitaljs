@@ -116,7 +116,61 @@ export function integrateArithConstant(model, dev, id) {
         || help(in2ConnList, in1ConnList, outConnList, dev.signed.in2, "in2", "in1");
 }
 
-export const transformations = [removeRepeater, integrateNegation, integrateArithConstant];
+const gate_mergable = new Map([
+    ["And", "And"],
+    ["Or", "Or"],
+    ["Xor", "Xor"],
+    ["Nand", "And"],
+    ["Nor", "Or"],
+    ["Xnor", "Xor"]
+]);
+
+export function makeNAryGates(model, dev, id)
+{
+    function inputNumber(str) {
+        return Number(str.match(/^in([0-9]+)$/)[1]);
+    }
+    if (!gate_mergable.has(dev.type)) return false;
+    const inputs = dev.inputs || 2;
+    const inConnList = Object.values(model.inputConnectors(id));
+    const outConnList = Object.values(model.outputPortConnectors(id, "out"));
+    for (const conn of inConnList) {
+        const inId = conn.from.id;
+        const inDev = model.getDevice(inId);
+        if (inDev.type != gate_mergable.get(dev.type)) continue;
+        const prevOutConnList = Object.values(model.outputConnectors(inId));
+        if (prevOutConnList.length != 1) continue;
+        if (prevOutConnList[0].to.id != id) continue;
+        const mergeConnList = Object.values(model.inputConnectors(inId));
+        const inputNo = inputNumber(conn.to.port);
+        model.removeDevice(inId);
+        model.removeDevice(id);
+        const newDev = _.cloneDeep(dev);
+        newDev.inputs = inputs + mergeConnList.length - 1;
+        model.addDevice(newDev, id);
+        for (const conn of outConnList)
+            model.addConnector(conn);
+        for (const conn of inConnList) {
+            const connInputNo = inputNumber(conn.to.port);
+            if (connInputNo == inputNo) continue;
+            const newConn = _.cloneDeep(conn);
+            if (connInputNo > inputNo)
+                newConn.to.port = "in" + (connInputNo + mergeConnList.length - 1);
+            model.addConnector(newConn);
+        }
+        for (const conn of mergeConnList) {
+            const connInputNo = inputNumber(conn.to.port);
+            const newConn = _.cloneDeep(conn);
+            newConn.to.id = id;
+            newConn.to.port = "in" + (connInputNo + inputNo - 1);
+            model.addConnector(newConn);
+        }
+        return true;
+    }
+    return false;
+}
+
+export const transformations = [removeRepeater, integrateNegation, integrateArithConstant, makeNAryGates];
 
 export class CircuitModel {
     constructor(data) {
