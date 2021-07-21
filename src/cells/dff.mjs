@@ -26,7 +26,7 @@ export const Dff = Box.define('Dff', {
     initialize() {
         const bits = this.get('bits');
         const initial = this.get('initial');
-        const polarity = this.get('polarity');
+        const polarity = this.get('polarity') || {};
         
         const ports = [];
         
