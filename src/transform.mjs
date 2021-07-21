@@ -283,7 +283,7 @@ export class CircuitModel {
     transformMany(fs) {
         let ret = false;
         for (const f of fs)
-            ret = ret || this.transform(f);
+            ret = this.transform(f) || ret;
         return ret;
     }
 };
