@@ -303,7 +303,6 @@ export function transformCircuit(circuit, fs)
             ret.subcircuits[id] = help(subcirc);
         }
     }
-    console.log(ret);
     return ret;
 }
 
