@@ -170,7 +170,76 @@ export function makeNAryGates(model, dev, id)
     return false;
 }
 
-export const transformations = [removeRepeater, integrateNegation, integrateArithConstant, makeNAryGates];
+export function makeBinaryMuxes(model, dev, id)
+{
+    function inputNumber(str) {
+        return Number(str.match(/^in([0-9]+)$/)[1]);
+    }
+    if (dev.type != "Mux1Hot") return false;
+    const selConnList = Object.values(model.inputPortConnectors(id, "sel"));
+    if (selConnList.length != 1) return false;
+    const groupId = selConnList[0].from.id;
+    const groupDev = model.getDevice(groupId);
+    if (groupDev.type != "BusGroup") return false;
+    if (!groupDev.groups.every(x => x == 1)) return false;
+    const inConnList = Object.values(model.inputConnectors(groupId));
+    const mapping = {};
+    let srcsignal;
+    let bits = -1;
+    for (const conn of inConnList) {
+        const inputNo = inputNumber(conn.to.port);
+        const constDev = model.getDevice(conn.from.id);
+        if (constDev.type != "EqConst") return false;
+        if (constDev.constant < 0) return false;
+        if (constDev.constant in mapping) return false;
+        const constInConnList = Object.values(model.inputConnectors(conn.from.id));
+        if (constInConnList.length != 1) return false;
+        if (srcsignal == undefined)
+            srcsignal = constInConnList[0].from;
+        if (srcsignal.id != constInConnList[0].from.id ||
+            srcsignal.port != constInConnList[0].from.port) return false;
+        const constBits = (constDev.bits || {}).in || 1;
+        if (bits == -1)
+            bits = constBits;
+        if (bits != constBits) return false;
+        mapping[constDev.constant] = inputNo + 1;
+    }
+    if (srcsignal == undefined) return false;
+    if (bits > 6) return false;
+    const mappingEntries = Object.entries(mapping);
+    if (mappingEntries.length < 2**(dev.bits-1)) return false;
+    const muxInputs = {};
+    for (let n = 0; n <= dev.bits.sel; n++)
+        muxInputs[n] = Object.values(model.inputPortConnectors(id, "in" + n));
+    const outConnList = Object.values(model.outputPortConnectors(id, "out"));
+    model.removeDevice(id);
+    model.removeDevice(groupId);
+    for (const conn of inConnList) {
+        const constOutConnList = Object.values(model.outputPortConnectors(conn.from.id, "out"));
+        if (constOutConnList.length == 0)
+            model.removeDevice(conn.from.id);
+    }
+    const newDev = _.cloneDeep(dev);
+    newDev.type = "Mux";
+    newDev.bits = newDev.bits || {};
+    newDev.bits.sel = bits;
+    model.addDevice(newDev, id);
+    for (const conn of outConnList)
+        model.addConnector(conn);
+    model.addConnector({ from: srcsignal, to: selConnList[0].to });
+    for (let n = 0; n < 2 ** bits; n++) {
+        const inputNo = n in mapping ? mapping[n] : 0;
+        for (const conn of muxInputs[inputNo])
+            model.addConnector({ from: conn.from, to: { id: id, port: 'in'+n }});
+    }
+    for (const conn of muxInputs[0]) {
+        if (Object.values(model.outputConnectors(conn.from.id)).length == 0)
+            model.removeDevice(conn.from.id);
+    }
+    return true;
+}
+
+export const transformations = [removeRepeater, integrateNegation, integrateArithConstant, makeNAryGates, makeBinaryMuxes];
 
 export class CircuitModel {
     constructor(data) {
