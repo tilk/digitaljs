@@ -239,7 +239,38 @@ export function makeBinaryMuxes(model, dev, id)
     return true;
 }
 
-export const transformations = [removeRepeater, integrateNegation, integrateArithConstant, makeNAryGates, makeBinaryMuxes];
+export function makeDffWithEnable(model, dev, id)
+{
+    if (dev.type != "Dff") return false;
+    if ("enable" in (dev.polarity || {})) return false;
+    const inConnList = Object.values(model.inputPortConnectors(id, "in"));
+    if (inConnList.length != 1) return false;
+    const preId = inConnList[0].from.id;
+    const preDev = model.getDevice(preId);
+    if (preDev.type != "Mux") return false;
+    if ((preDev.bits || {sel: 1}).sel != 1) return false;
+    if (Object.values(model.outputPortConnectors(preId, "out")).length != 1) return false;
+    const in0ConnList = Object.values(model.inputPortConnectors(preId, "in0"));
+    const in1ConnList = Object.values(model.inputPortConnectors(preId, "in1"));
+    function help(loopConnList, dffInConnList, polarity) {
+        if (loopConnList.length != 1) return false;
+        if (loopConnList[0].from.id != id) return false;
+        if (loopConnList[0].from.port != "out") return false;
+        if (!("polarity" in dev)) dev.polarity = {};
+        dev.polarity.enable = polarity;
+        const selConnList = Object.values(model.inputPortConnectors(preId, "sel"));
+        model.removeDevice(preId);
+        for (const conn of dffInConnList)
+            model.addConnector({ from: conn.from, to: { id: id, port: "in" } });
+        for (const conn of selConnList)
+            model.addConnector({ from: conn.from, to: { id: id, port: "en" }});
+        return true;
+    }
+    return help(in0ConnList, in1ConnList, true)
+        || help(in1ConnList, in0ConnList, false);
+}
+
+export const transformations = [removeRepeater, integrateNegation, integrateArithConstant, makeNAryGates, makeBinaryMuxes, makeDffWithEnable];
 
 export class CircuitModel {
     constructor(data) {
