@@ -265,7 +265,7 @@ export const ModuloView = GateView;
 // Power
 export const Power = Arith21.define('Power', {
     attrs: {
-        oper: { text: '**' }
+        oper: { text: '^' }
     }
 }, {
     arithop: (i, j) => j >= 0n ? i ** j : i == 1n ? 1n : i == -1n ? (j % 2n ? -1n : 1n) : 0n
@@ -352,14 +352,37 @@ export const Ne = EqCompare.define('Ne', {
 });
 export const NeView = GateView;
 
-// Arithmetic operations fused with constants
-export const ArithConst = Arith.define('ArithConst', {
-    size: { width: 60, height: 60 },
-    /* default properties */
-    bits: { in: 1, out: 1 },
-    signed: false,
+export const OpConst = Arith.define('OpConst', {
     leftOp: false,
     constant: 0
+}, {
+    initialize() {
+        Arith.prototype.initialize.apply(this, arguments);
+
+        const genLabel = () => {
+            const constantSize = String(this.get('constant')).length;
+            const diameter = 25 + constantSize * 15;
+            this.prop("size", { width: diameter, height: diameter });
+            this.attr("oper/text", 
+                this.get('leftOp') ? this.get('constant') + this.operSymbol
+                                   : this.operSymbol + this.get('constant'))
+        };
+        genLabel();
+
+        this.on('change:bits', (_, bits) => {
+            this._setPortsBits(bits);
+        });
+        this.on('change:constant', () => genLabel());
+        this.on('change:leftOp', () => genLabel());
+    },
+    _gateParams: Arith.prototype._gateParams.concat(['leftOp', 'constant'])
+});
+
+// Arithmetic operations fused with constants
+export const ArithConst = OpConst.define('ArithConst', {
+    /* default properties */
+    bits: { in: 1, out: 1 },
+    signed: false
 }, {
     initialize() {
         const bits = this.get('bits');
@@ -368,15 +391,7 @@ export const ArithConst = Arith.define('ArithConst', {
             { id: 'out', group: 'out', dir: 'out', bits: bits.out }
         ];
         
-        Arith.prototype.initialize.apply(this, arguments);
-
-        this.attr("oper/text", 
-            this.get('leftOp') ? this.get('constant') + this.operSymbol
-                               : this.operSymbol + this.get('constant'))
-        
-        this.on('change:bits', (_, bits) => {
-            this._setPortsBits(bits);
-        });
+        OpConst.prototype.initialize.apply(this, arguments);
     },
     operation(data) {
         const bits = this.get('bits');
@@ -395,19 +410,15 @@ export const ArithConst = Arith.define('ArithConst', {
                 out: Vector3vl.fromNumber(this.arithop(
                     data.in.toBigInt(sgn.in), BigInt(constant)), bits.out)
             };
-    },
-    _gateParams: Arith.prototype._gateParams.concat(['leftOp', 'constant'])
+    }
 });
 
 // Bit shift operations fused with constants
-export const ShiftConst = Arith.define('ShiftConst', {
-    size: { width: 60, height: 60 },
+export const ShiftConst = OpConst.define('ShiftConst', {
     /* default properties */
     bits: { in: 1, out: 1 },
     signed: { in: false, out: false },
-    fillx: false,
-    leftOp: false,
-    constant: 0
+    fillx: false
 }, {
     initialize() {
         const bits = this.get('bits');
@@ -416,15 +427,7 @@ export const ShiftConst = Arith.define('ShiftConst', {
             { id: 'out', group: 'out', dir: 'out', bits: bits.out }
         ];
         
-        Arith.prototype.initialize.apply(this, arguments);
-
-        this.attr("oper/text", 
-            this.get('leftOp') ? this.get('constant') + this.operSymbol
-                               : this.operSymbol + this.get('constant'))
-        
-        this.on('change:bits', (_, bits) => {
-            this._setPortsBits(bits);
-        });
+        OpConst.prototype.initialize.apply(this, arguments);
     },
     operation(data) {
         const bits = this.get('bits');
@@ -444,17 +447,14 @@ export const ShiftConst = Arith.define('ShiftConst', {
                 out: shiftHelp(data.in, constant * this.shiftdir, bits.in, bits.out, sgn.in, sgn.out, fillx) 
             };
     },
-    _gateParams: Arith.prototype._gateParams.concat(['leftOp', 'constant'])
+    _gateParams: OpConst.prototype._gateParams.concat(['fillx'])
 });
 
 // Comparison operations fused with constants
-export const CompareConst = Arith.define('CompareConst', {
-    size: { width: 60, height: 60 },
+export const CompareConst = OpConst.define('CompareConst', {
     /* default properties */
     bits: { in: 1 },
-    signed: false,
-    leftOp: false,
-    constant: 0
+    signed: false
 }, {
     initialize() {
         const bits = this.get('bits');
@@ -463,15 +463,7 @@ export const CompareConst = Arith.define('CompareConst', {
             { id: 'out', group: 'out', dir: 'out', bits: 1 }
         ];
         
-        Arith.prototype.initialize.apply(this, arguments);
-
-        this.attr("oper/text", 
-            this.get('leftOp') ? this.get('constant') + this.operSymbol
-                               : this.operSymbol + this.get('constant'))
-        
-        this.on('change:bits', (_, bits) => {
-            this._setPortsBits(bits);
-        });
+        OpConst.prototype.initialize.apply(this, arguments);
     },
     operation(data) {
         const bits = this.get('bits');
@@ -491,8 +483,7 @@ export const CompareConst = Arith.define('CompareConst', {
                     data.in.toBigInt(sgn.in), 
                     BigInt(constant)))
             };
-    },
-    _gateParams: Arith.prototype._gateParams.concat(['leftOp', 'constant'])
+    }
 });
 
 // Equality operations fused with constants
@@ -549,7 +540,7 @@ export const ModuloConstView = GateView;
 
 // Power with constant
 export const PowerConst = ArithConst.define('PowerConst', {}, {
-    operSymbol: '**',
+    operSymbol: '^',
     arithop: (i, j) => j >= 0n ? i ** j : i == 1n ? 1n : i == -1n ? (j % 2n ? -1n : 1n) : 0n
 });
 export const PowerConstView = GateView;
