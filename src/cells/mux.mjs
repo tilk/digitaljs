@@ -117,7 +117,21 @@ export const MuxView = GenMuxView;
 
 // Multiplexer with one-hot selection
 export const Mux1Hot = GenMux.define('Mux1Hot', {
+    attrs: {
+        info: {
+            refX: .5, refY: .5,
+            textAnchor: 'middle', textVerticalAnchor: 'middle',
+            text: '1Hot',
+            transform: 'rotate(90)'
+        }
+    }
 }, {
+    markup: GenMux.prototype.markup.concat([{
+            tagName: 'text',
+            className: 'info',
+            selector: 'info'
+        }
+    ]),
     muxNumInputs: n => n + 1,
     muxInput: s => {
         const i = s.toArray();
