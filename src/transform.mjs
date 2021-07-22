@@ -80,7 +80,7 @@ export function integrateArithConstant(model, dev, id) {
         const val = Vector3vl.fromBin(inDev.constant, inDev.constant.length);
         if (!val.isFullyDefined) return false;
         const i = val.toBigInt(sgn);
-        if (i > 99 || i < -9) return false;
+        if (i > 999 || i < -99) return false;
         const newDev = _.cloneDeep(dev);
         if (newDev.bits) {
             newDev.bits.in = newDev.bits[in2] || 1;

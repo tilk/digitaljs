@@ -361,7 +361,7 @@ export const OpConst = Arith.define('OpConst', {
 
         const genLabel = () => {
             const constantSize = String(this.get('constant')).length;
-            const diameter = 25 + constantSize * 15;
+            const diameter = 30 + constantSize * 10;
             this.prop("size", { width: diameter, height: diameter });
             this.attr("oper/text", 
                 this.get('leftOp') ? this.get('constant') + this.operSymbol
