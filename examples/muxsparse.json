@@ -1,0 +1,81 @@
+{
+    "devices": {
+        "sel": {
+            "type": "NumEntry",
+            "bits": 2,
+            "order": 2
+        },
+        "btna": {
+            "type": "Button",
+            "label": "a",
+            "net": "a",
+            "order": 0,
+            "bits": 1
+        },
+        "btnb": {
+            "type": "Button",
+            "label": "b",
+            "net": "b",
+            "order": 1,
+            "bits": 1
+        },
+        "out": {
+            "type": "Lamp",
+            "label": "o",
+            "net": "o",
+            "order": 0,
+            "bits": 1
+        },
+        "mux": {
+            "type": "MuxSparse",
+            "inputs": [1, 3],
+            "bits": {
+                "sel": 2,
+                "in": 1
+            },
+            "label": "mux"
+        }
+    },
+    "connectors": [
+        {
+            "from": {
+                "id": "btna",
+                "port": "out" 
+            },
+            "to": {
+                "id": "mux",
+                "port": "in0"
+            }
+        },
+        {
+            "from": {
+                "id": "btnb",
+                "port": "out"
+            },
+            "to": {
+                "id": "mux",
+                "port": "in1"
+            }
+        },
+        {
+            "from": {
+                "id": "mux",
+                "port": "out"
+            },
+            "to": {
+                "id": "out",
+                "port": "in"
+            }
+        },
+        {
+            "from": {
+                "id": "sel",
+                "port": "out"
+            },
+            "to": {
+                "id": "mux",
+                "port": "sel"
+            }
+        }
+    ]
+}

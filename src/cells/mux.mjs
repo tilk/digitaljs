@@ -17,14 +17,15 @@ export const GenMux = Gate.define('GenMux', {
             'in2': {
                 position: { name: 'top', args: { y: 5 } },
                 attrs: _.merge({}, portGroupAttrs, {
-                    wire: { x2: 0, y2: -20 },
-                    port: { magnet: 'passive', refY: -20 },
+                    wire: { x2: 0, y2: -25 },
+                    port: { magnet: 'passive', refY: -25 },
                     bits: { refDx: -5, refDy: 2, textAnchor: 'start' }
                 }),
                 z: -1
             }
         }
-    }
+    },
+    attrs: { label: { refDy: 8 } }
 }, {
     initialize() {
         const bits = this.get('bits');
@@ -33,18 +34,23 @@ export const GenMux = Gate.define('GenMux', {
             { id: 'out', group: 'out', dir: 'out', bits: bits.in }
         ];
         
-        const n_ins = this.muxNumInputs(bits.sel);
-        this.get('size').height = n_ins*16+8;
+        const ins = this.muxInputs(bits.sel);
+        this.get('size').height = ins.length*16+8;
         
         const vpath = [
             [2, 0],
             [5, 5],
-            [11, -5]
+            [10, -5]
         ];
         const path = 'M' + vpath.map(l => l.join(' ')).join(' L');
         
-        for (const num of Array(n_ins).keys()) {
-            ports.push({ id: 'in' + num, group: 'in', dir: 'in', bits: bits.in, decor: path });
+        for (const [num, label] of ins.entries()) {
+            const port = { id: 'in' + num, group: 'in', dir: 'in', bits: bits.in, decor: path };
+            if (label) {
+                port.portlabel = String(label);
+                port.labelled = true;
+            }
+            ports.push(port);
         }
         
         this.get('ports').items = ports;
@@ -52,7 +58,7 @@ export const GenMux = Gate.define('GenMux', {
         Gate.prototype.initialize.apply(this, arguments);
         
         const drawBorder = (size) => this.attr(['body', 'points'], 
-            [[0,0],[size.width,10],[size.width,size.height-10],[0,size.height]]
+            [[0,-5],[size.width,5],[size.width,size.height-5],[0,size.height+5]]
                 .map(x => x.join(',')).join(' '));
         drawBorder(this.get('size'));
         
@@ -63,10 +69,10 @@ export const GenMux = Gate.define('GenMux', {
         if (i === undefined) return { out: Vector3vl.xes(this.get('bits').in) };
         return { out: data['in' + i] };
     },
-    //add offset of 20pt to account for the top selection port at layout time
+    //add offset of 30pt to account for the top selection port and oversized box at layout time
     getLayoutSize() {
         const size = this.size();
-        size.height += 20;
+        size.height += 30;
         return size;
     },
     setLayoutPosition(position) {
@@ -86,7 +92,7 @@ export const GenMux = Gate.define('GenMux', {
 });
 export const GenMuxView = GateView.extend({
     initialize() {
-        this.n_ins = this.model.muxNumInputs(this.model.get('bits').sel);
+        this.ins = this.model.muxInputs(this.model.get('bits').sel);
         GateView.prototype.initialize.apply(this, arguments);
     },
     confirmUpdate(flags) {
@@ -101,7 +107,7 @@ export const GenMuxView = GateView.extend({
     },
     _updateMux(data) {
         const i = this.model.muxInput(data.sel);
-        for (const num of Array(this.n_ins).keys()) {
+        for (const num of this.ins.keys()) {
             this.$('[port=in' + num + '] path.decor').css('visibility', i == num ? 'visible' : 'hidden');
         }
     }
@@ -110,7 +116,7 @@ export const GenMuxView = GateView.extend({
 // Multiplexer with binary selection
 export const Mux = GenMux.define('Mux', {
 }, {
-    muxNumInputs: n => 1 << n,
+    muxInputs: n => Array(1 << n),
     muxInput: i => i.isFullyDefined ? i.toBigInt().toString() : undefined
 });
 export const MuxView = GenMuxView;
@@ -132,7 +138,7 @@ export const Mux1Hot = GenMux.define('Mux1Hot', {
             selector: 'info'
         }
     ]),
-    muxNumInputs: n => n + 1,
+    muxInputs: n => Array(n + 1),
     muxInput: s => {
         const i = s.toArray();
         return s.isFullyDefined && i.filter(x => x == 1).length <= 1
@@ -140,4 +146,28 @@ export const Mux1Hot = GenMux.define('Mux1Hot', {
     }
 });
 export const Mux1HotView = GenMuxView;
+
+export const MuxSparse = GenMux.define('MuxSparse', {
+    /* default properties */
+    inputs: undefined
+}, {
+    initialize() {
+        const inputs = this.get('inputs');
+        for (let i = 0; i < inputs.length; i++)
+            if (typeof inputs[i] != 'bigint')
+                inputs[i] = BigInt(inputs[i]);
+        GenMux.prototype.initialize.apply(this, arguments);
+    },
+    muxInputs(n) {
+        return this.get('inputs');
+    },
+    muxInput(i) {
+        if (!i.isFullyDefined) return undefined;
+        const idx = this.get('inputs').indexOf(i.toBigInt());
+        return idx < 0 ? undefined : idx;
+    },
+    _gateParams: GenMux.prototype._gateParams.concat(['inputs']),
+    _unsupportedPropChanges: GenMux.prototype._unsupportedPropChanges.concat(['inputs'])
+});
+export const MuxSparseView = GenMuxView;
 

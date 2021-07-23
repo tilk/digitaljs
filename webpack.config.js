@@ -17,6 +17,7 @@ const tests = [
     {name: 'fsm', title: 'Finite State Machine'},
     {name: 'gates', title: 'All available gates'},
     {name: 'biggate', title: 'N-ary gates'},
+    {name: 'muxsparse', title: 'Sparse mux'},
     {name: 'io', title: 'Input/Output types'},
     {name: 'horner', title: 'Benchmark example'},
     {name: 'latch', title: 'Level-triggered D-latch example'},
