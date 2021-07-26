@@ -186,6 +186,7 @@ export function makeBinaryMuxes(model, dev, id)
     const mapping = {};
     let srcsignal;
     let bits = -1;
+    let sparse = false;
     for (const conn of inConnList) {
         const inputNo = inputNumber(conn.to.port);
         const constDev = model.getDevice(conn.from.id);
@@ -204,13 +205,21 @@ export function makeBinaryMuxes(model, dev, id)
         if (bits != constBits) return false;
         mapping[constDev.constant] = inputNo + 1;
     }
-    if (srcsignal == undefined) return false;
-    if (bits > 6) return false;
-    const mappingEntries = Object.entries(mapping);
-    if (mappingEntries.length < 2**(dev.bits-1)) return false;
     const muxInputs = {};
     for (let n = 0; n <= dev.bits.sel; n++)
         muxInputs[n] = Object.values(model.inputPortConnectors(id, "in" + n));
+    if (srcsignal == undefined) return false;
+    if (bits > 9) return false;
+    if (bits > 6 || Object.entries(mapping).length < 2**(dev.bits-1)) {
+        // sparse vectors currently don't have a default input
+        for (const conn of muxInputs[0] || []) {
+            const inDev = model.getDevice(conn.from.id);
+            if (inDev.type != "Constant") return false;
+            const val = Vector3vl.fromBin(inDev.constant, bits);
+            if (!val.xmask().isHigh) return false;
+        }
+        sparse = true;
+    }
     const outConnList = Object.values(model.outputPortConnectors(id, "out"));
     model.removeDevice(id);
     model.removeDevice(groupId);
@@ -220,17 +229,25 @@ export function makeBinaryMuxes(model, dev, id)
             model.removeDevice(conn.from.id);
     }
     const newDev = _.cloneDeep(dev);
-    newDev.type = "Mux";
     newDev.bits = newDev.bits || {};
     newDev.bits.sel = bits;
+    newDev.type = sparse ? "MuxSparse" : "Mux";
+    if (sparse) newDev.inputs = Object.keys(mapping).map(x => BigInt(x)).sort((a, b) => a > b || -(a < b));
     model.addDevice(newDev, id);
+    model.addConnector({ from: srcsignal, to: selConnList[0].to });
     for (const conn of outConnList)
         model.addConnector(conn);
-    model.addConnector({ from: srcsignal, to: selConnList[0].to });
-    for (let n = 0; n < 2 ** bits; n++) {
-        const inputNo = n in mapping ? mapping[n] : 0;
-        for (const conn of muxInputs[inputNo])
-            model.addConnector({ from: conn.from, to: { id: id, port: 'in'+n }});
+    if (sparse) {
+        for (const [n, constant] of Object.entries(newDev.inputs)) {
+            for (const conn of muxInputs[mapping[constant]])
+                model.addConnector({ from: conn.from, to: { id: id, port: 'in'+n }});
+        }
+    } else {
+        for (let n = 0; n < 2 ** bits; n++) {
+            const inputNo = n in mapping ? mapping[n] : 0;
+            for (const conn of muxInputs[inputNo])
+                model.addConnector({ from: conn.from, to: { id: id, port: 'in'+n }});
+        }
     }
     for (const conn of muxInputs[0]) {
         if (Object.values(model.outputConnectors(conn.from.id)).length == 0)
