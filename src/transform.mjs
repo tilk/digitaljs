@@ -178,33 +178,55 @@ export function makeBinaryMuxes(model, dev, id)
     if (dev.type != "Mux1Hot") return false;
     const selConnList = Object.values(model.inputPortConnectors(id, "sel"));
     if (selConnList.length != 1) return false;
-    const groupId = selConnList[0].from.id;
-    const groupDev = model.getDevice(groupId);
-    if (groupDev.type != "BusGroup") return false;
-    if (!groupDev.groups.every(x => x == 1)) return false;
-    const inConnList = Object.values(model.inputConnectors(groupId));
+    const groupIds = [];
     const mapping = {};
     let srcsignal;
     let bits = -1;
     let sparse = false;
-    for (const conn of inConnList) {
-        const inputNo = inputNumber(conn.to.port);
-        const constDev = model.getDevice(conn.from.id);
-        if (constDev.type != "EqConst") return false;
-        if (constDev.constant < 0) return false;
-        if (constDev.constant in mapping) return false;
-        const constInConnList = Object.values(model.inputConnectors(conn.from.id));
-        if (constInConnList.length != 1) return false;
-        if (srcsignal == undefined)
-            srcsignal = constInConnList[0].from;
-        if (srcsignal.id != constInConnList[0].from.id ||
-            srcsignal.port != constInConnList[0].from.port) return false;
-        const constBits = (constDev.bits || {}).in || 1;
-        if (bits == -1)
-            bits = constBits;
-        if (bits != constBits) return false;
-        mapping[constDev.constant] = inputNo + 1;
+    function traverse(groupId, baseNo) {
+        groupIds.push(groupId);
+        const groupDev = model.getDevice(groupId);
+        if (groupDev.type == "BusGroup") {
+            let offset = 0;
+            for (const [inputNo, groupSize] of (groupDev.groups || [1]).entries()) {
+                const conns = Object.values(model.inputPortConnectors(groupId, "in" + inputNo));
+                if (conns.length != 1) return false;
+                if (!traverse(conns[0].from.id, baseNo + offset))
+                    return false;
+                offset += groupSize;
+            }
+            return true;
+        } else if (groupDev.type == "EqConst") {
+            if (groupDev.constant < 0) return false;
+            if (groupDev.constant in mapping) return false;
+            const constInConnList = Object.values(model.inputConnectors(groupId));
+            if (constInConnList.length != 1) return false;
+            if (srcsignal == undefined)
+                srcsignal = constInConnList[0].from;
+            if (srcsignal.id != constInConnList[0].from.id ||
+                srcsignal.port != constInConnList[0].from.port) return false;
+            const constBits = (groupDev.bits || {}).in || 1;
+            if (bits == -1)
+                bits = constBits;
+            if (bits != constBits) return false;
+            mapping[groupDev.constant] = baseNo;
+            return true;
+        } else if (groupDev.type == "OrReduce") {
+            const constInConnList = Object.values(model.inputPortConnectors(groupId, "in"));
+            if (constInConnList.length != 1) return false;
+            const prevId = constInConnList[0].from.id;
+            const prevDev = model.getDevice(prevId);
+            if (prevDev.type != "BusGroup") return false;
+            groupIds.push(prevId);
+            if (!(groupDev.groups || []).every(x => x == 1)) return false;
+            for (const conn of Object.values(model.inputConnectors(prevId))) {
+                if (!traverse(conn.from.id, baseNo)) return false;
+            }
+            return true;
+        } else return false;
     }
+    if (!traverse(selConnList[0].from.id, 1))
+        return false;
     const muxInputs = {};
     for (let n = 0; n <= dev.bits.sel; n++)
         muxInputs[n] = Object.values(model.inputPortConnectors(id, "in" + n));
@@ -214,11 +236,10 @@ export function makeBinaryMuxes(model, dev, id)
         sparse = true;
     const outConnList = Object.values(model.outputPortConnectors(id, "out"));
     model.removeDevice(id);
-    model.removeDevice(groupId);
-    for (const conn of inConnList) {
-        const constOutConnList = Object.values(model.outputPortConnectors(conn.from.id, "out"));
+    for (const groupId of groupIds) {
+        const constOutConnList = Object.values(model.outputConnectors(groupId));
         if (constOutConnList.length == 0)
-            model.removeDevice(conn.from.id);
+            model.removeDevice(groupId);
     }
     const newDev = _.cloneDeep(dev);
     newDev.bits = newDev.bits || {};
