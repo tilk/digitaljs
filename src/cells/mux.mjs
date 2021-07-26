@@ -149,7 +149,8 @@ export const Mux1HotView = GenMuxView;
 
 export const MuxSparse = GenMux.define('MuxSparse', {
     /* default properties */
-    inputs: undefined
+    inputs: undefined,
+    default_input: false
 }, {
     initialize() {
         const inputs = this.get('inputs');
@@ -159,15 +160,19 @@ export const MuxSparse = GenMux.define('MuxSparse', {
         GenMux.prototype.initialize.apply(this, arguments);
     },
     muxInputs(n) {
-        return this.get('inputs');
+        if (this.get('default_input'))
+            return ['*'].concat(this.get('inputs'))
+        else
+            return this.get('inputs');
     },
     muxInput(i) {
+        const deflt = this.get('default_input');
         if (!i.isFullyDefined) return undefined;
         const idx = this.get('inputs').indexOf(i.toBigInt());
-        return idx < 0 ? undefined : idx;
+        return idx < 0 ? (deflt ? 0 : undefined) : (deflt ? idx + 1 : idx);
     },
-    _gateParams: GenMux.prototype._gateParams.concat(['inputs']),
-    _unsupportedPropChanges: GenMux.prototype._unsupportedPropChanges.concat(['inputs'])
+    _gateParams: GenMux.prototype._gateParams.concat(['inputs', 'default_input']),
+    _unsupportedPropChanges: GenMux.prototype._unsupportedPropChanges.concat(['inputs', 'default_input'])
 });
 export const MuxSparseView = GenMuxView;
 
