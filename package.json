@@ -51,7 +51,7 @@
     "3vl": "^0.3.5",
     "babel-polyfill": "^6.26.0",
     "dagre": "^0.8.5",
-    "elkjs": "^0.6.2",
+    "elkjs": "^0.7.1",
     "fastpriorityqueue": "^0.6.3",
     "graphlib": "^2.1.8",
     "jointjs": "^3.3.0",
