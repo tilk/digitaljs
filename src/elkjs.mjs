@@ -4,9 +4,9 @@ import elkjs from 'elkjs/lib/elk.bundled.js';
 function to_elkjs(graph) {
     const elkGraph = {
         id: "root",
-        layoutOptions: {
-            algorithm: 'layered',
-            maxIterations: 5,
+        properties: {
+            "elk.algorithm": 'layered',
+//            maxIterations: 5,
             'elk.layered.spacing.nodeNodeBetweenLayers': 110.0
         },
         children: [],
@@ -37,10 +37,10 @@ function to_elkjs(graph) {
                     id: p.id,
                     x: ppos[p.group][p.id].x,
                     y: ppos[p.group][p.id].y,
-                    layoutOptions: {
-                        side: p.group == "in" ? "WEST" : "EAST",
-                        borderOffset: 30,
-                        index: i
+                    properties: {
+                        'port.side': p.group == "in" ? "WEST" : "EAST",
+                        'port.borderOffset': 30,
+                        'port.index': i
                     }
                 };
             });
@@ -50,8 +50,8 @@ function to_elkjs(graph) {
                 width: size.width,
                 height: size.height,
                 ports: ports,
-                layoutOptions: {
-                    portConstraints: 'FIXED_POS'
+                properties: {
+                    portConstraints: 'FIXED_ORDER'
                 }
             });
         }
