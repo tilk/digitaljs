@@ -183,7 +183,6 @@ Some ideas for further developing the simulator.
  * Undo-redo capability.
  * Saving and loading circuits, including layout and state.
  * Generic handling of negation for unary/binary gates (negation on inputs/outputs) for better clarity.
- * Better algorithm for graph layout. (Idea: use elkjs)
  * Zooming in/out on schematics.
  * SVG export.
  * Verilog export.
