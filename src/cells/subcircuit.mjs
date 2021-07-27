@@ -83,8 +83,8 @@ export const Subcircuit = Box.define('Subcircuit', {
     },
     setLayoutPosition(position) {
         this.set('position', {
-            x: position.x - position.width / 2,
-            y: position.y - position.height / 2 + 10
+            x: position.x,
+            y: position.y + 10
         });
     },
     markup: [{

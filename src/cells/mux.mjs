@@ -77,8 +77,8 @@ export const GenMux = Gate.define('GenMux', {
     },
     setLayoutPosition(position) {
         this.set('position', {
-            x: position.x - position.width / 2,
-            y: position.y - position.height / 2 + 20
+            x: position.x,
+            y: position.y + 20
         });
     },
     markup: Gate.prototype.markup.concat([{

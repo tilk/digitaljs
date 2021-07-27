@@ -175,7 +175,12 @@ export class Circuit extends HeadlessCircuit {
                     rankSep: 110,
                     rankDir: "LR",
                     setPosition: function(element, position) {
-                        element.setLayoutPosition(position);
+                        element.setLayoutPosition({
+                            x: position.x - position.width/2,
+                            y: position.y - position.height/2,
+                            width: position.width,
+                            height: position.height
+                        });
                     },
                     exportElement: function(element) {
                         return element.getLayoutSize();
