@@ -64,23 +64,111 @@ export function getCellType(tp) {
     if (tp in types) return types[tp];
     else return cells.Subcircuit;
 }
-    
-export class HeadlessCircuit {
-    constructor(data, {cellsNamespace = {}} = {}) {
-        this._cells = Object.assign(cells, cellsNamespace);
+        
+const eqSigs = (sigs1, sigs2) => {
+    for (const k in sigs2) {
+        if (!sigs1[k].eq(sigs2[k])) return false;
+    }
+    return true;
+};
+
+export class SynchEngine {
+    constructor(graph, cells) {
         this._queue = new Map();
         this._pq = new FastPriorityQueue();
         this._tick = 0;
+        this._graph = graph;
+        this._cells = cells;
+        this._instrumentGraph(graph);
+    }
+    get hasPendingEvents() {
+        return this._queue.size > 0;
+    }
+    get tick() {
+        return this._tick;
+    }
+    shutdown() {
+        this.stopListening();
+    }
+    _instrumentGraph(graph) {
+        this.listenTo(graph, 'change:constantCache', (gate) => {
+            this._enqueue(gate);
+        });
+        this.listenTo(graph, 'change:inputSignals', (gate, sigs) => {
+            if (eqSigs(sigs, gate.previous("inputSignals")) && !sigs._clock_hack) return;
+            this._enqueue(gate);
+        });
+        for (const elem of graph.getElements()) {
+            this._enqueue(elem);
+            if (elem instanceof this._cells.Subcircuit)
+                this._instrumentGraph(elem.get('graph'));
+        }
+    }
+    _enqueue(gate) {
+        const k = (this._tick + gate.get('propagation')) | 0;
+        const sq = (() => {
+            const q = this._queue.get(k);
+            if (q !== undefined) return q;
+            const q1 = new Map();
+            this._queue.set(k, q1);
+            this._pq.add(k);
+            return q1;
+        })();
+        sq.set(gate, gate.get('inputSignals'));
+    }
+    updateGatesNext() {
+        const k = this._pq.poll() | 0;
+        console.assert(k >= this._tick);
+        this._tick = k;
+        const q = this._queue.get(k);
+        let count = 0;
+        while (q.size) {
+            const [gate, args] = q.entries().next().value;
+            q.delete(gate);
+            if (gate instanceof this._cells.Subcircuit) continue;
+            if (gate instanceof this._cells.Input) continue;
+            if (gate instanceof this._cells.Output) continue;
+            const graph = gate.graph;
+            if (!graph) continue;
+            gate.set('outputSignals', gate.operation(args));
+            count++;
+        }
+        this._queue.delete(k);
+        this._tick = (k + 1) | 0;
+        this.trigger('postUpdateGates', k, count);
+        return count;
+    }
+    updateGates() {
+        if (this._pq.peek() == this._tick) return this.updateGatesNext();
+        else {
+            const k = this._tick | 0;
+            this._tick = (k + 1) | 0;
+            this.trigger('postUpdateGates', k, 0);
+            return 0;
+        }
+    }
+};
+
+_.extend(SynchEngine.prototype, Backbone.Events);
+
+export class HeadlessCircuit {
+    constructor(data, {cellsNamespace = {}, engine = SynchEngine} = {}) {
+        this._cells = Object.assign(cells, cellsNamespace);
         this._display3vl = new Display3vl();
         this._display3vl.addDisplay(new help.Display3vlASCII());
         this._graph = this._makeGraph(data, data.subcircuits);
+        this._engine = new engine(this._graph, this._cells);
         this.makeLabelIndex();
+        this.listenTo(this._engine, 'postUpdateGates', (tick, count) => {
+            this.trigger('postUpdateGates', tick, count);
+        });
     }
     addDisplay(display) {
         this._display3vl.addDisplay(display);
         this.trigger('display:add', display);
     }
     shutdown() {
+        this._engine.shutdown();
         this.stopListening();
     }
     hasWarnings() {
@@ -108,20 +196,11 @@ export class HeadlessCircuit {
         this.listenTo(graph, 'userChange', () => {
             this.trigger('userChange');
         });
-        this.listenTo(graph, 'change:constantCache', (gate) => {
-            this._enqueue(gate);
-        });
-        const eqSigs = (sigs1, sigs2) => {
-            for (const k in sigs2) {
-                if (!sigs1[k].eq(sigs2[k])) return false;
-            }
-            return true;
-        };
         this.listenTo(graph, 'change:inputSignals', (gate, sigs) => {
-            if (eqSigs(sigs, gate.previous("inputSignals")) && !sigs._clock_hack) return;
+            if (eqSigs(sigs, gate.previous("inputSignals"))) return;
             if (gate._changeInputSignals) {
                 gate._changeInputSignals(sigs);
-            } else this._enqueue(gate);
+            }
         });
         this.listenTo(graph, 'change:outputSignals', (gate, sigs) => {
             if (eqSigs(sigs, gate.previous("outputSignals"))) return;
@@ -163,7 +242,6 @@ export class HeadlessCircuit {
                 cellArgs.graph = this._makeGraph(subcircuits[dev.celltype], subcircuits, { nested: true });
             const cell = new cellType(cellArgs);
             graph.addCell(cell);
-            this._enqueue(cell);
         }
         for (const conn of data.connectors) {
             graph.addCell(new this._cells.Wire({
@@ -176,56 +254,17 @@ export class HeadlessCircuit {
         if (laid_out) graph.set('laid_out', true);
         return graph;
     }
-    _enqueue(gate) {
-        const k = (this._tick + gate.get('propagation')) | 0;
-        const sq = (() => {
-            const q = this._queue.get(k);
-            if (q !== undefined) return q;
-            const q1 = new Map();
-            this._queue.set(k, q1);
-            this._pq.add(k);
-            return q1;
-        })();
-        sq.set(gate, gate.get('inputSignals'));
-    }
     updateGatesNext() {
-        const k = this._pq.poll() | 0;
-        console.assert(k >= this._tick);
-        this._tick = k;
-        const q = this._queue.get(k);
-        let count = 0;
-        this.trigger('preUpdateGates', k);
-        while (q.size) {
-            const [gate, args] = q.entries().next().value;
-            q.delete(gate);
-            if (gate instanceof this._cells.Subcircuit) continue;
-            if (gate instanceof this._cells.Input) continue;
-            if (gate instanceof this._cells.Output) continue;
-            const graph = gate.graph;
-            if (!graph) continue;
-            gate.set('outputSignals', gate.operation(args));
-            count++;
-        }
-        this._queue.delete(k);
-        this._tick = (k + 1) | 0;
-        this.trigger('postUpdateGates', k, count);
-        return count;
+        this._engine.updateGatesNext();
     }
     updateGates() {
-        if (this._pq.peek() == this._tick) return this.updateGatesNext();
-        else {
-            const k = this._tick | 0;
-            this.trigger('preUpdateGates', k);
-            this._tick = (k + 1) | 0;
-            this.trigger('postUpdateGates', k, 0);
-            return 0;
-        }
+        this._engine.updateGates();
     }
     get hasPendingEvents() {
-        return this._queue.size > 0;
+        return this._engine.hasPendingEvents;
     }
     get tick() {
-        return this._tick;
+        return this._engine.tick;
     }
     getInputCells() {
         return this._graph.getElements().filter(x => x.isInput);
