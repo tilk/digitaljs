@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+    <title>N-ary gates</title>
+  <script type="text/javascript" src="../main.js"></script></head>
+  <body>
+    <div>
+        <button name="start" type="button">▶️</button>
+        <button name="stop" type="button">⏹️</button>
+    </div>
+    <div id="paper">
+    </div>
+    <div>
+        <input name="fixed" type="checkbox">Fixed Mode</input>
+        <button name="json" type="button">Serialize and Reload</button>
+        <input name="layout" type="checkbox">Include layout information</button>
+    </div>
+    <div>
+        <button name="ppt_up" type="button">+</button><button name="ppt_down">-</button><button name="left">&lt;</button><button name="right">&gt;</button><button name="live">live</button>
+    </div>
+    <div id="monitor">
+    </div>
+    <div id="iopanel">
+    </div>
+    <script>
+      var circuit, monitor, monitorview, iopanel, paper;
+      var start = $('button[name=start]');
+      var stop = $('button[name=stop]');
+      var papers = {};
+      const fixed = function (fixed) {
+        Object.values(papers).forEach(p => p.fixed(fixed));
+      }
+      const loadCircuit = function (json) {
+        circuit = new digitaljs.Circuit(json);
+        monitor = new digitaljs.Monitor(circuit);
+        monitorview = new digitaljs.MonitorView({model: monitor, el: $('#monitor') });
+        iopanel = new digitaljs.IOPanelView({model: circuit, el: $('#iopanel') });
+        circuit.on('new:paper', function(paper) {
+          paper.fixed($('input[name=fixed]').prop('checked'));
+          papers[paper.cid] = paper;
+          paper.on('element:pointerdblclick', (cellView) => {
+            window.digitaljsCell = cellView.model;
+            console.info('You can now access the doubly clicked gate as digitaljsCell in your WebBrowser console!');
+          });
+        });
+        circuit.on('changeRunning', () => {
+          if (circuit.running) {
+            start.prop('disabled', true);
+            stop.prop('disabled', false);
+          } else {
+            start.prop('disabled', false);
+            stop.prop('disabled', true);
+          }
+        });
+        paper = circuit.displayOn($('#paper'));
+        fixed($('input[name=fixed]').prop('checked'));
+        circuit.on('remove:paper', function(paper) {
+          delete papers[paper.cid];
+        });
+        circuit.start();
+      }
+      start.on('click', (e) => { circuit.start(); });
+      stop.on('click', (e) => { circuit.stop(); });
+      $('button[name=json]').on('click', (e) => {
+        monitorview.shutdown();
+        iopanel.shutdown();
+        circuit.stop();
+        const json = circuit.toJSON($('input[name=layout]').prop('checked'));
+        console.log(json);
+        loadCircuit(json);
+      });
+      $('input[name=fixed]').change(function () {
+        fixed($(this).prop('checked'));
+      });
+      $('button[name=ppt_up]').on('click', (e) => { monitorview.pixelsPerTick *= 2; });
+      $('button[name=ppt_down]').on('click', (e) => { monitorview.pixelsPerTick /= 2; });
+      $('button[name=left]').on('click', (e) => { monitorview.live = false; monitorview.start -= monitorview._width / monitorview.pixelsPerTick / 4; });
+      $('button[name=right]').on('click', (e) => { monitorview.live = false; monitorview.start += monitorview._width / monitorview.pixelsPerTick / 4; });
+      $('button[name=live]').on('click', (e) => { monitorview.live = true; });
+      $(window).ready(function () { loadCircuit({"devices":{"in1":{"type":"Button","label":"a","net":"a"},"in2":{"type":"Button","label":"b","net":"b"},"in3":{"type":"Button","label":"c","net":"c"},"in4":{"type":"Button","label":"d","net":"d"},"in5":{"type":"Button","label":"e","net":"e"},"out2":{"type":"Lamp","label":"o2","net":"o2"},"out3":{"type":"Lamp","label":"o3","net":"o3"},"out4":{"type":"Lamp","label":"o4","net":"o4"},"out5":{"type":"Lamp","label":"o5","net":"o5"},"gate2":{"type":"And","inputs":2},"gate3":{"type":"And","inputs":3},"gate4":{"type":"And","inputs":4},"gate5":{"type":"And","inputs":5}},"connectors":[{"from":{"id":"in1","port":"out"},"to":{"id":"gate5","port":"in1"}},{"from":{"id":"in2","port":"out"},"to":{"id":"gate5","port":"in2"}},{"from":{"id":"in3","port":"out"},"to":{"id":"gate5","port":"in3"}},{"from":{"id":"in4","port":"out"},"to":{"id":"gate5","port":"in4"}},{"from":{"id":"in5","port":"out"},"to":{"id":"gate5","port":"in5"}},{"from":{"id":"gate5","port":"out"},"to":{"id":"out5","port":"in"}},{"from":{"id":"in1","port":"out"},"to":{"id":"gate4","port":"in1"}},{"from":{"id":"in2","port":"out"},"to":{"id":"gate4","port":"in2"}},{"from":{"id":"in3","port":"out"},"to":{"id":"gate4","port":"in3"}},{"from":{"id":"in4","port":"out"},"to":{"id":"gate4","port":"in4"}},{"from":{"id":"gate4","port":"out"},"to":{"id":"out4","port":"in"}},{"from":{"id":"in1","port":"out"},"to":{"id":"gate3","port":"in1"}},{"from":{"id":"in2","port":"out"},"to":{"id":"gate3","port":"in2"}},{"from":{"id":"in3","port":"out"},"to":{"id":"gate3","port":"in3"}},{"from":{"id":"gate3","port":"out"},"to":{"id":"out3","port":"in"}},{"from":{"id":"in1","port":"out"},"to":{"id":"gate2","port":"in1"}},{"from":{"id":"in2","port":"out"},"to":{"id":"gate2","port":"in2"}},{"from":{"id":"gate2","port":"out"},"to":{"id":"out2","port":"in"}}]}) });
+    </script>
+  </body>
+</html>

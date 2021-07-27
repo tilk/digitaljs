@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+    <title>Sparse mux</title>
+  <script type="text/javascript" src="../main.js"></script></head>
+  <body>
+    <div>
+        <button name="start" type="button">▶️</button>
+        <button name="stop" type="button">⏹️</button>
+    </div>
+    <div id="paper">
+    </div>
+    <div>
+        <input name="fixed" type="checkbox">Fixed Mode</input>
+        <button name="json" type="button">Serialize and Reload</button>
+        <input name="layout" type="checkbox">Include layout information</button>
+    </div>
+    <div>
+        <button name="ppt_up" type="button">+</button><button name="ppt_down">-</button><button name="left">&lt;</button><button name="right">&gt;</button><button name="live">live</button>
+    </div>
+    <div id="monitor">
+    </div>
+    <div id="iopanel">
+    </div>
+    <script>
+      var circuit, monitor, monitorview, iopanel, paper;
+      var start = $('button[name=start]');
+      var stop = $('button[name=stop]');
+      var papers = {};
+      const fixed = function (fixed) {
+        Object.values(papers).forEach(p => p.fixed(fixed));
+      }
+      const loadCircuit = function (json) {
+        circuit = new digitaljs.Circuit(json);
+        monitor = new digitaljs.Monitor(circuit);
+        monitorview = new digitaljs.MonitorView({model: monitor, el: $('#monitor') });
+        iopanel = new digitaljs.IOPanelView({model: circuit, el: $('#iopanel') });
+        circuit.on('new:paper', function(paper) {
+          paper.fixed($('input[name=fixed]').prop('checked'));
+          papers[paper.cid] = paper;
+          paper.on('element:pointerdblclick', (cellView) => {
+            window.digitaljsCell = cellView.model;
+            console.info('You can now access the doubly clicked gate as digitaljsCell in your WebBrowser console!');
+          });
+        });
+        circuit.on('changeRunning', () => {
+          if (circuit.running) {
+            start.prop('disabled', true);
+            stop.prop('disabled', false);
+          } else {
+            start.prop('disabled', false);
+            stop.prop('disabled', true);
+          }
+        });
+        paper = circuit.displayOn($('#paper'));
+        fixed($('input[name=fixed]').prop('checked'));
+        circuit.on('remove:paper', function(paper) {
+          delete papers[paper.cid];
+        });
+        circuit.start();
+      }
+      start.on('click', (e) => { circuit.start(); });
+      stop.on('click', (e) => { circuit.stop(); });
+      $('button[name=json]').on('click', (e) => {
+        monitorview.shutdown();
+        iopanel.shutdown();
+        circuit.stop();
+        const json = circuit.toJSON($('input[name=layout]').prop('checked'));
+        console.log(json);
+        loadCircuit(json);
+      });
+      $('input[name=fixed]').change(function () {
+        fixed($(this).prop('checked'));
+      });
+      $('button[name=ppt_up]').on('click', (e) => { monitorview.pixelsPerTick *= 2; });
+      $('button[name=ppt_down]').on('click', (e) => { monitorview.pixelsPerTick /= 2; });
+      $('button[name=left]').on('click', (e) => { monitorview.live = false; monitorview.start -= monitorview._width / monitorview.pixelsPerTick / 4; });
+      $('button[name=right]').on('click', (e) => { monitorview.live = false; monitorview.start += monitorview._width / monitorview.pixelsPerTick / 4; });
+      $('button[name=live]').on('click', (e) => { monitorview.live = true; });
+      $(window).ready(function () { loadCircuit({"devices":{"sel":{"type":"NumEntry","bits":2,"order":2},"btna":{"type":"Button","label":"a","net":"a","order":0,"bits":1},"btnb":{"type":"Button","label":"b","net":"b","order":1,"bits":1},"out":{"type":"Lamp","label":"o","net":"o","order":0,"bits":1},"mux":{"type":"MuxSparse","inputs":[1,3],"bits":{"sel":2,"in":1},"label":"mux"}},"connectors":[{"from":{"id":"btna","port":"out"},"to":{"id":"mux","port":"in0"}},{"from":{"id":"btnb","port":"out"},"to":{"id":"mux","port":"in1"}},{"from":{"id":"mux","port":"out"},"to":{"id":"out","port":"in"}},{"from":{"id":"sel","port":"out"},"to":{"id":"mux","port":"sel"}}]}) });
+    </script>
+  </body>
+</html>
