@@ -8,9 +8,7 @@ function to_elkjs(graph) {
         properties: {
             algorithm: 'sporeOverlap',
             underlyingLayoutAlgorithm: 'layered',
-//            maxIterations: 5,
-            'elk.layered.spacing.nodeNodeBetweenLayers': 110.0,
-            'spacing.portsSurrounding': 'new ElkMargin(200)'
+            'elk.layered.spacing.nodeNodeBetweenLayers': 90.0,
         },
         children: [],
         edges: []
@@ -58,7 +56,6 @@ function to_elkjs(graph) {
             });
         }
     }
-    console.log(elkGraph);
     return elkGraph;
 }
 
@@ -85,8 +82,6 @@ export function elk_layout(graph) {
     const elk = new elkjs();
 
     elk.layout(elkGraph).then(g => {
-        console.log(elkGraph);
-        console.log(g);
         from_elkjs(graph, g);
     });
 }
