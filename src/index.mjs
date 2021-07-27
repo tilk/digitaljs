@@ -13,7 +13,7 @@ import 'jquery-ui/themes/base/all.css';
 import * as cells from './cells.mjs';
 import * as tools from './tools.mjs';
 import * as transform from './transform.mjs';
-import { HeadlessCircuit, getCellType } from './circuit.mjs';
+import { SynchEngine, HeadlessCircuit, getCellType } from './circuit.mjs';
 import { MonitorView, Monitor } from './monitor.mjs';
 import { IOPanelView } from './iopanel.mjs';
 import { elk_layout } from './elkjs.mjs';
@@ -71,30 +71,20 @@ export const paperOptions = {
     }
 };
 
-export class Circuit extends HeadlessCircuit {
-    constructor(data, options = {}) {
-        super(data, options);
-        const { 
-            windowCallback = this._defaultWindowCallback,
-            layoutEngine = "elkjs"
-        } = options;
-        this._layoutEngine = layoutEngine
-        this._windowCallback = windowCallback;
+export class BrowserSynchEngine extends SynchEngine {
+    constructor(graph, cells) {
+        super(graph, cells);
         this._interval_ms = 10;
         this._interval = null;
         this._idle = null;
     }
     start() {
-        if (this.hasWarnings())
-            return; //todo: print/show error
         this._interval = setInterval(() => {
             this.updateGates();
         }, this._interval_ms);
         this.trigger('changeRunning');
     }
     startFast() {
-        if (this.hasWarnings())
-            return; //todo: print/show error
         this._idle = requestIdleCallback((dd) => {
             while (dd.timeRemaining() > 0 && this.hasPendingEvents && this._idle !== null)
                 this.updateGatesNext();
@@ -127,6 +117,40 @@ export class Circuit extends HeadlessCircuit {
     }
     get running() {
         return this._interval !== null || this._idle !== null;
+    }
+};
+
+export class Circuit extends HeadlessCircuit {
+    constructor(data, { windowCallback = Circuit.prototype._defaultWindowCallback, layoutEngine = "elkjs", ...options } = {}) {
+        if (!options.engine) options.engine = BrowserSynchEngine;
+        super(data, options);
+        this._layoutEngine = layoutEngine
+        this._windowCallback = windowCallback;
+        this.listenTo(this._engine, 'changeRunning', () => {
+            this.trigger('changeRunning');
+        });
+    }
+    start() {
+        if (this.hasWarnings())
+            return; //todo: print/show error
+        this._engine.start();
+    }
+    startFast() {
+        if (this.hasWarnings())
+            return; //todo: print/show error
+        this._engine.startFast();
+    }
+    stop() {
+        this._engine.stop();
+    }
+    get interval() {
+        return this._engine.interval;
+    }
+    set interval(ms) {
+        this._engine.interval = ms;
+    }
+    get running() {
+        return this._engine.running;
     }
     shutdown() {
         super.shutdown();
