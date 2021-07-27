@@ -253,8 +253,8 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
     },
     setLayoutPosition(position) {
         this.set('position', {
-            x: position.x - position.width / 2,
-            y: position.y - position.height / 2
+            x: position.x,
+            y: position.y
         });
     },
 

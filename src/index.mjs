@@ -16,6 +16,7 @@ import * as transform from './transform';
 import { HeadlessCircuit, getCellType } from './circuit';
 import { MonitorView, Monitor } from './monitor';
 import { IOPanelView } from './iopanel';
+import { elk_layout } from './elkjs.mjs';
 import './style.css';
 
 // polyfill ResizeObserver for e.g. Firefox ESR 68.8
@@ -71,9 +72,14 @@ export const paperOptions = {
 };
 
 export class Circuit extends HeadlessCircuit {
-    constructor(data, windowCallback, cellsNamespace) {
-        super(data, cellsNamespace);
-        this._windowCallback = windowCallback || this._defaultWindowCallback;
+    constructor(data, options = {}) {
+        super(data, options);
+        const { 
+            windowCallback = this._defaultWindowCallback,
+            layoutEngine = "elkjs"
+        } = options;
+        this._layoutEngine = layoutEngine
+        this._windowCallback = windowCallback;
         this._interval_ms = 10;
         this._interval = null;
         this._idle = null;
@@ -162,20 +168,29 @@ export class Circuit extends HeadlessCircuit {
         graph.resetCells(graph.getCells());
         // lazy graph layout
         if (!graph.get('laid_out')) {
-            joint.layout.DirectedGraph.layout(graph, {
-                nodeSep: 20,
-                edgeSep: 0,
-                rankSep: 110,
-                rankDir: "LR",
-                setPosition(element, position) {
-                    element.setLayoutPosition(position);
-                },
-                exportElement(element) {
-                    return element.getLayoutSize();
-                },
-                dagre: dagre,
-                graphlib: graphlib
-            });
+            if (this._layoutEngine == "dagre") {
+                joint.layout.DirectedGraph.layout(graph, {
+                    nodeSep: 20,
+                    edgeSep: 0,
+                    rankSep: 110,
+                    rankDir: "LR",
+                    setPosition: function(element, position) {
+                        element.setLayoutPosition({
+                            x: position.x - position.width/2,
+                            y: position.y - position.height/2,
+                            width: position.width,
+                            height: position.height
+                        });
+                    },
+                    exportElement: function(element) {
+                        return element.getLayoutSize();
+                    },
+                    dagre: dagre,
+                    graphlib: graphlib
+                });
+            } else if (this._layoutEngine == "elkjs") {
+                elk_layout(graph);
+            }
             graph.set('laid_out', true);
         }
         paper.listenTo(this, 'display:add', function() {
