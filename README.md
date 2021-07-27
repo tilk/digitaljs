@@ -86,9 +86,9 @@ instance.
     * Attributes: `bits` (natural number)
     * Inputs: `in` (`bits`-bit)
     * Outputs: `out` (`bits`-bit)
- * Binary gates: `And`, `Nand`, `Or`, `Nor`, `Xor`, `Xnor`
-    * Attributes: `bits` (natural number)
-    * Inputs: `in1`, `in2` (`bits`-bit)
+ * N-ary gates: `And`, `Nand`, `Or`, `Nor`, `Xor`, `Xnor`
+    * Attributes: `bits` (natural number), `inputs` (natural number, default 2)
+    * Inputs: `in1`, `in2` ... `inN` (`bits`-bit, `N` = `inputs`)
     * Outputs: `out` (`bits`-bit)
  * Reducing gates: `AndReduce`, `NandReduce`, `OrReduce`, `NorReduce`, `XorReduce`, `XnorReduce`
     * Attributes: `bits` (natural number)
@@ -120,6 +120,10 @@ instance.
  * One-hot multiplexer: `Mux1Hot`
     * Attributes: `bits.in`, `bits.sel` (natural number)
     * Inputs: `in0` ... `inN` (`bits.in`-bit, `N` = `bits.sel`), `sel` (`bits.sel`-bit)
+    * Outputs: `out` (`bits.in`-bit)
+ * Sparse multiplexer: `MuxSparse`
+    * Attributes: `bits.in`, `bits.sel` (natural number), `inputs` (list of natural numbers), `default_input` (optional boolean)
+    * Inputs: `in0` ... `inN` (`bits.in`-bit, `N` = `inputs.length`, +1 if `default_input` is true)
     * Outputs: `out` (`bits.in`-bit)
  * D flip-flop: `Dff`
     * Attributes: `bits` (natural number), `polarity.clock`, `polarity.arst`, `polarity.enable` (optional booleans), `initial` (optional binary string), `arst_value` (optional binary string)
