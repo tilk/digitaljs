@@ -5,9 +5,11 @@ function to_elkjs(graph) {
     const elkGraph = {
         id: "root",
         properties: {
-            "elk.algorithm": 'layered',
+            algorithm: 'sporeOverlap',
+            underlyingLayoutAlgorithm: 'layered',
 //            maxIterations: 5,
-            'elk.layered.spacing.nodeNodeBetweenLayers': 110.0
+            'elk.layered.spacing.nodeNodeBetweenLayers': 110.0,
+            'spacing.portsSurrounding': 'new ElkMargin(200)'
         },
         children: [],
         edges: []
@@ -20,10 +22,8 @@ function to_elkjs(graph) {
 
             elkGraph.edges.push({
                 id: cell.id,
-                source: source.id,
-                sourcePort: source.id + '.' + source.port,
-                target: target.id,
-                targetPort: target.id + '.' + target.port
+                sources: [ source.id + '.' + source.port ],
+                targets: [ target.id + '.' + target.port ]
             });
         } else {
             const size = cell.getLayoutSize();
@@ -34,13 +34,13 @@ function to_elkjs(graph) {
                 if (!ppos[p.group])
                     ppos[p.group] = cell.getPortsPositions(p.group);
                 return {
-                    id: p.id,
+                    id: cell.id + "." + p.id,
                     x: ppos[p.group][p.id].x,
                     y: ppos[p.group][p.id].y,
                     properties: {
-                        'port.side': p.group == "in" ? "WEST" : "EAST",
+                        'port.side': p.group == "in" ? "WEST" : p.group == "in2" ? "NORTH" : "EAST",
                         'port.borderOffset': 30,
-                        'port.index': i
+                        'port.index': -i
                     }
                 };
             });
@@ -51,7 +51,7 @@ function to_elkjs(graph) {
                 height: size.height,
                 ports: ports,
                 properties: {
-                    portConstraints: 'FIXED_ORDER'
+                    portConstraints: 'FIXED_POS'
                 }
             });
         }
