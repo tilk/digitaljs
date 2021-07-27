@@ -1,6 +1,6 @@
 
 import elkjs from 'elkjs/lib/elk.bundled.js';
-import { Input, Output } from "./cells/io";
+import { Clock, Input, Output } from "./cells/io";
 
 function to_elkjs(graph) {
     const elkGraph = {
@@ -51,7 +51,8 @@ function to_elkjs(graph) {
                 ports: ports,
                 properties: {
                     portConstraints: 'FIXED_POS',
-                    layerConstraint: cell instanceof Input ? "FIRST" : cell instanceof Output ? "LAST" : "NONE"
+                    layerConstraint: (cell instanceof Input || cell instanceof Clock) ? "FIRST" 
+                                                             : cell instanceof Output ? "LAST" : "NONE"
                 }
             });
         }
