@@ -90,6 +90,11 @@ export class SynchEngine {
     shutdown() {
         this.stopListening();
     }
+    _instrumentElement(elem) {
+        this._enqueue(elem);
+        if (elem instanceof this._cells.Subcircuit)
+            this._instrumentGraph(elem.get('graph'));
+    }
     _instrumentGraph(graph) {
         this.listenTo(graph, 'change:constantCache', (gate) => {
             this._enqueue(gate);
@@ -118,11 +123,8 @@ export class SynchEngine {
             }
             this._enqueue(gate);
         });
-        for (const elem of graph.getElements()) {
-            this._enqueue(elem);
-            if (elem instanceof this._cells.Subcircuit)
-                this._instrumentGraph(elem.get('graph'));
-        }
+        for (const elem of graph.getElements())
+            this._instrumentElement(elem);
     }
     _enqueue(gate) {
         const k = (this._tick + gate.get('propagation')) | 0;
