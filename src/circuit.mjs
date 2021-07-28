@@ -95,7 +95,27 @@ export class SynchEngine {
             this._enqueue(gate);
         });
         this.listenTo(graph, 'change:inputSignals', (gate, sigs) => {
-            if (eqSigs(sigs, gate.previous("inputSignals")) && !sigs._clock_hack) return;
+            const prevSigs = gate.previous("inputSignals");
+            if (eqSigs(sigs, prevSigs) && !sigs._clock_hack) return;
+            if (gate instanceof this._cells.Subcircuit) {
+                const iomap = gate.get('circuitIOmap');
+                for (const [port, sig] of Object.entries(sigs)) {
+                    if (!prevSigs[port] || sig.eq(prevSigs[port])) continue;
+                    const input = gate.get('graph').getCell(iomap[port]);
+                    console.assert(input.isInput);
+                    input._setInput(sig);
+                }
+            }
+            if (gate instanceof this._cells.Output && gate.get('mode') == 0) {
+                const subcir = gate.graph.get('subcircuit');
+                if (subcir != true) {
+                    console.assert(subcir != null);
+                    const port = gate.get('net');
+                    const signals = _.clone(subcir.get('outputSignals'));
+                    signals[port] = gate.getOutput();
+                    subcir.set('outputSignals', signals);
+                }
+            }
             this._enqueue(gate);
         });
         for (const elem of graph.getElements()) {

@@ -63,18 +63,6 @@ export const Subcircuit = Box.define('Subcircuit', {
         
         Box.prototype.initialize.apply(this, arguments);
     },
-    _setInput(sig, port) {
-        Box.prototype._setInput.apply(this, arguments);
-        const iomap = this.get('circuitIOmap');
-        const input = this.get('graph').getCell(iomap[port]);
-        console.assert(input.isInput);
-        input._setInput(sig);
-    },
-    _setOutput(sig, port) {
-        const signals = _.clone(this.get('outputSignals'));
-        signals[port] = sig;
-        this.set('outputSignals', signals);
-    },
     //add offset of 10pt to account for the top label at layout time
     getLayoutSize() {
         const size = this.size();
