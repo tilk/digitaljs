@@ -61,3 +61,10 @@ export function baseSelectMarkupHTML(display3vl, bits, base) {
     return '<select name="base">' + markup.join("") + '</select>';
 };
 
+export function eqSigs(sigs1, sigs2) {
+    for (const k in sigs2) {
+        if (!sigs1[k].eq(sigs2[k])) return false;
+    }
+    return true;
+};
+
