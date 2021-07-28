@@ -316,19 +316,6 @@ export const Output = IO.define('Output', {
 }, {
     isOutput: true,
     _portDirection: 'in',
-    _changeInputSignals(sigs) {
-        if (this.get('mode') != 0) return; // not inside a subcircuit
-
-        const subcir = this.graph.get('subcircuit');
-        if (subcir == true) return; // graph still under construction
-        console.assert(subcir != null);
-        subcir._setOutput(sigs.in, this.get('net'));
-    },
-    _setPortsBits(portsBits) {
-        IO.prototype._setPortsBits.apply(this, arguments);
-
-        this._changeInputSignals(this.get('inputSignals'));
-    },
     getOutput() {
         return this.get('inputSignals').in;
     },
