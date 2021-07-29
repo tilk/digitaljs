@@ -1,17 +1,17 @@
 
 import _ from 'lodash';
-import Backbone from 'backbone';
 import FastPriorityQueue from 'fastpriorityqueue';
 import * as help from '../help.mjs';
+import { BaseEngine } from './base.mjs';
 
-export class SynchEngine {
+export class SynchEngine extends BaseEngine {
     constructor(graph, cells) {
+        super(graph);
         this._queue = new Map();
         this._pq = new FastPriorityQueue();
         this._tick = 0;
-        this._graph = graph;
         this._cells = cells;
-        this._instrumentGraph(graph);
+        this._addGraph(graph);
     }
     get hasPendingEvents() {
         return this._queue.size > 0;
@@ -22,12 +22,23 @@ export class SynchEngine {
     shutdown() {
         this.stopListening();
     }
-    _instrumentElement(elem) {
-        this._enqueue(elem);
-        if (elem instanceof this._cells.Subcircuit)
-            this._instrumentGraph(elem.get('graph'));
+    _updateSubcircuit(gate, sigs, prevSigs = {}) {
+        if (!sigs) sigs = gate.get("inputSignals");
+        const iomap = gate.get('circuitIOmap');
+        for (const [port, sig] of Object.entries(sigs)) {
+            if (prevSigs[port] && sig.eq(prevSigs[port])) continue;
+            const input = gate.get('graph').getCell(iomap[port]);
+            console.assert(input.isInput);
+            input._setInput(sig);
+        }
     }
-    _instrumentGraph(graph) {
+    _addGate(gate) {
+        super._addGate(gate);
+        this._enqueue(gate);
+        if (gate instanceof this._cells.Subcircuit)
+            this._updateSubcircuit(gate);
+    }
+    _addGraph(graph) {
         this.listenTo(graph, 'change:constantCache', (gate) => {
             this._enqueue(gate);
         });
@@ -35,13 +46,7 @@ export class SynchEngine {
             const prevSigs = gate.previous("inputSignals");
             if (help.eqSigs(sigs, prevSigs) && !sigs._clock_hack) return;
             if (gate instanceof this._cells.Subcircuit) {
-                const iomap = gate.get('circuitIOmap');
-                for (const [port, sig] of Object.entries(sigs)) {
-                    if (!prevSigs[port] || sig.eq(prevSigs[port])) continue;
-                    const input = gate.get('graph').getCell(iomap[port]);
-                    console.assert(input.isInput);
-                    input._setInput(sig);
-                }
+                this._updateSubcircuit(gate, sigs, prevSigs);
             }
             if (gate instanceof this._cells.Output && gate.get('mode') == 0) {
                 const subcir = gate.graph.get('subcircuit');
@@ -55,8 +60,7 @@ export class SynchEngine {
             }
             this._enqueue(gate);
         });
-        for (const elem of graph.getElements())
-            this._instrumentElement(elem);
+        super._addGraph(graph);
     }
     _enqueue(gate) {
         const k = (this._tick + gate.get('propagation')) | 0;
@@ -119,6 +123,4 @@ export class SynchEngine {
         return false;
     }
 };
-
-_.extend(SynchEngine.prototype, Backbone.Events);
 

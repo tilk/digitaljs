@@ -16,6 +16,12 @@ class WorkerEngineWorker {
     }
     stop() {
     }
+    addGraph(graphId) {
+    }
+    addLink(graphId, linkId, source, target) {
+    }
+    addGate(graphId, gateId, gateParams) {
+    }
 };
 
 const worker = new WorkerEngineWorker();
