@@ -1,8 +1,8 @@
 "use strict";
 
 import * as joint from 'jointjs';
-import { Box, BoxView } from './base';
-import * as help from '../help';
+import { Box, BoxView } from './base.mjs';
+import * as help from '../help.mjs';
 import { Vector3vl } from '3vl';
 
 // D flip-flops

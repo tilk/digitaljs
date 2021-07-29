@@ -2,9 +2,9 @@
 
 import * as joint from 'jointjs';
 import _ from 'lodash';
-import { Box, BoxView } from './base';
-import { IO, Input, Output } from './io';
-import * as help from '../help';
+import { Box, BoxView } from './base.mjs';
+import { IO, Input, Output } from './io.mjs';
+import * as help from '../help.mjs';
 
 // Subcircuit model -- embeds a circuit graph in an element
 export const Subcircuit = Box.define('Subcircuit', {

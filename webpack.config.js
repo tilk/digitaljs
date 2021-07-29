@@ -1,7 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CleanWebpackPlugin = require("clean-webpack-plugin");
-const babelenv = require('@babel/preset-env');
 
 const outputDirectory = 'dist';
 
@@ -37,12 +36,8 @@ module.exports = {
     devtool: "source-map",
     module: {
         rules: [
-            { // workaround for Webpack borkedness
-                test: /\.mjs/,
-                type: "javascript/auto"
-            },
             {
-                test: /\.css/,
+                test: /\.css$/,
                 use: [
                     'style-loader',
                     'css-loader'
@@ -50,16 +45,14 @@ module.exports = {
             },
             {
                 test: /\.svg|\.png/,
-                use: [
-                    'base64-inline-loader?limit=1000&name=[name].[ext]'
-                ]
+                type: 'asset'
             },
             {
                 test: require.resolve('jquery'),
-                use: [{
-                    loader: 'expose-loader',
-                    options: '$'
-                }]
+                loader: 'expose-loader',
+                options: {
+                    exposes: ['$']
+                }
             }
         ]
     },

@@ -3,7 +3,7 @@
 import * as joint from 'jointjs';
 import _ from 'lodash';
 import { Vector3vl } from '3vl';
-import * as tools from '../tools';
+import * as tools from '../tools.mjs';
 
 export const portGroupAttrs = {
     wire: {

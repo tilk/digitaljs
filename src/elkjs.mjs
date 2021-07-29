@@ -1,6 +1,6 @@
 
 import elkjs from 'elkjs/lib/elk.bundled.js';
-import { Clock, Input, Output } from "./cells/io";
+import { Clock, Input, Output } from "./cells/io.mjs";
 
 function to_elkjs(graph) {
     const elkGraph = {

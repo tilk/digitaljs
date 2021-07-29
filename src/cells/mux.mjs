@@ -2,8 +2,8 @@
 
 import * as joint from 'jointjs';
 import _ from 'lodash';
-import { Gate, GateView, portGroupAttrs } from './base';
-import * as help from '../help';
+import { Gate, GateView, portGroupAttrs } from './base.mjs';
+import * as help from '../help.mjs';
 import { Vector3vl } from '3vl';
 
 // Multiplexers

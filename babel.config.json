@@ -10,5 +10,6 @@
         "exclude": ["babel-plugin-transform-exponentiation-operator"]
       }
     ]
-  ]
+  ],
+  "plugins": ["babel-plugin-add-import-extension"]
 }

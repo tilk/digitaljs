@@ -1,7 +1,7 @@
 "use strict";
 
 import * as joint from 'jointjs';
-import { Box, BoxView } from './base';
+import { Box, BoxView } from './base.mjs';
 import _ from 'lodash';
 import $ from 'jquery';
 import { Vector3vl } from '3vl';

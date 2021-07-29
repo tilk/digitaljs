@@ -3,8 +3,8 @@
 import $ from 'jquery';
 import _ from 'lodash';
 import * as joint from 'jointjs';
-import { Box, BoxView } from './base';
-import * as help from '../help';
+import { Box, BoxView } from './base.mjs';
+import * as help from '../help.mjs';
 import { Vector3vl, Mem3vl } from '3vl';
 
 // Memory cell

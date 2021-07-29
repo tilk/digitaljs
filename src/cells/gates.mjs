@@ -1,8 +1,8 @@
 "use strict";
 
 import * as joint from 'jointjs';
-import { Gate, GateView } from './base';
-import * as help from '../help';
+import { Gate, GateView } from './base.mjs';
+import * as help from '../help.mjs';
 import { Vector3vl } from '3vl';
 
 const and_path = "M19 0v32h16c9 0 16-7 16-16S44 0 35 0H20z";
