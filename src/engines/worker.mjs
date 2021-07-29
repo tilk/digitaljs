@@ -1,14 +1,30 @@
 
-export class WorkerEngine {
-    constructor(graph, cells) {
-        this._graph = graph;
-        this._cells = cells;
+import _ from 'lodash';
+import { BaseEngine } from './base.mjs';
+
+export class WorkerEngine extends BaseEngine {
+    constructor(graph) {
+        super(graph);
         this._running = false;
         this._tickCache = 0;
         this._pendingEventsCache = false;
         this._worker = new Worker(new URL('./worker-worker.mjs', import.meta.url));
         this._worker.onmessage = (e) => this._handleMessage(e.data);
         this.interval = 10;
+        this._addGraph(this._graph);
+    }
+    _addGate(gate) {
+        this._worker.postMessage({ type: 'addGate', args: [gate.graph.cid, gate.id, gate.getGateParams()] });
+        super._addGate(gate);
+    }
+    _addLink(link) {
+        if (!link.get('warning'))
+            this._worker.postMessage({ type: 'addLink', args: [link.graph.cid, link.id, link.get('source'), link.get('target')]});
+        super._addLink(link);
+    }
+    _addGraph(graph) {
+        this._worker.postMessage({ type: 'addGraph', args: [graph.cid]});
+        super._addGraph(graph);
     }
     get hasPendingEvents() {
         return this._pendingEventsCache;
@@ -63,4 +79,3 @@ export class WorkerEngine {
     }
 };
 
-_.extend(WorkerEngine.prototype, Backbone.Events);
