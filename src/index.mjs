@@ -11,6 +11,7 @@ import { Vector3vl } from '3vl';
 import 'jquery-ui/ui/widgets/dialog.js';
 import 'jquery-ui/themes/base/all.css';
 import * as cells from './cells.mjs';
+import * as engines from './engines.mjs';
 import * as tools from './tools.mjs';
 import * as transform from './transform.mjs';
 import { HeadlessCircuit, getCellType } from './circuit.mjs';
@@ -25,7 +26,7 @@ import './style.css';
 // see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#Browser_compatibility
 import ResizeObserver from 'resize-observer-polyfill';
 
-export { HeadlessCircuit, getCellType, cells, tools, transform, MonitorView, Monitor, IOPanelView };
+export { HeadlessCircuit, getCellType, cells, tools, engines, transform, MonitorView, Monitor, IOPanelView };
 
 export const paperOptions = {
     async: true,
