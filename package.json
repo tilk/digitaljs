@@ -29,9 +29,9 @@
   "author": "Marek Materzok",
   "license": "BSD-2-Clause",
   "devDependencies": {
-    "@babel/cli": "^7.13.16",
-    "@babel/core": "^7.13.16",
-    "@babel/preset-env": "^7.13.16",
+    "@babel/cli": "^7.14.8",
+    "@babel/core": "^7.14.8",
+    "@babel/preset-env": "^7.14.8",
     "acorn": "^6.4.2",
     "babel-jest": "^26.6.3",
     "babel-loader": "^8.2.2",
@@ -45,19 +45,19 @@
     "jest": "^26.6.3",
     "style-loader": "^0.23.1",
     "webpack": "^4.46.0",
-    "webpack-cli": "^4.5.0"
+    "webpack-cli": "^4.7.2"
   },
   "dependencies": {
     "3vl": "^0.3.5",
     "babel-polyfill": "^6.26.0",
     "dagre": "^0.8.5",
     "elkjs": "^0.7.1",
-    "fastpriorityqueue": "^0.6.3",
+    "fastpriorityqueue": "^0.6.4",
     "graphlib": "^2.1.8",
-    "jointjs": "^3.3.0",
-    "jquery": "^3.5.1",
+    "jointjs": "^3.4.0",
+    "jquery": "^3.6.0",
     "jquery-ui": "^1.12.1",
-    "regenerator-runtime": "^0.13.7",
+    "regenerator-runtime": "^0.13.9",
     "resize-observer-polyfill": "^1.5.1",
     "wavecanvas": "^0.2.5"
   },
