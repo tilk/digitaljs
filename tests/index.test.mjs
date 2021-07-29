@@ -3,9 +3,9 @@
 import _ from 'lodash';
 import 'core-js';
 import 'regenerator-runtime/runtime';
-import { HeadlessCircuit, getCellType } from '../src/circuit.mjs';
+import { HeadlessCircuit, getCellType } from '../lib/circuit.mjs';
 import { Vector3vl } from '3vl';
-import * as cells from '../src/cells';
+import * as cells from '../lib/cells.mjs';
 
 console.assert = (stmt, msg) => { if (!stmt) throw new Error(msg); };
 
