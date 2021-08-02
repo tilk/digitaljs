@@ -44,7 +44,7 @@ export class SynchEngine extends BaseEngine {
         });
         this.listenTo(graph, 'change:inputSignals', (gate, sigs) => {
             const prevSigs = gate.previous("inputSignals");
-            if (help.eqSigs(sigs, prevSigs) && !sigs._clock_hack) return;
+            if (help.eqSigs(sigs, prevSigs)) return;
             if (gate instanceof this._cells.Subcircuit) {
                 this._updateSubcircuit(gate, sigs, prevSigs);
             }
@@ -88,7 +88,12 @@ export class SynchEngine extends BaseEngine {
             if (gate instanceof this._cells.Output) continue;
             const graph = gate.graph;
             if (!graph) continue;
-            gate.set('outputSignals', gate.operation(args));
+            const newOutputSignals = gate.operation(args);
+            if ('_clock_hack' in newOutputSignals) {
+                delete newOutputSignals['_clock_hack'];
+                this._enqueue(gate);
+            }
+            gate.set('outputSignals', newOutputSignals);
             count++;
         }
         this._queue.delete(k);
