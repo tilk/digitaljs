@@ -63,7 +63,8 @@ export const Arith11 = Arith.define('Arith11', {
         return {
             out: Vector3vl.fromNumber(this.arithop(data.in.toBigInt(this.get('signed'))), bits.out)
         };
-    }
+    },
+    _operationHelpers: Arith.prototype._operationHelpers.concat(['arithop'])
 });
 
 // Binary arithmetic operations
@@ -96,7 +97,8 @@ export const Arith21 = Arith.define('Arith21', {
                     data.in1.toBigInt(sgn.in1 && sgn.in2),
                     data.in2.toBigInt(sgn.in1 && sgn.in2)), bits.out)
         };
-    }
+    },
+    _operationHelpers: Arith.prototype._operationHelpers.concat(['arithop'])
 });
 
 function shiftHelp(in1, am, bits_in, bits_out, sgn_in, sgn_out, fillx) {
@@ -141,11 +143,12 @@ export const Shift = Arith.define('Shift', {
         return { out: shiftHelp(data.in1, am, bits.in1, bits.out, sgn.in1, sgn.out, fillx) };
     },
     _gateParams: Arith.prototype._gateParams.concat(['fillx']),
-    _unsupportedPropChanges: Arith.prototype._unsupportedPropChanges.concat(['fillx'])
+    _unsupportedPropChanges: Arith.prototype._unsupportedPropChanges.concat(['fillx']),
+    _operationHelpers: Arith.prototype._operationHelpers.concat(['shiftdir'])
 });
 
 // Comparison operations
-export const Compare = Arith.define('Compare', {
+export const BaseCompare = Arith.define('BaseCompare', {
     /* default properties */
     bits: { in1: 1, in2: 1 },
     signed: { in1: false, in2: false }
@@ -163,7 +166,11 @@ export const Compare = Arith.define('Compare', {
         this.on('change:bits', (_, bits) => {
             this._setPortsBits(bits);
         });
-    },
+    }
+});
+
+// Arithmetic comparison operations
+export const Compare = BaseCompare.define('Compare', {}, {
     operation(data) {
         const bits = this.get('bits');
         const sgn = this.get('signed');
@@ -174,11 +181,12 @@ export const Compare = Arith.define('Compare', {
                     data.in1.toBigInt(sgn.in1 && sgn.in2),
                     data.in2.toBigInt(sgn.in1 && sgn.in2)))
         };
-    }
+    },
+    _operationHelpers: BaseCompare.prototype._operationHelpers.concat(['arithcomp'])
 });
 
 // Equality operations
-export const EqCompare = Compare.define('EqCompare', {}, {
+export const EqCompare = BaseCompare.define('EqCompare', {}, {
     operation(data) {
         const bits = this.get('bits');
         const sgn = this.get('signed');
@@ -189,7 +197,8 @@ export const EqCompare = Compare.define('EqCompare', {}, {
         return {
             out: this.bincomp(in1, in2)
         };
-    }
+    },
+    _operationHelpers: BaseCompare.prototype._operationHelpers.concat(['bincomp'])
 });
 
 // Negation
@@ -410,7 +419,8 @@ export const ArithConst = OpConst.define('ArithConst', {
                 out: Vector3vl.fromNumber(this.arithop(
                     data.in.toBigInt(sgn.in), BigInt(constant)), bits.out)
             };
-    }
+    },
+    _operationHelpers: OpConst.prototype._operationHelpers.concat(['arithop'])
 });
 
 // Bit shift operations fused with constants
@@ -447,11 +457,12 @@ export const ShiftConst = OpConst.define('ShiftConst', {
                 out: shiftHelp(data.in, constant * this.shiftdir, bits.in, bits.out, sgn.in, sgn.out, fillx) 
             };
     },
-    _gateParams: OpConst.prototype._gateParams.concat(['fillx'])
+    _gateParams: OpConst.prototype._gateParams.concat(['fillx']),
+    _operationHelpers: OpConst.prototype._operationHelpers.concat(['shiftdir'])
 });
 
 // Comparison operations fused with constants
-export const CompareConst = OpConst.define('CompareConst', {
+export const BaseCompareConst = OpConst.define('BaseCompareConst', {
     /* default properties */
     bits: { in: 1 },
     signed: false
@@ -464,7 +475,11 @@ export const CompareConst = OpConst.define('CompareConst', {
         ];
         
         OpConst.prototype.initialize.apply(this, arguments);
-    },
+    }
+});
+
+// Arithmetic comparisons fused with constants
+export const CompareConst = BaseCompareConst.define('CompareConst', {}, {
     operation(data) {
         const bits = this.get('bits');
         const sgn = this.get('signed');
@@ -483,11 +498,12 @@ export const CompareConst = OpConst.define('CompareConst', {
                     data.in.toBigInt(sgn.in), 
                     BigInt(constant)))
             };
-    }
+    },
+    _operationHelpers: BaseCompareConst.prototype._operationHelpers.concat(['arithcomp'])
 });
 
 // Equality operations fused with constants
-export const EqCompareConst = CompareConst.define('EqCompare', {}, {
+export const EqCompareConst = BaseCompareConst.define('EqCompareConst', {}, {
     operation(data) {
         const bits = this.get('bits');
         const sgn = this.get('signed');
@@ -500,7 +516,8 @@ export const EqCompareConst = CompareConst.define('EqCompare', {}, {
             return {
                 out: this.bincomp(data.in, Vector3vl.fromNumber(constant, bits.in))
             };
-    }
+    },
+    _operationHelpers: BaseCompareConst.prototype._operationHelpers.concat(['bincomp'])
 });
 
 // Addition with constant

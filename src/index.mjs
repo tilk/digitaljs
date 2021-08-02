@@ -110,6 +110,7 @@ export class Circuit extends HeadlessCircuit {
         return this._makePaper(elem, this._graph);
     }
     _makePaper(elem, graph) {
+        this._engine.observeGraph(graph);
         const circuit = this;
         const opts = _.merge({ el: elem, model: graph }, paperOptions);
         const paper = new joint.dia.Paper(opts);
@@ -165,6 +166,7 @@ export class Circuit extends HeadlessCircuit {
             const paper = this._makePaper(pdiv, graph);
             paper.once('render:done', function() {
                 circuit._windowCallback('Subcircuit', div, () => {
+                    this._engine.unobserveGraph(graph);
                     paper.remove();
                     div.remove();
                 });

@@ -108,8 +108,8 @@ export class HeadlessCircuit {
             if (subcir == null || subcir == true) return;
             subcir.set('warning', graph._warnings > 0);
         };
-        this.listenTo(graph, 'userChange', () => {
-            this.trigger('userChange');
+        this.listenTo(graph, 'userChange', (gate) => {
+            this.trigger('userChange', gate);
         });
         this.listenTo(graph, 'change:inputSignals', (gate, sigs) => {
             if (help.eqSigs(sigs, gate.previous("inputSignals"))) return;
