@@ -88,7 +88,8 @@ export const GenMux = Gate.define('GenMux', {
         }
     ]),
     _gateParams: Gate.prototype._gateParams.concat(['bits']),
-    _unsupportedPropChanges: Gate.prototype._unsupportedPropChanges.concat(['bits'])
+    _unsupportedPropChanges: Gate.prototype._unsupportedPropChanges.concat(['bits']),
+    _operationHelpers: Gate.prototype._operationHelpers.concat(['muxInput'])
 });
 export const GenMuxView = GateView.extend({
     initialize() {

@@ -205,7 +205,7 @@ export const Input = IO.define('Input', {
     },
     setInput(sig) {
         this._setInput(sig);
-        this.trigger('userChange');
+        this.trigger('userChange', this);
     },
     toggleInput() {
         this.setInput(this.get('outputSignals').out.not());
@@ -395,7 +395,6 @@ export const Constant = NumBase.define('Constant', {
         const constant = this.get('constant');
         const bits = constant.length;
         this.set('bits', bits);
-        this.set('constantCache', Vector3vl.fromBin(constant, bits));
         this.get('ports').items = [
             { id: 'out', group: 'out', dir: 'out', bits: bits }
         ];
@@ -408,6 +407,11 @@ export const Constant = NumBase.define('Constant', {
             this.set('bits', bits);
             this.set('constantCache', Vector3vl.fromBin(constant, bits));
         });
+    },
+    prepare() {
+        const constant = this.get('constant');
+        const bits = constant.length;
+        this.set('constantCache', Vector3vl.fromBin(constant, bits));
     },
     operation() {
         return { out: this.get('constantCache') };

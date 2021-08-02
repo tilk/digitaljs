@@ -92,6 +92,7 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
         }
         
         joint.shapes.basic.Generic.prototype.initialize.apply(this, arguments);
+        this.prepare();
         
         this.bindAttrToProp('label/text', 'label');
         if (this._unsupportedPropChanges.length > 0) {
@@ -105,6 +106,8 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
                 console.warn('Beta property change support: "' + changed + '" changes on ' + this.get('type') + ' are (currently) not supported.');
             });
         }
+    },
+    prepare() {
     },
     bindAttrToProp(attr, prop) {
         this.attr(attr, this.get(prop));
@@ -297,7 +300,8 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
     },
     _gateParams: ['label', 'type', 'propagation'],
     _gateLayoutParams: ['position'],
-    _unsupportedPropChanges: []
+    _unsupportedPropChanges: [],
+    _operationHelpers: []
 });
 
 export const GateView = joint.dia.ElementView.extend({

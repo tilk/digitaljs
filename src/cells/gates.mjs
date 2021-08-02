@@ -137,7 +137,8 @@ export const GateX1 = GateSVG.define('GateX1', {
         return val
     },
     _gateParams: GateSVG.prototype._gateParams.concat(['inputs']),
-    _unsupportedPropChanges: GateSVG.prototype._unsupportedPropChanges.concat(['inputs'])
+    _unsupportedPropChanges: GateSVG.prototype._unsupportedPropChanges.concat(['inputs']),
+    _operationHelpers: GateSVG.prototype._operationHelpers.concat(['binoperation', 'finoperation'])
 });
 
 // Reducing gate model

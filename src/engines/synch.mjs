@@ -127,5 +127,9 @@ export class SynchEngine extends BaseEngine {
     get running() {
         return false;
     }
+    observeGraph(graph) {
+    }
+    unobserveGraph(graph) {
+    }
 };
 
