@@ -82,6 +82,7 @@ export class HeadlessCircuit {
         this.trigger('display:add', display);
     }
     shutdown() {
+        this.trigger('shutdown');
         this.stop();
         this._engine.shutdown();
         this.stopListening();

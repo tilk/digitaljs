@@ -94,13 +94,16 @@ export class Circuit extends HeadlessCircuit {
         }
         const observer = new ResizeObserver(fixSize);
         observer.observe(div.get(0));
-        div.dialog({
+        const shutdownCallback = () => { div.dialog('close'); };
+        this.listenToOnce(this, 'shutdown', shutdownCallback);
+        const dialog = div.dialog({
             width: 'auto',
             height: 'auto',
             maxWidth: $(window).width() * 0.9,
             maxHeight: $(window).height() * 0.9,
             resizable: type !== "Memory",
             close: () => {
+                this.stopListening(this, 'shutdown', shutdownCallback);
                 closingCallback();
                 observer.disconnect();
             }
@@ -111,7 +114,6 @@ export class Circuit extends HeadlessCircuit {
     }
     _makePaper(elem, graph) {
         this._engine.observeGraph(graph);
-        const circuit = this;
         const opts = _.merge({ el: elem, model: graph }, paperOptions);
         const paper = new joint.dia.Paper(opts);
         paper.$el.addClass('djs');
@@ -126,7 +128,7 @@ export class Circuit extends HeadlessCircuit {
                     edgeSep: 0,
                     rankSep: 110,
                     rankDir: "LR",
-                    setPosition: function(element, position) {
+                    setPosition: (element, position) => {
                         element.setLayoutPosition({
                             x: position.x - position.width/2,
                             y: position.y - position.height/2,
@@ -134,7 +136,7 @@ export class Circuit extends HeadlessCircuit {
                             height: position.height
                         });
                     },
-                    exportElement: function(element) {
+                    exportElement: (element) => {
                         return element.getLayoutSize();
                     },
                     dagre: dagre,
@@ -145,38 +147,38 @@ export class Circuit extends HeadlessCircuit {
             }
             graph.set('laid_out', true);
         }
-        paper.listenTo(this, 'display:add', function() {
+        paper.listenTo(this, 'display:add', () => {
             // a very inefficient way to refresh numbase dropdowns
             // TODO: a better method
             paper.freeze();
             graph.resetCells(graph.getCells());
             paper.unfreeze();
         });
-        this.listenTo(paper, 'render:done', function() {
+        this.listenTo(paper, 'render:done', () => {
             paper.fitToContent({ padding: 30, allowNewOrigin: 'any' });
         });
         paper.unfreeze();
         // subcircuit display
-        this.listenTo(paper, 'open:subcircuit', function(model) {
+        this.listenTo(paper, 'open:subcircuit', (model) => {
             const div = $('<div>', { 
                 title: model.get('celltype') + ' ' + model.get('label')
             }).appendTo('html > body');
             const pdiv = $('<div>').appendTo(div);
             const graph = model.get('graph');
             const paper = this._makePaper(pdiv, graph);
-            paper.once('render:done', function() {
-                circuit._windowCallback('Subcircuit', div, () => {
+            paper.once('render:done', () => {
+                this._windowCallback('Subcircuit', div, () => {
                     this._engine.unobserveGraph(graph);
                     paper.remove();
                     div.remove();
                 });
             });
         });
-        this.listenTo(paper, 'open:memorycontent', function(div, closeCallback) {
-            circuit._windowCallback('Memory', div, closeCallback);
+        this.listenTo(paper, 'open:memorycontent', (div, closeCallback) => {
+            this._windowCallback('Memory', div, closeCallback);
         });
-        this.listenTo(paper, 'open:fsm', function(div, closeCallback) {
-            circuit._windowCallback('FSM', div, closeCallback);
+        this.listenTo(paper, 'open:fsm', (div, closeCallback) => {
+            this._windowCallback('FSM', div, closeCallback);
         });
         paper.fixed = function(fixed) {
             this.setInteractivity(!fixed);
