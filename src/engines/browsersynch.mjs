@@ -15,16 +15,16 @@ export class BrowserSynchEngine extends SynchEngine {
         this.trigger('changeRunning');
     }
     startFast() {
-        this._idle = requestIdleCallback((dd) => {
-            while (dd.timeRemaining() > 0 && this.hasPendingEvents && this._idle !== null)
-                this.updateGatesNext();
-            if (this._idle !== null) {
-                if (!this.hasPendingEvents) {
-                    this._idle = null;
-                    this.trigger('changeRunning');
-                } else this.startFast();
-            }
-        }, {timeout: 20});
+        const idle = () => {
+            this._idle = requestIdleCallback((dd) => {
+                while (dd.timeRemaining() > 0 && this.hasPendingEvents && this._idle !== null)
+                    this.updateGatesNext();
+                if (this._idle !== null) {
+                    idle();
+                }
+            }, {timeout: 20});
+        }
+        idle();
         this.trigger('changeRunning');
     }
     stop() {

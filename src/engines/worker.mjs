@@ -153,6 +153,7 @@ export class WorkerEngine extends BaseEngine {
             this[name]();
     }
     _handle_update(tick, pendingEvents, updates) {
+        let changeRunning = this._pendingEventsCache != pendingEvents;
         this._tickCache = tick;
         this._pendingEventsCache = pendingEvents;
         for (const [graphId, gateId, vals] of updates) {
@@ -167,6 +168,7 @@ export class WorkerEngine extends BaseEngine {
             gate.set('outputSignals', newOutputs);
         }
         this.trigger('postUpdateGates', tick);
+        if (changeRunning) this.trigger('changeRunning');
     }
     _handle_stopped(tick) {
         this._running = false;

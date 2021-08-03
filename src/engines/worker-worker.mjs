@@ -181,10 +181,6 @@ class WorkerEngineWorker {
             const startTime = Date.now();
             while (Date.now() - startTime < 10 && this._hasPendingEvents())
                 this.updateGatesNext();
-            if (!this._hasPendingEvents) {
-                this.stop();
-                postMessage({ type: 'stopped', arg: this._tick });
-            }
         }, 10);
     }
     stop() {
