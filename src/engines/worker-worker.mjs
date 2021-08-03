@@ -16,6 +16,9 @@ class Gate {
     constructor(id, graph, gateParams, ports, inputSignals, outputSignals) {
         this.id = id;
         this.graph = graph;
+        this.special = specialGates.has(gateParams.type);
+        this.isSubcircuit = gateParams.type == 'Subcircuit';
+        this.isOutput = gateParams.type == 'Output';
         const cell = cells[gateParams.type].prototype;
         this.operation = cell.operation;
         for (const helper of cell._operationHelpers)
@@ -61,6 +64,9 @@ class Gate {
     getPort(port) {
         return this._ports[port];
     }
+    getPorts() {
+        return Object.values(this._ports);
+    }
 }
 
 class Graph {
@@ -69,6 +75,7 @@ class Graph {
         this._gates = {};
         this._links = {};
         this._observed = false;
+        this._subcircuit = null;
     }
     addLink(linkId, source, target) {
         this._links[linkId] = new Link(source, target);
@@ -98,6 +105,9 @@ class Graph {
     getLink(linkId) {
         return this._links[linkId];
     }
+    getGates() {
+        return Object.values(this._gates);
+    }
     observe() {
         this._observed = true;
     }
@@ -106,6 +116,12 @@ class Graph {
     }
     get observed() {
         return this._observed;
+    }
+    setSubcircuit(gate) {
+        this._subcircuit = gate;
+    }
+    get subcircuit() {
+        return this._subcircuit;
     }
 }
 
@@ -140,7 +156,7 @@ class WorkerEngineWorker {
         while (q.size) {
             const [gate, args] = q.entries().next().value;
             q.delete(gate);
-            if (specialGates.has(gate.get('type'))) continue;
+            if (gate.special) continue;
             const graph = gate.graph;
             if (!graph) continue;
             const newOutputs = gate.operation(args);
@@ -195,6 +211,21 @@ class WorkerEngineWorker {
         this._enqueue(graph.getGate(gateId));
     }
     addSubcircuit(graphId, gateId, subgraphId, IOmap) {
+        const graph = this._graphs[graphId];
+        const gate = graph.getGate(gateId);
+        const subgraph = this._graphs[subgraphId];
+        gate.set('subgraph', subgraph);
+        gate.set('circuitIOmap', IOmap);
+        subgraph.setSubcircuit(gate);
+        for (const [port, ioId] of Object.entries(IOmap)) {
+            const io = subgraph.getGate(ioId);
+            if (gate.getPort(port).dir == 'in') {
+                this._setGateOutputSignal(io, 'out', gate.get('inputSignals')[port]);
+            }
+            if (gate.getPort(port).dir == 'out') {
+                this._setGateOutputSignal(gate, port, io.get('inputSignals').in);
+            }
+        }
     }
     removeLink(graphId, linkId) {
         const graph = this._graphs[graphId];
@@ -205,10 +236,15 @@ class WorkerEngineWorker {
         this._setGateInputSignal(targetGate, link.target.port, sig);
     }
     removeGate(graphId, gateId) {
-        this._graphs[graphId].removGate(gateId);
+        this._graphs[graphId].removeGate(gateId);
     }
     observeGraph(graphId) {
-        this._graphs[graphId].observe();
+        const graph = this._graphs[graphId];
+        graph.observe();
+        for (const gate of graph.getGates())
+            for (const port of gate.getPorts())
+                if (port.dir == 'out')
+                    this._markUpdate(gate, port.id);
     }
     unobserveGraph(graphId) {
         this._graphs[graphId].unobserve();
@@ -230,22 +266,39 @@ class WorkerEngineWorker {
         sq.set(gate, gate.get('inputSignals'));
     }
     _setGateOutputSignals(gate, newOutputs) {
-        const oldOutputs = gate.get('outputSignals');
-        gate.set('outputSignals', newOutputs);
-        for (const port of Object.keys(newOutputs)) {
-            if (oldOutputs[port].eq(newOutputs[port])) continue;
-            this._markUpdate(gate, port);
-            for (const target of gate.targets(port)) {
-                const targetGate = gate.graph.getGate(target.id);
-                this._setGateInputSignal(targetGate, target.port, newOutputs[port]);
-            }
+        for (const [port, sig] of Object.entries(newOutputs)) {
+            this._setGateOutputSignal(gate, port, sig);
+        }
+    }
+    _setGateOutputSignal(gate, port, sig) {
+        const outputs = gate.get('outputSignals');
+        const oldOutput = outputs[port];
+        if (sig.eq(oldOutput)) return;
+        outputs[port] = sig;
+        this._markUpdate(gate, port);
+        for (const target of gate.targets(port)) {
+            const targetGate = gate.graph.getGate(target.id);
+            this._setGateInputSignal(targetGate, target.port, sig);
         }
     }
     _setGateInputSignal(targetGate, port, sig) {
         const inputs = targetGate.get('inputSignals');
         const oldInput = inputs[port];
-        if (!sig.eq(oldInput)) {
-            inputs[port] = sig;
+        if (sig.eq(oldInput)) return;
+        inputs[port] = sig;
+        if (targetGate.isSubcircuit) {
+            const subgraph = targetGate.get('subgraph');
+            if (!subgraph) return;
+            const iomap = targetGate.get('circuitIOmap');
+            const gate = subgraph.getGate(iomap[port]);
+            if (!gate) return;
+            this._setGateOutputSignals(gate, { out: sig });
+        } else if (targetGate.isOutput) {
+            const subcir = targetGate.graph.subcircuit;
+            if (!subcir) return;
+            const subcirPort = targetGate.get('net');
+            this._setGateOutputSignal(subcir, subcirPort, sig);
+        } else {
             this._enqueue(targetGate);
         }
     }
