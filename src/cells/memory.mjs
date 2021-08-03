@@ -38,21 +38,7 @@ export const Memory = Box.define('Memory', {
         const abits = this.get('abits');
         const rdports = this.get('rdports');
         const wrports = this.get('wrports');
-        var words = this.get('words');
-        const memdata = this.get('memdata');
         
-        if (!words) {
-            words = 1 << abits;
-            this.prop('words', words, { init: true });
-        }
-        if (memdata)
-            this.memdata = Mem3vl.fromJSON(bits, memdata);
-        else
-            this.memdata = new Mem3vl(bits, words);
-        console.assert(this.memdata.words == words);
-        this.removeProp('memdata'); // performance hack
-        
-        this.last_clk = {};
         let num = 0;
         let idxOffset = 0;
         const ports = [], portsplits = [];
@@ -71,7 +57,6 @@ export const Memory = Box.define('Memory', {
                 num++;
                 idxOffset++;
                 ports.push({ id: portname + 'clk', group: 'in', dir: 'in', bits: 1, portlabel: 'clk', polarity: port.clock_polarity, decor: Box.prototype.decorClock, labelled: true });
-                this.last_clk[portname + 'clk'] = 0;
             } else {
                 port.transparent = true;
             }
@@ -90,7 +75,6 @@ export const Memory = Box.define('Memory', {
             if ('clock_polarity' in port) {
                 num++;
                 ports.push({ id: portname + 'clk', group: 'in', dir: 'in', bits: 1, portlabel: 'clk', polarity: port.clock_polarity, decor: Box.prototype.decorClock, labelled: true });
-                this.last_clk[portname + 'clk'] = 0;
             }
             portsplits.push(num);
         }
@@ -99,6 +83,8 @@ export const Memory = Box.define('Memory', {
         this.get('ports').items = ports;
         
         Box.prototype.initialize.apply(this, arguments);
+        
+        this.removeProp('memdata'); // performance hack
         
         this.on('change:size', (_, size) => {
             // only adapting to changed width
@@ -111,6 +97,27 @@ export const Memory = Box.define('Memory', {
             }
             this.attr('path.portsplit/d', 'M ' + path.join(' M '));
         });
+    },
+    prepare() {
+        const bits = this.get('bits');
+        var words = this.get('words');
+        const memdata = this.get('memdata');
+        
+        if (!words) {
+            words = 1 << abits;
+            this.prop('words', words, { init: true });
+        }
+        if (memdata)
+            this.memdata = Mem3vl.fromJSON(bits, memdata);
+        else
+            this.memdata = new Mem3vl(bits, words);
+        console.assert(this.memdata.words == words);
+        
+        this.last_clk = {};
+        for (const [portname, port] of this._memports()) {
+            if ('clock_polarity' in port)
+                this.last_clk[portname + 'clk'] = 0;
+        }
     },
     operation(data) {
         const out = {};
@@ -162,23 +169,6 @@ export const Memory = Box.define('Memory', {
             if (port.transparent) do_read(portname, port);
         return out;
     },
-    _updateOutputs(addr) {
-        if (addr < 0 || addr >= this.get('words')) return;
-        const data = this.get('inputSignals');
-        const sigs = _.clone(this.get('outputSignals'));
-        let changed = false;
-        for (const [portname, port] of this._memrdports()) {
-            if (port.transparent
-                    && !('clock_polarity' in port)
-                    && this._calcaddr(data[portname + 'addr']) == addr) {
-                if ('enable_polarity' in port && !data[portname + 'en'].toArray().some(x => x == pol('enable')))
-                    continue;
-                changed = true;
-                sigs[portname + 'data'] = this.memdata.get(addr);
-            }
-        }
-        if (changed) this.set('outputSignals', sigs);
-    },
     _calcaddr(sig) {
         if (!sig.isFullyDefined) return -1;
         return sig.toNumber() - this.get('offset');
@@ -207,7 +197,8 @@ export const Memory = Box.define('Memory', {
         return params;
     },
     _gateParams: Box.prototype._gateParams.concat(['bits', 'abits', 'rdports', 'wrports', 'words', 'offset']),
-    _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['bits', 'abits', 'rdports', 'wrports', 'words', 'offset'])
+    _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['bits', 'abits', 'rdports', 'wrports', 'words', 'offset']),
+    _operationHelpers: Box.prototype._operationHelpers.concat(['_memrdports', '_memwrports', '_memports', '_calcaddr'])
 });
 export const MemoryView = BoxView.extend({
     _autoResizeBox: true,
@@ -333,13 +324,13 @@ export const MemoryView = BoxView.extend({
             if (display3vl.validate(numbase, evt.target.value, bits)) {
                 const val = display3vl.read(numbase, evt.target.value, bits);
                 memdata.set(addr, val);
-                this.model._updateOutputs(addr);
+                this.model.trigger('manualMemChange', this.model, addr, val);
                 target.removeClass('invalid');
             } else {
                 target.addClass('invalid');
             }
         });
-        const changeCallback = (addr, data) => {
+        this.listenTo(this.model, "memChange", (addr, data) => {
             if (addr < address || addr > address + rows * columns) return;
             const numbase = get_numbase();
             const z = getCell(addr)
@@ -347,15 +338,14 @@ export const MemoryView = BoxView.extend({
                 .removeClass('invalid')
                 .removeClass('flash');
             setTimeout(() => { z.addClass('flash') }, 10);
-        };
-        this.model.on("memChange", changeCallback);
-        this.model.on("change:inputSignals", (gate, sigs) => {
+        });
+        this.listenTo(this.model, "change:inputSignals", (gate, sigs) => {
             clearMarkings(this.model.previous('inputSignals'));
             displayMarkings(sigs);
         });
         this.paper.trigger('open:memorycontent', div, () => {
             div.remove();
-            this.model.off("memChange", changeCallback);
+            this.stopListening();
         });
         return false;
     }

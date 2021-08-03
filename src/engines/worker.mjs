@@ -38,6 +38,14 @@ export class WorkerEngine extends BaseEngine {
                 });
             });
         }
+        if (gate instanceof cells.Memory) {
+            this.listenTo(gate, 'memChange', (addr, data) => {
+                gate.memdata.set(addr, data);
+            });
+            this.listenTo(gate, 'manualMemChange', (gate, addr, data) => {
+                this._worker.postMessage({ type: 'manualMemChange', args: [gate.graph.cid, gate.id, addr, data] });
+            });
+        }
     }
     _addLink(graph, link) {
         if (!link.get('warning') && link.get('source').id && link.get('target').id)
@@ -157,9 +165,7 @@ export class WorkerEngine extends BaseEngine {
         this._tickCache = tick;
         this._pendingEventsCache = pendingEvents;
         for (const [graphId, gateId, vals] of updates) {
-            const graph = this._graphs[graphId];
-            if (graph === undefined) continue;
-            const gate = graph.getCell(gateId);
+            const gate = this._findGateByIds(graphId, gateId);
             if (gate === undefined) continue;
             const newOutputs = {};
             for (const [port, val] of Object.entries(vals))
@@ -175,6 +181,18 @@ export class WorkerEngine extends BaseEngine {
         this._pendingEventsCache = false;
         this._tickCache = tick;
         this.trigger('changeRunning');
+    }
+    _handle_gateTrigger(graphId, gateId, event, args) {
+        if (event == "memChange")
+            args[1] = Vector3vl.fromClonable(args[1]);
+        const gate = this._findGateByIds(graphId, gateId);
+        if (gate === undefined) return;
+        gate.trigger(event, ...args);
+    }
+    _findGateByIds(graphId, gateId) {
+            const graph = this._graphs[graphId];
+            if (graph === undefined) return undefined;
+            return graph.getCell(gateId);
     }
 };
 
