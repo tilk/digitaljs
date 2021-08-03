@@ -17,15 +17,15 @@ export class WorkerEngine extends BaseEngine {
         this.interval = 10;
         this._addGraph(this._graph);
     }
-    _addGate(gate) {
+    _addGate(graph, gate) {
         const params = gate.getGateParams();
         const ports = gate.getPorts().map(({id, dir, bits}) => ({id, dir, bits}));
-        this._worker.postMessage({ type: 'addGate', args: [gate.graph.cid, gate.id, params, ports, gate.get('inputSignals'), gate.get('outputSignals') ] });
-        super._addGate(gate);
+        this._worker.postMessage({ type: 'addGate', args: [graph.cid, gate.id, params, ports, gate.get('inputSignals'), gate.get('outputSignals') ] });
+        super._addGate(graph, gate);
         if (gate instanceof cells.Subcircuit) {
             this._worker.postMessage({
                 type: 'addSubcircuit',
-                args: [gate.graph.cid, gate.id, gate.get('graph').cid, gate.get('circuitIOmap')]
+                args: [graph.cid, gate.id, gate.get('graph').cid, gate.get('circuitIOmap')]
             });
         }
         if (gate instanceof cells.Input && gate.get('mode') != 0) {
@@ -34,21 +34,54 @@ export class WorkerEngine extends BaseEngine {
                 if (prevSigs.out.eq(sigs.out)) return;
                 this._worker.postMessage({
                     type: 'changeInput',
-                    args: [gate.graph.cid, gate.id, sigs.out]
+                    args: [graph.cid, gate.id, sigs.out]
                 });
             });
         }
     }
-    _addLink(link) {
-        if (!link.get('warning'))
-            this._worker.postMessage({ type: 'addLink', args: [link.graph.cid, link.id, link.get('source'), link.get('target')]});
-        super._addLink(link);
+    _addLink(graph, link) {
+        if (!link.get('warning') && link.get('source').id && link.get('target').id)
+            this._worker.postMessage({ type: 'addLink', args: [graph.cid, link.id, link.get('source'), link.get('target')] });
+        super._addLink(graph, link);
     }
     _addGraph(graph) {
         this._observers[graph.cid] = 0;
         this._graphs[graph.cid] = graph;
         this._worker.postMessage({ type: 'addGraph', args: [graph.cid]});
         super._addGraph(graph);
+    }
+    _removeGate(graph, gate) {
+        this._worker.postMessage({ type: 'removeGate', args: [graph.cid, gate.id] });
+        super._removeGate(graph, link);
+    }
+    _removeLink(graph, link) {
+        if (!link.get('warning') && link.get('source').id && link.get('target').id)
+            this._worker.postMessage({ type: 'removeLink', args: [graph.cid, link.id] });
+        super._removeLink(graph, link);
+    }
+    _changeLinkSource(graph, link, src, prevSrc) {
+        super._changeLinkSource(graph, link, src, prevSrc);
+        if (link.get('warning') || !link.get('target').id) return;
+        if (src.id && !prevSrc.id)
+            this._worker.postMessage({ type: 'addLink', args: [graph.cid, link.id, link.get('source'), link.get('target')] });
+        if (prevSrc.id && !src.id)
+            this._worker.postMessage({ type: 'removeLink', args: [graph.cid, link.id] });
+    }
+    _changeLinkTarget(graph, link, end, prevEnd) {
+        super._changeLinkTarget(graph, link, end, prevEnd);
+        if (link.get('warning') || !link.get('source').id) return;
+        if (end.id && !prevEnd.id)
+            this._worker.postMessage({ type: 'addLink', args: [graph.cid, link.id, link.get('source'), link.get('target')] });
+        if (prevEnd.id && !end.id)
+            this._worker.postMessage({ type: 'removeLink', args: [graph.cid, link.id] });
+    }
+    _changeLinkWarning(graph, link, warn, prevWarn) {
+        super._changeLinkWarning(graph, link, warn, prevWarn);
+        if (!link.get('source').id || !link.get('target').id) return;
+        if (!warn && prevWarn)
+            this._worker.postMessage({ type: 'addLink', args: [graph.cid, link.id, link.get('source'), link.get('target')] });
+        if (!prevWarn && warn)
+            this._worker.postMessage({ type: 'removeLink', args: [graph.cid, link.id] });
     }
     get hasPendingEvents() {
         return this._pendingEventsCache;

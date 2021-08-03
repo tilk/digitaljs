@@ -32,8 +32,8 @@ export class SynchEngine extends BaseEngine {
             input._setInput(sig);
         }
     }
-    _addGate(gate) {
-        super._addGate(gate);
+    _addGate(graph, gate) {
+        super._addGate(graph, gate);
         this._enqueue(gate);
         if (gate instanceof this._cells.Subcircuit)
             this._updateSubcircuit(gate);

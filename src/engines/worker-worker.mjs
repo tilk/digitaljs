@@ -58,6 +58,9 @@ class Gate {
     targets(port) {
         return this._links_to[port];
     }
+    getPort(port) {
+        return this._ports[port];
+    }
 }
 
 class Graph {
@@ -184,11 +187,7 @@ class WorkerEngineWorker {
         const sourceGate = graph.getGate(source.id);
         const targetGate = graph.getGate(target.id);
         const sig = sourceGate.get('outputSignals')[source.port];
-        const oldInput = targetGate.get('inputSignals')[target.port];
-        if (!sig.eq(oldInput)) {
-            targetGate.get('inputSignals')[target.port] = sig;
-            this._enqueue(targetGate);
-        }
+        this._setGateInputSignal(targetGate, target.port, sig);
     }
     addGate(graphId, gateId, gateParams, ports, inputSignals, outputSignals) {
         const graph = this._graphs[graphId];
@@ -201,13 +200,9 @@ class WorkerEngineWorker {
         const graph = this._graphs[graphId];
         const link = graph.getLink(linkId);
         graph.removeLink(linkId);
-        const targetGate = graph.getGate(target.id);
-        const oldInput = targetGate.get('inputSignals')[target.port];
-        const sig = Vector3vl.xes(oldInput.bits);
-        if (!sig.eq(oldInput)) {
-            targetGate.get('inputSignals')[target.port] = sig;
-            this._enqueue(targetGate);
-        }
+        const targetGate = graph.getGate(link.target.id);
+        const sig = Vector3vl.xes(targetGate.getPort(link.target.port).bits);
+        this._setGateInputSignal(targetGate, link.target.port, sig);
     }
     removeGate(graphId, gateId) {
         this._graphs[graphId].removGate(gateId);
@@ -242,10 +237,16 @@ class WorkerEngineWorker {
             this._markUpdate(gate, port);
             for (const target of gate.targets(port)) {
                 const targetGate = gate.graph.getGate(target.id);
-                const inputs = targetGate.get('inputSignals');
-                inputs[target.port] = newOutputs[port];
-                this._enqueue(targetGate);
+                this._setGateInputSignal(targetGate, target.port, newOutputs[port]);
             }
+        }
+    }
+    _setGateInputSignal(targetGate, port, sig) {
+        const inputs = targetGate.get('inputSignals');
+        const oldInput = inputs[port];
+        if (!sig.eq(oldInput)) {
+            inputs[port] = sig;
+            this._enqueue(targetGate);
         }
     }
     _markUpdate(gate, port) {
