@@ -42,7 +42,8 @@ export const BitExtend = Box.define('BitExtend', {
             selector: 'value'
         }
     ]),
-    _gateParams: Box.prototype._gateParams.concat(['extend'])
+    _gateParams: Box.prototype._gateParams.concat(['extend']),
+    _operationHelpers: Box.prototype._operationHelpers.concat(['_extBit'])
 });
 export const BitExtendView = BoxView.extend({
     _autoResizeBox: true,
