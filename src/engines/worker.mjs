@@ -53,6 +53,7 @@ export class WorkerEngine extends BaseEngine {
     _removeGate(graph, gate) {
         this._worker.postMessage({ type: 'removeGate', args: [graph.cid, gate.id] });
         super._removeGate(graph, link);
+        this.stopListening(gate);
     }
     _removeLink(graph, link) {
         if (!link.get('warning') && link.get('source').id && link.get('target').id)
