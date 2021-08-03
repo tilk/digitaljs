@@ -42,26 +42,31 @@ export const Subcircuit = Box.define('Subcircuit', {
         outputs.sort(sortfun);
         const vcount = Math.max(inputs.length, outputs.length);
         const size = { width: 80, height: vcount*16+8 };
-        const ports = [], iomap = {}, inputSignals = {}, outputSignals = {};
+        const ports = [], iomap = {};
         for (const [num, io] of inputs.entries()) {
             ports.push({ id: io.get('net'), group: 'in', dir: 'in', bits: io.get('bits'), labelled: true });
-            inputSignals[io.get('net')] = io.get('outputSignals').out;
         }
         for (const [num, io] of outputs.entries()) {
             ports.push({ id: io.get('net'), group: 'out', dir: 'out', bits: io.get('bits'), labelled: true });
-            outputSignals[io.get('net')] = io.get('inputSignals').in;
         }
         for (const io of IOs) {
             iomap[io.get('net')] = io.get('id');
         }
         this.set('size', size);
         this.set('circuitIOmap', iomap);
-        this.set('inputSignals', inputSignals);
-        this.set('outputSignals', outputSignals);
         this.get('ports').items = ports;
         this.set('warning', graph._warnings > 0);
         
         Box.prototype.initialize.apply(this, arguments);
+    },
+    _resetPortValue(port) {
+        const iomap = this.get('circuitIOmap');
+        const graph = this.get('graph');
+        if (port.dir == 'in')
+            return graph.getCell(iomap[port.id]).get('outputSignals').out;
+        if (port.dir == 'out')
+            return graph.getCell(iomap[port.id]).get('inputSignals').in;
+        return Box.prototype._resetPortValue.call(this, port);
     },
     //add offset of 10pt to account for the top label at layout time
     getLayoutSize() {
