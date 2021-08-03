@@ -67,6 +67,9 @@ class Gate {
     getPorts() {
         return Object.values(this._ports);
     }
+    trigger(event, ...args) {
+        postMessage({ type: 'gateTrigger', args: [this.graph.id, this.id, event, args] });
+    }
 }
 
 class Graph {
@@ -248,6 +251,11 @@ class WorkerEngineWorker {
     changeInput(graphId, gateId, sig) {
         const gate = this._graphs[graphId].getGate(gateId);
         this._setGateOutputSignals(gate, { out: Vector3vl.fromClonable(sig) });
+    }
+    manualMemChange(graphId, gateId, addr, data) {
+        const gate = this._graphs[graphId].getGate(gateId);
+        gate.memdata.set(addr, Vector3vl.fromClonable(data));
+        this._enqueue(gate);
     }
     _enqueue(gate) {
         const k = (this._tick + gate.get('propagation')) | 0;

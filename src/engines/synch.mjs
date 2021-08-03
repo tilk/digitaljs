@@ -39,6 +39,9 @@ export class SynchEngine extends BaseEngine {
             this._updateSubcircuit(gate);
     }
     _addGraph(graph) {
+        this.listenTo(graph, 'manualMemChange', (gate) => {
+            this._enqueue(gate);
+        });
         this.listenTo(graph, 'change:constantCache', (gate) => {
             this._enqueue(gate);
         });
