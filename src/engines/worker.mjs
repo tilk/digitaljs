@@ -189,6 +189,11 @@ export class WorkerEngine extends BaseEngine {
         if (gate === undefined) return;
         gate.trigger(event, ...args);
     }
+    _handle_gateSet(graphId, gateId, name, value) {
+        const gate = this._findGateByIds(graphId, gateId);
+        if (gate === undefined) return;
+        gate.set(name, value);
+    }
     _findGateByIds(graphId, gateId) {
             const graph = this._graphs[graphId];
             if (graph === undefined) return undefined;

@@ -34,11 +34,6 @@ export const FSM = Box.define('FSM', {
         const polarity = this.get('polarity');
         
         const init_state = this.get('init_state');
-        var current_state = this.get('current_state');
-        if (current_state === undefined) {
-            current_state = init_state;
-            this.set('current_state', current_state);
-        }
         const states = this.get('states');
         const trans_table = this.get('trans_table');
         
@@ -50,6 +45,8 @@ export const FSM = Box.define('FSM', {
         ];
         
         Box.prototype.initialize.apply(this, arguments);
+        
+        const current_state = this.get('current_state');
         
         this.fsmgraph = new joint.dia.Graph;
         const statenodes = [];
@@ -64,24 +61,25 @@ export const FSM = Box.define('FSM', {
             node.addTo(this.fsmgraph);
             statenodes.push(node);
         }
-        for (const tr of trans_table) {
-            const trans = new joint.shapes.standard.Link({
-                ctrlIn: Vector3vl.fromBin(tr.ctrl_in, bits.in),
-                ctrlOut: Vector3vl.fromBin(tr.ctrl_out, bits.out)
-            });
-            trans.appendLabel({
-                attrs: {
-                    text: {
-                        text: trans.get('ctrlIn').toBin() + '/' + trans.get('ctrlOut').toBin()
+        for (const [stateIn, trs] of this.transitions) {
+            for (const tr of trs) {
+                const trans = new joint.shapes.standard.Link({
+                    id: tr.id, 
+                    ctrlIn: tr.ctrlIn,
+                    ctrlOut: tr.ctrlOut
+                });
+                trans.appendLabel({
+                    attrs: {
+                        text: {
+                            text: trans.get('ctrlIn').toBin() + '/' + trans.get('ctrlOut').toBin()
+                        }
                     }
-                }
-            });
-            trans.source({ id: 'state' + tr.state_in });
-            trans.target({ id: 'state' + tr.state_out });
-            trans.addTo(this.fsmgraph);
+                });
+                trans.source({ id: 'state' + stateIn });
+                trans.target({ id: 'state' + tr.stateOut });
+                trans.addTo(this.fsmgraph);
+            }
         }
-        
-        this.last_clk = 0;
         
         this.listenTo(this, 'change:current_state', (model, state) => {
             const pstate = model.previous('current_state');
@@ -107,29 +105,49 @@ export const FSM = Box.define('FSM', {
             }
         });
     },
+    prepare() {
+        const bits = this.get('bits');
+        this.transitions = new Map();
+        var id = 0;
+        for (const tr of this.get('trans_table')) {
+            if (!this.transitions.has(tr.state_in))
+                this.transitions.set(tr.state_in, []);
+            this.transitions.get(tr.state_in).push({
+                id: 'tr'+id,
+                stateOut: tr.state_out,
+                ctrlIn: Vector3vl.fromBin(tr.ctrl_in, bits.in),
+                ctrlOut: Vector3vl.fromBin(tr.ctrl_out, bits.out)
+            });
+            id++;
+        };
+        var current_state = this.get('current_state');
+        if (current_state === undefined) {
+            current_state = this.get('init_state');
+            this.set('current_state', current_state);
+        }
+        this.last_clk = 0;
+    },
     operation(data) {
         const bits = this.get('bits');
         const polarity = this.get('polarity');
         const next_trans = () => {
-            const node = this.fsmgraph.getCell('state' + this.get('current_state'));
-            const links = this.fsmgraph.getConnectedLinks(node, { outbound: true });
+            const links = this.transitions.get(this.get('current_state')) || [];
             for (const trans of links) {
-                const ctrlIn = trans.get('ctrlIn');
+                const ctrlIn = trans.ctrlIn;
                 const xmask = ctrlIn.xmask();
                 if (data.in.or(xmask).eq(ctrlIn.or(xmask)))
                     return trans;
             }
         };
         const next_output = () => {
-            const node = this.fsmgraph.getCell('state' + this.get('current_state'));
-            const links = this.fsmgraph.getConnectedLinks(node, { outbound: true });
+            const links = this.transitions.get(this.get('current_state')) || [];
             const ixmask = data.in.xmask();
             const results = [];
             for (const trans of links) {
-                const ctrlIn = trans.get('ctrlIn');
+                const ctrlIn = trans.ctrlIn;
                 const xmask = ctrlIn.xmask().or(ixmask);
                 if (data.in.or(xmask).eq(ctrlIn.or(xmask)))
-                    results.push(trans.get('ctrlOut'));
+                    results.push(trans.ctrlOut);
             }
             const xes = Vector3vl.xes(bits.out);
             if (results.length == 0) return xes;
@@ -148,7 +166,7 @@ export const FSM = Box.define('FSM', {
             if (data.clk.get(0) == pol('clock') && last_clk == -pol('clock')) {
                 const trans = next_trans();
                 this.set('current_state',
-                    trans ? trans.getTargetElement().get('stateNo') : this.get('init_state'));
+                    trans ? trans.stateOut : this.get('init_state'));
             }
         }
         this.last_clk = data.clk.get(0);
@@ -162,7 +180,8 @@ export const FSM = Box.define('FSM', {
     },
     markup: Box.prototype.markup.concat(Box.prototype.markupZoom),
     _gateParams: Box.prototype._gateParams.concat(['bits', 'polarity', 'states', 'init_state', 'trans_table']),
-    _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['bits', 'polarity', 'states', 'init_state', 'trans_table'])
+    _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['bits', 'polarity', 'states', 'init_state', 'trans_table']),
+    _presentationParams: Box.prototype._presentationParams.concat(['current_state', 'next_trans'])
 });
 
 export const FSMView = BoxView.extend({

@@ -28,6 +28,8 @@ class Gate {
         this._params = gateParams;
         this._params.inputSignals = Object.create(null);
         this._params.outputSignals = Object.create(null);
+        this._presentationParams = cell._presentationParams;
+        this._presentationParamChanged = Object.create(null);
         this._ports = Object.create(null);
         for (const port of ports) {
             this._ports[port.id] = port;
@@ -45,6 +47,9 @@ class Gate {
     }
     set(name, value) {
         this._params[name] = value;
+        if (this._presentationParams.includes(name)) {
+            worker._markPresentationParam(this, name);
+        }
     }
     addLinkTo(port, target) {
         this._links_to[port].add(target);
@@ -135,6 +140,7 @@ class WorkerEngineWorker {
         this._queue = new Map();
         this._pq = new FastPriorityQueue();
         this._toUpdate = new Map();
+        this._toUpdateParam = new Map();
         this._tick = 0;
         this._sender = setInterval(() => {
             this._sendUpdates();
@@ -317,6 +323,17 @@ class WorkerEngineWorker {
         })();
         s.add(port);
     }
+    _markPresentationParam(gate, param) {
+        if (!gate.graph.observed) return;
+        const s = (() => {
+            const v = this._toUpdateParam.get(gate);
+            if (v !== undefined) return v;
+            const r = new Set();
+            this._toUpdateParam.set(gate, r);
+            return r;
+        })();
+        s.add(param);
+    }
     _sendUpdates() {
         const updates = [];
         for (const [gate, ports] of this._toUpdate) {
@@ -329,6 +346,13 @@ class WorkerEngineWorker {
         this._toUpdate = new Map();
         const pendingEvents = this._hasPendingEvents();
         postMessage({ type: 'update', args: [this._tick, pendingEvents, updates] });
+        if (this._toUpdateParam.size > 0) {
+            for (const [gate, params] of this._toUpdateParam) {
+                for (const param of params)
+                    postMessage({ type: 'gateSet', args: [gate.graph.id, gate.id, param, gate.get(param) ] });
+            }
+            this._toUpdateParam = new Map();
+        }
     }
     _hasPendingEvents() {
         return this._queue.size > 0;

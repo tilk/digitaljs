@@ -301,7 +301,8 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
     _gateParams: ['label', 'type', 'propagation'],
     _gateLayoutParams: ['position'],
     _unsupportedPropChanges: [],
-    _operationHelpers: []
+    _operationHelpers: [],
+    _presentationParams: []
 });
 
 export const GateView = joint.dia.ElementView.extend({
