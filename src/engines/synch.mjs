@@ -134,12 +134,20 @@ export class SynchEngine extends BaseEngine {
     }
     unobserveGraph(graph) {
     }
-    monitor(gate, port, callback) {
+    monitor(gate, port, callback, {triggerValues, stopOnTrigger}) {
         const cb = (gate, sigs) => {
-            callback(this._tick, sigs[port]);
+            const sig = sigs[port];
+            let triggered = true;
+            if (triggerValues != undefined)
+                triggered = triggerValues.some((triggerValue) => sig.eq(triggerValue));
+            if (triggered) {
+                const ret = callback(this._tick, sig);
+                if (ret && stopOnTrigger) this.stop();
+            }
         };
         gate.on('change:outputSignals', cb);
-        callback(this._tick, gate.get('outputSignals')[port]);
+        if (triggerValues == undefined)
+            callback(this._tick, gate.get('outputSignals')[port]);
         return { gate: gate, callback: cb };
     }
     unmonitor(monitorId) {

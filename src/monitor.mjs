@@ -106,7 +106,6 @@ export class MonitorView extends Backbone.View {
         this._busTriggerMarkup = args.busTriggerMarkup || '<input type="text" name="trigger" title="Trigger" placeholder="trigger" pattern="[0-9a-fx]*">';
         this.listenTo(this.model, 'add', this._handleAdd);
         this.listenTo(this.model, 'remove', this._handleRemove);
-        this.listenTo(this.model, 'change', this._handleChange);
         this.listenTo(this.model._circuit, "display:add", () => { this.render() });
         this.listenTo(this.model._circuit, 'postUpdateGates', (tick) => {
             if (this._live) this.start = tick - this._width / this._settings.pixelsPerTick;
@@ -134,23 +133,47 @@ export class MonitorView extends Backbone.View {
             const trig = row.find('input[name=trigger]');
             trig.attr('pattern', display3vl.pattern(base));
             if (settings.trigger)
-                trig.val(display3vl.show(base, settings.trigger));
+                trig.val(display3vl.show(base, settings.trigger[0]));
             this.trigger('change');
         });
+        const handleTrigger = () => {
+            return true;
+        };
+        const setTrigger = (wireid, triggers) => {
+            const settings = this._settingsFor.get(wireid);
+            if (settings.triggerId) {
+                this.model._circuit.unmonitor(settings.triggerId);
+                settings.triggerId = null;
+            }
+            if (triggers.length > 0) {
+                const wire = this.model._wires.get(wireid).wire;
+                settings.triggerId = this.model._circuit.monitorWire(wire, handleTrigger, {triggerValues: triggers, stopOnTrigger: true});
+            }
+            settings.trigger = triggers;
+        }
         this.$el.on('input', 'select[name=trigger]', (e) => {
-            this._settingsFor.get(evt_wireid(e)).trigger = e.target.value;
+            const wireid = evt_wireid(e);
+            switch (e.target.value) {
+                case 'rising': setTrigger(wireid, [Vector3vl.one]); break;
+                case 'falling': setTrigger(wireid, [Vector3vl.zero]); break;
+                case 'risefall': setTrigger(wireid, [Vector3vl.one, Vector3vl.zero]); break;
+                case 'undef': setTrigger(wireid, [Vector3vl.x]); break;
+                default: setTrigger(wireid, []);
+            }
         });
         this.$el.on('change', 'input[name=trigger]', (e) => {
-            const settings = this._settingsFor.get(evt_wireid(e));
+            const wireid = evt_wireid(e);
+            const settings = this._settingsFor.get(wireid);
             const base = settings.base;
-            const bits = this.model._wires.get(evt_wireid(e)).waveform.bits;
+            const bits = this.model._wires.get(wireid).waveform.bits;
             if (e.target.value == "") {
-                settings.trigger = "";
+                setTrigger(wireid, []);
             } else if (display3vl.validate(base, e.target.value, bits)) {
-                settings.trigger = display3vl.read(base, e.target.value, bits);
-                e.target.value = display3vl.show(base, settings.trigger);
+                const val = display3vl.read(base, e.target.value, bits);
+                setTrigger(wireid, [val]);
+                e.target.value = display3vl.show(base, val);
             } else {
-                settings.trigger = null;
+                setTrigger(wireid, []);
             }
         });
         this.listenTo(this, 'change', () => { if (this._autoredraw) this._drawAll() });
@@ -256,38 +279,13 @@ export class MonitorView extends Backbone.View {
     }
     _handleAdd(wire) {
         const wireid = getWireId(wire);
-        this._settingsFor.set(wireid, extendSettings(this._settings, {base: 'hex'}));
+        this._settingsFor.set(wireid, extendSettings(this._settings, {base: 'hex', trigger: [], triggerId: null}));
         this.$('table').append(this._createRow(wire));
     }
     _handleRemove(wire) {
         const wireid = getWireId(wire);
         this.$('tr[wireid="'+wireid+'"]').remove();
         this._settingsFor.delete(wireid);
-    }
-    _handleChange(wire, signal) {
-        const wireid = getWireId(wire);
-        const trigger = this._settingsFor.get(wireid).trigger;
-        if (trigger instanceof Vector3vl) {
-            if (signal.eq(trigger)) this._triggered();
-        } else switch(trigger) {
-            case 'rising':
-                if (signal.isHigh) this._triggered();
-                break;
-            case 'falling':
-                if (signal.isLow) this._triggered();
-                break;
-            case 'risefall':
-                if (signal.isHigh || signal.isLow) this._triggered();
-                break;
-            case 'undef':
-                if (!signal.isDefined) this._triggered();
-                break;
-        }
-    }
-    _triggered() {
-        if (this.model._circuit.running) {
-            this.model._circuit.stop();
-        }
     }
     _createRow(wire) {
         const wireid = getWireId(wire);

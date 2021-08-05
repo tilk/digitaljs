@@ -124,7 +124,7 @@ export class WorkerEngine extends BaseEngine {
         if (this.running)
             throw new Error("startFast while running");
         this._worker.postMessage({ type: 'startFast' });
-        this._running = true;
+        this._running = 'fast';
         this.trigger('changeRunning');
     }
     stop() {
@@ -141,7 +141,7 @@ export class WorkerEngine extends BaseEngine {
         this._worker.postMessage({ type: 'interval', arg: ms });
     }
     get running() {
-        return this._running;
+        return this._running != false;
     }
     observeGraph(graph) {
         this._observers[graph.cid] += 1;
@@ -153,10 +153,10 @@ export class WorkerEngine extends BaseEngine {
         if (this._observers[graph.cid] == 0)
             this._worker.postMessage({ type: 'unobserveGraph', arg: graph.cid });
     }
-    monitor(gate, port, callback) {
+    monitor(gate, port, callback, options) {
         const monitorId = this._generateUniqueId();
         this._monitors[monitorId] = callback;
-        this._worker.postMessage({ type: 'monitor', args: [gate.graph.cid, gate.id, port, monitorId] });
+        this._worker.postMessage({ type: 'monitor', args: [gate.graph.cid, gate.id, port, monitorId, options] });
         return monitorId;
     }
     unmonitor(monitorId) {
@@ -207,10 +207,17 @@ export class WorkerEngine extends BaseEngine {
         if (gate === undefined) return;
         gate.set(name, value);
     }
-    _handle_monitorValue(monitorId, tick, sig) {
+    _handle_monitorValue(monitorId, tick, sig, stopped) {
         const callback = this._monitors[monitorId];
         if (callback == undefined) return;
-        callback(tick, Vector3vl.fromClonable(sig));
+        const ret = callback(tick, Vector3vl.fromClonable(sig));
+        if (stopped) {
+            if (ret) {
+                this._running = false;
+                this.trigger('changeRunning');
+            } else if (this._running)
+                this._worker.postMessage({ type: this._running == 'fast' ? 'startFast' : 'start' });
+        }
     }
     _findGateByIds(graphId, gateId) {
             const graph = this._graphs[graphId];

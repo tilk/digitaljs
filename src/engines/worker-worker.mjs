@@ -200,7 +200,7 @@ class WorkerEngineWorker {
         this.stop();
         this._updater = setInterval(() => {
             const startTime = Date.now();
-            while (Date.now() - startTime < 10 && this._hasPendingEvents())
+            while (Date.now() - startTime < 10 && this._hasPendingEvents() && this._updater)
                 this.updateGatesNext();
         }, 10);
     }
@@ -275,11 +275,15 @@ class WorkerEngineWorker {
         gate.memdata.set(addr, Vector3vl.fromClonable(data));
         this._enqueue(gate);
     }
-    monitor(graphId, gateId, port, monitorId) {
+    monitor(graphId, gateId, port, monitorId, {triggerValues, stopOnTrigger}) {
+        if (triggerValues != undefined)
+            for (const k of triggerValues.keys())
+                triggerValues[k] = Vector3vl.fromClonable(triggerValues[k]);
         const gate = this._graphs[graphId].getGate(gateId);
-        this._monitors[monitorId] = { gate: gate, port: port };
+        this._monitors[monitorId] = { gate, port, triggerValues, stopOnTrigger };
         gate.monitor(port, monitorId);
-        postMessage({ type: 'monitorValue', args: [monitorId, this._tick, gate.get('outputSignals')[port]] });
+        if (triggerValues == undefined)
+            postMessage({ type: 'monitorValue', args: [monitorId, this._tick, gate.get('outputSignals')[port]] });
     }
     unmonitor(monitorId) {
         const monitor = this._monitors[monitorId];
@@ -316,7 +320,14 @@ class WorkerEngineWorker {
         const monitors = gate.getMonitors(port);
         if (monitors.size > 0) {
             for (const monitorId of monitors) {
-                postMessage({ type: 'monitorValue', args: [monitorId, this._tick, sig] });
+                const {triggerValues, stopOnTrigger} = this._monitors[monitorId];
+                let triggered = true;
+                if (triggerValues)
+                    triggered = triggerValues.some((triggerValue) => sig.eq(triggerValue));
+                if (triggered) {
+                    postMessage({ type: 'monitorValue', args: [monitorId, this._tick, sig, stopOnTrigger] });
+                    if (stopOnTrigger) this.stop();
+                }
             }
         }
     }
