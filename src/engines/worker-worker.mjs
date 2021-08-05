@@ -30,9 +30,11 @@ class Gate {
         this._params.outputSignals = Object.create(null);
         this._presentationParams = cell._presentationParams;
         this._presentationParamChanged = Object.create(null);
+        this._monitors = Object.create(null);
         this._ports = Object.create(null);
         for (const port of ports) {
             this._ports[port.id] = port;
+            this._monitors[port.id] = new Set();
             if (port.dir == "in")
                 this._params.inputSignals[port.id] = Vector3vl.fromClonable(inputSignals[port.id]);
             if (port.dir == "out") {
@@ -74,6 +76,15 @@ class Gate {
     }
     trigger(event, ...args) {
         postMessage({ type: 'gateTrigger', args: [this.graph.id, this.id, event, args] });
+    }
+    monitor(port, monitorId) {
+        this._monitors[port].add(monitorId);
+    }
+    unmonitor(port, monitorId) {
+        this._monitors[port].delete(monitorId);
+    }
+    getMonitors(port) {
+        return this._monitors[port];
     }
 }
 
@@ -137,6 +148,7 @@ class WorkerEngineWorker {
     constructor() {
         this._interval = 10;
         this._graphs = Object.create(null);
+        this._monitors = Object.create(null);
         this._queue = new Map();
         this._pq = new FastPriorityQueue();
         this._toUpdate = new Map();
@@ -263,6 +275,17 @@ class WorkerEngineWorker {
         gate.memdata.set(addr, Vector3vl.fromClonable(data));
         this._enqueue(gate);
     }
+    monitor(graphId, gateId, port, monitorId) {
+        const gate = this._graphs[graphId].getGate(gateId);
+        this._monitors[monitorId] = { gate: gate, port: port };
+        gate.monitor(port, monitorId);
+        postMessage({ type: 'monitorValue', args: [monitorId, this._tick, gate.get('outputSignals')[port]] });
+    }
+    unmonitor(monitorId) {
+        const monitor = this._monitors[monitorId];
+        if (monitor == undefined) return;
+        monitor.gate.unmonitor(monitor.port, monitorId);
+    }
     _enqueue(gate) {
         const k = (this._tick + gate.get('propagation')) | 0;
         const sq = (() => {
@@ -289,6 +312,12 @@ class WorkerEngineWorker {
         for (const target of gate.targets(port)) {
             const targetGate = gate.graph.getGate(target.id);
             this._setGateInputSignal(targetGate, target.port, sig);
+        }
+        const monitors = gate.getMonitors(port);
+        if (monitors.size > 0) {
+            for (const monitorId of monitors) {
+                postMessage({ type: 'monitorValue', args: [monitorId, this._tick, sig] });
+            }
         }
     }
     _setGateInputSignal(targetGate, port, sig) {
