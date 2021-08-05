@@ -50,17 +50,18 @@ export class Monitor {
     addWire(wire) {
         const wireid = getWireId(wire);
         if (this._wires.has(wireid)) return;
-        this.listenTo(wire, 'change:signal', this._handleChange);
         const waveform = new Waveform(wire.get('bits'));
-        waveform.push(this._circuit.tick, wire.get('signal'));
-        this._wires.set(wireid, {wire: wire, waveform: waveform});
+        const obj = {wire: wire, waveform: waveform, monitorId: undefined};
+        this._wires.set(wireid, obj);
         this.trigger('add', wire);
+        obj.monitorId = this._circuit.monitorWire(wire, (tick, sig) => { this._handleChange(tick, wire, sig) });
     }
     removeWire(wire) {
         if (typeof wire == 'string') wire = this._wires.get(wire).wire;
         this.trigger('remove', wire);
-        this.stopListening(wire);
-        this._wires.delete(getWireId(wire));
+        const wireid = getWireId(wire);
+        this._circuit.unmonitor(this._wires.get(wireid).monitorId);
+        this._wires.delete(wireid);
     }
     getWires() {
         const ret = [];
@@ -83,8 +84,8 @@ export class Monitor {
             if (e && e.get('bits') == w.bits) this.addWire(e);
         }
     }
-    _handleChange(wire, signal) {
-        this._wires.get(getWireId(wire)).waveform.push(this._circuit.tick, signal);
+    _handleChange(tick, wire, signal) {
+        this._wires.get(getWireId(wire)).waveform.push(tick, signal);
         this.trigger('change', wire, signal);
     }
 }

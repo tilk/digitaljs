@@ -299,6 +299,18 @@ export class HeadlessCircuit {
         ret.subcircuits = subcircuits;
         return ret;
     }
+    monitorWire(wire, callback) {
+        const src = wire.get('source');
+        const gate = wire.getSourceElement();
+        if (gate == null) return null;
+        return this.monitor(gate, src.port, callback);
+    }
+    monitor(cell, port, callback) {
+        return this._engine.monitor(cell, port, callback);
+    }
+    unmonitor(monitorId) {
+        this._engine.unmonitor(monitorId);
+    }
 };
 
 _.extend(HeadlessCircuit.prototype, Backbone.Events);

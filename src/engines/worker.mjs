@@ -12,6 +12,8 @@ export class WorkerEngine extends BaseEngine {
         this._pendingEventsCache = false;
         this._observers = Object.create(null);
         this._graphs = Object.create(null);
+        this._monitors = Object.create(null);
+        this._uniqueCounter = 0;
         this._worker = new Worker(new URL('./worker-worker.mjs', import.meta.url));
         this._worker.onmessage = (e) => this._handleMessage(e.data);
         this.interval = 10;
@@ -151,6 +153,17 @@ export class WorkerEngine extends BaseEngine {
         if (this._observers[graph.cid] == 0)
             this._worker.postMessage({ type: 'unobserveGraph', arg: graph.cid });
     }
+    monitor(gate, port, callback) {
+        const monitorId = this._generateUniqueId();
+        this._monitors[monitorId] = callback;
+        this._worker.postMessage({ type: 'monitor', args: [gate.graph.cid, gate.id, port, monitorId] });
+        return monitorId;
+    }
+    unmonitor(monitorId) {
+        if (!(monitorId in this._monitors)) return;
+        this._worker.postMessage({ type: 'unmonitor', arg: monitorId });
+        delete this._monitors[monitorId];
+    }
     _handleMessage(msg) {
         const name = '_handle_' + msg.type;
         if ('arg' in msg)
@@ -194,10 +207,18 @@ export class WorkerEngine extends BaseEngine {
         if (gate === undefined) return;
         gate.set(name, value);
     }
+    _handle_monitorValue(monitorId, tick, sig) {
+        const callback = this._monitors[monitorId];
+        if (callback == undefined) return;
+        callback(tick, Vector3vl.fromClonable(sig));
+    }
     _findGateByIds(graphId, gateId) {
             const graph = this._graphs[graphId];
             if (graph === undefined) return undefined;
             return graph.getCell(gateId);
+    }
+    _generateUniqueId() {
+        return this._uniqueCounter++;
     }
 };
 

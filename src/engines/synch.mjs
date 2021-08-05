@@ -134,5 +134,16 @@ export class SynchEngine extends BaseEngine {
     }
     unobserveGraph(graph) {
     }
+    monitor(gate, port, callback) {
+        const cb = (gate, sigs) => {
+            callback(this._tick, sigs[port]);
+        };
+        gate.on('change:outputSignals', cb);
+        callback(this._tick, gate.get('outputSignals')[port]);
+        return { gate: gate, callback: cb };
+    }
+    unmonitor(monitorId) {
+        monitorId.gate.off('change:outputSignals', monitorId.callback);
+    }
 };
 
