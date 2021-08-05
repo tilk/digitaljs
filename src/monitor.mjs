@@ -285,6 +285,9 @@ export class MonitorView extends Backbone.View {
     _handleRemove(wire) {
         const wireid = getWireId(wire);
         this.$('tr[wireid="'+wireid+'"]').remove();
+        const settings = this._settingsFor.get(wireid);
+        if (settings.triggerId) 
+            this.model._circuit.unmonitor(settings.triggerId);
         this._settingsFor.delete(wireid);
     }
     _createRow(wire) {
