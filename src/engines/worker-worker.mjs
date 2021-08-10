@@ -162,18 +162,30 @@ class WorkerEngineWorker {
     interval(ms) {
         this._interval = ms;
     }
-    updateGates() {
-        if (this._pq.peek() == this._tick) this.updateGatesNext();
+    updateGates(reqid, sendUpdates) {
+        const count = this._updateGates();
+        if (sendUpdates) this._sendUpdates();
+        this._sendAck(reqid, count);
+    }
+    _updateGates() {
+        if (this._pq.peek() == this._tick) return this._updateGatesNext();
         else {
             const k = this._tick | 0;
             this._tick = (k + 1) | 0;
+            return 0;
         }
     }
-    updateGatesNext() {
+    updateGatesNext(reqid, sendUpdates) {
+        const count = this._updateGatesNext();
+        if (sendUpdates) this._sendUpdates();
+        this._sendAck(reqid, count);
+    }
+    _updateGatesNext() {
         const k = this._pq.poll() | 0;
         console.assert(k >= this._tick);
         this._tick = k;
         const q = this._queue.get(k);
+        let count = 0;
         while (q.size) {
             const [gate, args] = q.entries().next().value;
             q.delete(gate);
@@ -186,25 +198,36 @@ class WorkerEngineWorker {
                 this._enqueue(gate);
             }
             this._setGateOutputSignals(gate, newOutputs);
+            count++;
         }
         this._queue.delete(k);
         this._tick = (k + 1) | 0;
+        return count;
+    }
+    ping(reqid, sendUpdates) {
+        if (sendUpdates) this._sendUpdates();
+        this._sendAck(reqid);
     }
     start() {
-        this.stop();
+        this._stop();
         this._updater = setInterval(() => {
-            this.updateGates();
+            this._updateGates();
         }, this._interval);
     }
     startFast() {
-        this.stop();
+        this._stop();
         this._updater = setInterval(() => {
             const startTime = Date.now();
             while (Date.now() - startTime < 10 && this._hasPendingEvents() && this._updater)
-                this.updateGatesNext();
+                this._updateGatesNext();
         }, 10);
     }
-    stop() {
+    stop(reqid, sendUpdates) {
+        this._stop();
+        if (sendUpdates) this._sendUpdates();
+        this._sendAck(reqid);
+    }
+    _stop() {
         if (this._updater) {
             clearInterval(this._updater);
             this._updater = null;
@@ -326,7 +349,7 @@ class WorkerEngineWorker {
                     triggered = triggerValues.some((triggerValue) => sig.eq(triggerValue));
                 if (triggered) {
                     postMessage({ type: 'monitorValue', args: [monitorId, this._tick, sig, stopOnTrigger] });
-                    if (stopOnTrigger) this.stop();
+                    if (stopOnTrigger) this._stop();
                 }
             }
         }
@@ -394,6 +417,9 @@ class WorkerEngineWorker {
             this._toUpdateParam = new Map();
         }
     }
+    _sendAck(reqid, response) {
+        postMessage({ type: 'ack', args: [reqid, response] });
+    }
     _hasPendingEvents() {
         return this._queue.size > 0;
     }
@@ -401,7 +427,7 @@ class WorkerEngineWorker {
 
 const worker = new WorkerEngineWorker();
 
-onmessage = (e) => {
+self.onmessage = (e) => {
     const msg = e.data;
     if ('arg' in msg)
         worker[msg.type](msg.arg);

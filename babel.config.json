@@ -11,5 +11,5 @@
       }
     ]
   ],
-  "plugins": ["babel-plugin-add-import-extension"]
+  "plugins": ["babel-plugin-add-import-extension", "babel-plugin-transform-import-meta"]
 }

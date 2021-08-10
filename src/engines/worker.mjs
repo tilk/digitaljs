@@ -3,9 +3,10 @@ import _ from 'lodash';
 import { BaseEngine } from './base.mjs';
 import { Vector3vl } from '3vl';
 import * as cells from '../cells.mjs';
+import Worker from 'web-worker';
 
 export class WorkerEngine extends BaseEngine {
-    constructor(graph) {
+    constructor(graph, { workerURL }) {
         super(graph);
         this._running = false;
         this._tickCache = 0;
@@ -13,8 +14,9 @@ export class WorkerEngine extends BaseEngine {
         this._observers = Object.create(null);
         this._graphs = Object.create(null);
         this._monitors = Object.create(null);
+        this._promises = Object.create(null);
         this._uniqueCounter = 0;
-        this._worker = new Worker(new URL('./worker-worker.mjs', import.meta.url));
+        this._worker = workerURL ? new Worker(workerURL) : new Worker(new URL('./worker-worker.mjs', import.meta.url));
         this._worker.onmessage = (e) => this._handleMessage(e.data);
         this.interval = 10;
         this._addGraph(this._graph);
@@ -103,15 +105,24 @@ export class WorkerEngine extends BaseEngine {
     shutdown() {
         this._worker.terminate();
     }
-    updateGatesNext() {
+    synchronize() {
+        const [reqid, promise] = this._generatePromise();
+        this._worker.postMessage({ type: 'ping', args: [reqid, true] });
+        return promise;
+    }
+    updateGatesNext({ synchronous = false } = {}) {
         if (this._running)
             throw new Error("updateGatesNext while running");
-        this._worker.postMessage({ type: 'updateGatesNext' });
+        const [reqid, promise] = this._generatePromise();
+        this._worker.postMessage({ type: 'updateGatesNext', args: [reqid, synchronous] });
+        return promise;
     }
-    updateGates() {
+    updateGates({ synchronous = false } = {}) {
         if (this._running)
             throw new Error("updateGates while running");
-        this._worker.postMessage({ type: 'updateGates' });
+        const [reqid, promise] = this._generatePromise();
+        this._worker.postMessage({ type: 'updateGates', args: [reqid, synchronous] });
+        return promise;
     }
     start() {
         if (this.running)
@@ -127,11 +138,13 @@ export class WorkerEngine extends BaseEngine {
         this._running = 'fast';
         this.trigger('changeRunning');
     }
-    stop() {
+    stop({ synchronous = false } = {}) {
         if (!this._running) return;
-        this._worker.postMessage({ type: 'stop' });
+        const [reqid, promise] = this._generatePromise();
+        this._worker.postMessage({ type: 'stop', args: [reqid, synchronous] });
         this._running = false;
         this.trigger('changeRunning');
+        return promise;
     }
     get interval() {
         return this._interval;
@@ -219,6 +232,9 @@ export class WorkerEngine extends BaseEngine {
                 this._worker.postMessage({ type: this._running == 'fast' ? 'startFast' : 'start' });
         }
     }
+    _handle_ack(reqid, response) {
+        this._resolvePromise(reqid, response);
+    }
     _findGateByIds(graphId, gateId) {
             const graph = this._graphs[graphId];
             if (graph === undefined) return undefined;
@@ -226,6 +242,18 @@ export class WorkerEngine extends BaseEngine {
     }
     _generateUniqueId() {
         return this._uniqueCounter++;
+    }
+    _generatePromise() {
+        const reqid = this._generateUniqueId();
+        return [reqid, new Promise((resolve) => { this._promises[reqid] = resolve; })];
+    }
+    _resolvePromise(reqid, value) {
+        if (!this._promises[reqid]) {
+            console.warn("Missing promise", reqid);
+            return;
+        }
+        this._promises[reqid](value);
+        delete this._promises[reqid];
     }
 };
 

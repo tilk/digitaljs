@@ -2,8 +2,8 @@
 import { SynchEngine } from './synch.mjs';
 
 export class BrowserSynchEngine extends SynchEngine {
-    constructor(graph, cells) {
-        super(graph, cells);
+    constructor(graph, opts) {
+        super(graph, opts);
         this._interval_ms = 10;
         this._interval = null;
         this._idle = null;
@@ -37,6 +37,7 @@ export class BrowserSynchEngine extends SynchEngine {
             this._idle = null;
         }
         this.trigger('changeRunning');
+        return Promise.resolve();
     }
     get interval() {
         return this._interval_ms;
