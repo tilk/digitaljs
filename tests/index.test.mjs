@@ -6,11 +6,13 @@ import 'regenerator-runtime/runtime';
 import { HeadlessCircuit, getCellType } from '../lib/circuit.mjs';
 import { Vector3vl } from '3vl';
 import * as cells from '../lib/cells.mjs';
+import { SynchEngine } from '../lib/engines/synch.mjs';
+import { WorkerEngine } from '../lib/engines/worker.mjs';
 
 console.assert = (stmt, msg) => { if (!stmt) throw new Error(msg); };
 
 class SingleCellTestFixture {
-    constructor(celldata) {
+    constructor(engine, celldata) {
         this.inlist = [];
         this.outlist = [];
         const celltype = celldata.type ? cells[celldata.type] : getCellType(celldata.celltype);
@@ -55,7 +57,14 @@ class SingleCellTestFixture {
                 }
             });
         }
-        this.circuit = new HeadlessCircuit(circ);
+        beforeAll(() => {
+            this.circuit = new HeadlessCircuit(circ, { engine, engineOptions: { workerURL: new URL('../lib/engines/worker-worker.js', require('url').pathToFileURL(__filename).toString()) }});
+            this.circuit.observeGraph();
+        });
+        afterAll(() => {
+            this.circuit.shutdown();
+            this.circuit = null;
+        });
     }
     circuitOutputs() {
         let ret = {};
@@ -86,9 +95,9 @@ class SingleCellTestFixture {
                 yield randtest();
             }
         }
-        test("randomized logic table check", () => {
+        test("randomized logic table check", async () => {
             for (const ins of gen(100)) {
-                this.expect(ins, fun, opts);
+                await this.expect(ins, fun, opts);
             }
         });
         return this;
@@ -128,9 +137,9 @@ class SingleCellTestFixture {
             }
             return rec(0);
         }
-        test("complete logic table check", () => {
+        test("complete logic table check", async () => {
             for (const ins of gen()) {
-                this.expect(ins, fun, opts);
+                await this.expect(ins, fun, opts);
             }
         });
         return this;
@@ -144,7 +153,7 @@ class SingleCellTestFixture {
         if (opts.clock) return this.expectSeq(ins, outs, opts);
         else return this.expectComb(ins, outs, opts);
     }
-    expectSeq(ins, fun, opts = {}) {
+    async expectSeq(ins, fun, opts = {}) {
         let message = Object.entries(ins).map(([a, x]) => a + ':' + x.toBin()).join(' ');;
         try {
             const outs = fun(ins, this.circuitOutputs());
@@ -152,7 +161,7 @@ class SingleCellTestFixture {
             for (const [name, value] of Object.entries(ins)) {
                 this.circuit.setInput(name, value);
             }
-            this.clockPulse(opts.clock, opts.clock_polarity, opts.timeout);
+            await this.clockPulse(opts.clock, opts.clock_polarity, opts.timeout);
             for (const k in this.outlist) {
                 expect(this.circuit.getOutput(this.outlist[k].name).toBin())
                     .toEqual(outs[this.outlist[k].name].toBin());
@@ -162,7 +171,7 @@ class SingleCellTestFixture {
             throw e;
         }
     }
-    expectComb(ins, fun, opts = {}) {
+    async expectComb(ins, fun, opts = {}) {
         let message = Object.entries(ins).map(([a, x]) => a + ':' + x.toBin()).join(' ');;
         try {
             const outs = fun(ins, this.circuitOutputs());
@@ -170,7 +179,7 @@ class SingleCellTestFixture {
             for (const [name, value] of Object.entries(ins)) {
                 this.circuit.setInput(name, value);
             }
-            this.waitUntilStable(opts.timeout);
+            await this.waitUntilStable(opts.timeout);
             for (const k in this.outlist) {
                 expect(this.circuit.getOutput(this.outlist[k].name).toBin())
                     .toEqual(outs[this.outlist[k].name].toBin());
@@ -180,24 +189,29 @@ class SingleCellTestFixture {
             throw e;
         }
     }
-    waitUntilStable(timeout) {
+    async waitUntilStable(timeout) {
         timeout = timeout || 2;
+        await this.circuit.synchronize();
         for (let x = 0; x < timeout && this.circuit.hasPendingEvents; x++)
-            this.circuit.updateGates();
+            await this.circuit.updateGates({ synchronous: true });
         expect(this.circuit.hasPendingEvents).toBeFalsy();
     }
-    clockPulse(clk, polarity, timeout) {
-        this.waitUntilStable(timeout);
+    async clockPulse(clk, polarity, timeout) {
+        await this.waitUntilStable(timeout);
         this.circuit.setInput(clk, Vector3vl.fromBool(!polarity));
-        this.waitUntilStable(timeout);
+        await this.waitUntilStable(timeout);
         this.circuit.setInput(clk, Vector3vl.fromBool(polarity));
-        this.waitUntilStable(timeout);        
+        await this.waitUntilStable(timeout);        
     }
 };
 
 const testBits = [1, 2, 3, 4, 16, 32, 48, 64];
 const numTestBits = [1, 2, 3, 8, 32, 48];
 const smallTestBits = [1, 48];
+
+describe.each([
+["synch", SynchEngine],
+["worker", WorkerEngine]])('%s', (name, engine) => {
 
 describe.each([
 ["$and",  s => ({ out: s.in1.and(s.in2) })],
@@ -207,7 +221,7 @@ describe.each([
 ["$nor",  s => ({ out: s.in1.nor(s.in2) })],
 ["$xnor", s => ({ out: s.in1.xnor(s.in2) })]])('%s', (name, fun) => {
     describe.each(testBits)('%i bits', (bits) => {
-        new SingleCellTestFixture({celltype: name, bits: bits})
+        new SingleCellTestFixture(engine, {celltype: name, bits: bits})
             .testFun(fun);
     });
 });
@@ -216,7 +230,7 @@ describe.each([
 ["$not",      s => ({ out: s.in.not() })],
 ["$repeater", s => ({ out: s.in })]])('%s', (name, fun) => {
     describe.each(testBits)('%i bits', (bits) => {
-        new SingleCellTestFixture({celltype: name, bits: bits})
+        new SingleCellTestFixture(engine, {celltype: name, bits: bits})
             .testFun(fun);
     });
 });
@@ -229,7 +243,7 @@ describe.each([
 ["$reduce_nor",  s => ({ out: s.in.reduceNor() })],
 ["$reduce_xnor", s => ({ out: s.in.reduceXnor() })]])('%s', (name, fun) => {
     describe.each(testBits)('%i bits', (bits) => {
-        new SingleCellTestFixture({celltype: name, bits: bits})
+        new SingleCellTestFixture(engine, {celltype: name, bits: bits})
             .testFun(fun);
     });
 });
@@ -241,7 +255,7 @@ describe.each([
 ["$busungroup", 2, s => ({ out0: s.in.slice(0, Math.ceil(s.in.bits / 2)), out1: s.in.slice(Math.ceil(s.in.bits / 2)) })],
 ])('%s %i-port', (name, ins, fun) => {
     describe.each(testBits)('%i bits', (bits) => {
-        new SingleCellTestFixture({celltype: name, groups: Array(ins).fill(Math.ceil(bits / ins))})
+        new SingleCellTestFixture(engine, {celltype: name, groups: Array(ins).fill(Math.ceil(bits / ins))})
             .testFun(fun);
     });
 });
@@ -256,7 +270,7 @@ describe.each([
 ["$pmux", 2, pmuxfun(s => [s.in0, s.in1, s.in2, s.in3, s.in4])],
 ])('%s %i-select', (name, ins, fun) => {
     describe.each(testBits)('%i bits', (bits) => {
-        new SingleCellTestFixture({celltype: name, bits: {in: bits, sel: ins}})
+        new SingleCellTestFixture(engine, {celltype: name, bits: {in: bits, sel: ins}})
             .testFun(fun);
     });
 });
@@ -288,11 +302,11 @@ describe.each([
     [true,  true],
     ])('%s %s', (sgn1, sgn2) => {
         describe.each(numTestBits)('%i bits', (bits) => {
-            new SingleCellTestFixture({type: name, bits: { in1: bits, in2: bits }, signed: { in1: sgn1, in2: sgn2 }})
+            new SingleCellTestFixture(engine, {type: name, bits: { in1: bits, in2: bits }, signed: { in1: sgn1, in2: sgn2 }})
                 .testFun(fun(sgn1, sgn2), { no_random_x : true });
         });
         describe.each([[3, 8], [8, 3]])('%i bits to %i bits', (bits1, bits2) => {
-            new SingleCellTestFixture({type: name, bits: { in1: bits1, in2: bits2 }, signed: { in1: sgn1, in2: sgn2 }})
+            new SingleCellTestFixture(engine, {type: name, bits: { in1: bits1, in2: bits2 }, signed: { in1: sgn1, in2: sgn2 }})
                 .testFun(fun(sgn1, sgn2), { no_random_x : true });
         });
     });
@@ -301,9 +315,9 @@ describe.each([
             describe.each(numTestBits)('%i bits', (bits) => {
                 if (sgn && con > 2**(bits-1)-1) return;
                 if (!sgn && con > 2**bits-1) return;
-                new SingleCellTestFixture({type: name + 'Const', leftOp: false, constant: con, bits: { in: bits }, signed: { in: sgn }})
+                new SingleCellTestFixture(engine, {type: name + 'Const', leftOp: false, constant: con, bits: { in: bits }, signed: { in: sgn }})
                     .testFun(s => fun(sgn, sgn)({in1: s.in, in2: Vector3vl.fromNumber(con, bits)}), { no_random_x : true });
-                new SingleCellTestFixture({type: name + 'Const', leftOp: true, constant: con, bits: { in: bits }, signed: { in: sgn }})
+                new SingleCellTestFixture(engine, {type: name + 'Const', leftOp: true, constant: con, bits: { in: bits }, signed: { in: sgn }})
                     .testFun(s => fun(sgn, sgn)({in2: s.in, in1: Vector3vl.fromNumber(con, bits)}), { no_random_x : true });
             });
         });
@@ -329,12 +343,12 @@ describe.each([
         describe.each(numTestBits)('%i bits', (bits) => {
             if (name == 'Multiplication' && bits >= 24) return; // tests use JS numbers
             if (name == 'Power' && bits >= 4) return; // power grows crazy fast
-            new SingleCellTestFixture({type: name, bits: { in1: bits, in2: bits, out: bits }, signed: { in1: sgn1, in2: sgn2 }})
+            new SingleCellTestFixture(engine, {type: name, bits: { in1: bits, in2: bits, out: bits }, signed: { in1: sgn1, in2: sgn2 }})
                 .testFun(fun(sgn1, sgn2, bits), { no_random_x : true });
         });
         describe.each([[3, 8], [8, 3]])('%i bits to %i bits', (bits1, bits2) => {
             if (name == 'Power' && bits1 >= 4) return; // power grows crazy fast
-            new SingleCellTestFixture({type: name, bits: { in1: bits1, in2: bits1, out: bits2 }, signed: { in1: sgn1, in2: sgn2 }})
+            new SingleCellTestFixture(engine, {type: name, bits: { in1: bits1, in2: bits1, out: bits2 }, signed: { in1: sgn1, in2: sgn2 }})
                 .testFun(fun(sgn1, sgn2, bits2), { no_random_x : true });
         });
     });
@@ -345,9 +359,9 @@ describe.each([
                 if (!sgn && con > 2**bits-1) return;
                 if (name == 'Multiplication' && bits >= 24) return; // tests use JS numbers
                 if (name == 'Power' && bits >= 4) return; // power grows crazy fast
-                new SingleCellTestFixture({type: name + 'Const', leftOp: false, constant: con, bits: { in: bits, out: bits }, signed: { in: sgn }})
+                new SingleCellTestFixture(engine, {type: name + 'Const', leftOp: false, constant: con, bits: { in: bits, out: bits }, signed: { in: sgn }})
                     .testFun(s => fun(sgn, sgn, bits)({in1: s.in, in2: Vector3vl.fromNumber(con, bits)}), { no_random_x : true });
-                new SingleCellTestFixture({type: name + 'Const', leftOp: true, constant: con, bits: { in: bits, out: bits }, signed: { in: sgn }})
+                new SingleCellTestFixture(engine, {type: name + 'Const', leftOp: true, constant: con, bits: { in: bits, out: bits }, signed: { in: sgn }})
                     .testFun(s => fun(sgn, sgn, bits)({in2: s.in, in1: Vector3vl.fromNumber(con, bits)}), { no_random_x : true });
             });
         });
@@ -360,7 +374,7 @@ describe.each([
 ])('%s', (name, fun) => {
     describe.each([false, true])('%s', sgn => {
         describe.each(numTestBits)('%i bits', (bits) => {
-            new SingleCellTestFixture({celltype: name, bits: { in: bits, out: bits }, signed: sgn })
+            new SingleCellTestFixture(engine, {celltype: name, bits: { in: bits, out: bits }, signed: sgn })
                 .testFun(fun(sgn, bits), { no_random_x : true });
         });
     });
@@ -371,7 +385,7 @@ describe('$constant', () => {
     '', '0', '1', 'x',
     '00', '01', '0x', '10', '11', '1x', 'x0', 'x1', 'xx',
     ])('%s', (cbits) => {
-        new SingleCellTestFixture({celltype: '$constant', constant: cbits })
+        new SingleCellTestFixture(engine, {celltype: '$constant', constant: cbits })
             .testFun(s => ({ out: Vector3vl.fromBin(cbits) }));
     });
 });
@@ -389,11 +403,11 @@ describe.each([
     [true,  true],
     ])('%s %s', (sgn1, sgn2) => {
         describe.each(numTestBits)('%i bits', (bits) => {
-            new SingleCellTestFixture({type: name, bits: { in1: bits, in2: Math.ceil(Math.log2(bits)) + 1, out: bits }, signed: { in1: sgn1, in2: sgn2, out: sgn1 }})
+            new SingleCellTestFixture(engine, {type: name, bits: { in1: bits, in2: Math.ceil(Math.log2(bits)) + 1, out: bits }, signed: { in1: sgn1, in2: sgn2, out: sgn1 }})
                 .testFun(fun(sgn1, sgn2, bits), { no_random_x : true });
         });
         describe.each([[3, 8], [8, 3]])('%i bits to %i bits', (bits1, bits2) => {
-            new SingleCellTestFixture({type: name, bits: { in1: bits1, in2: Math.ceil(Math.log2(Math.max(bits1, bits2))) + 1, out: bits2 }, signed: { in1: sgn1, in2: sgn2, out: sgn1 }})
+            new SingleCellTestFixture(engine, {type: name, bits: { in1: bits1, in2: Math.ceil(Math.log2(Math.max(bits1, bits2))) + 1, out: bits2 }, signed: { in1: sgn1, in2: sgn2, out: sgn1 }})
                 .testFun(fun(sgn1, sgn2, bits2), { no_random_x : true });
         });
     });
@@ -401,11 +415,11 @@ describe.each([
         describe.each([false, true])('%s', sgn => {
             describe.each(numTestBits)('%i bits', (bits) => {
                 const bits2 = Math.ceil(Math.log2(bits)) + 1;
-                new SingleCellTestFixture({type: name + 'Const', leftOp: false, constant: con, bits: { in: bits, out: bits }, signed: { in: sgn, out: sgn }})
+                new SingleCellTestFixture(engine, {type: name + 'Const', leftOp: false, constant: con, bits: { in: bits, out: bits }, signed: { in: sgn, out: sgn }})
                     .testFun(s => fun(sgn, false, bits)({in1: s.in, in2: Vector3vl.fromNumber(con)}), { no_random_x : true });
                 if (sgn && con > 2**(bits-1)-1) return;
                 if (!sgn && con > 2**bits-1) return;
-                new SingleCellTestFixture({type: name + 'Const', leftOp: true, constant: con, bits: { in: bits2, out: bits }, signed: { in: sgn, out: sgn }})
+                new SingleCellTestFixture(engine, {type: name + 'Const', leftOp: true, constant: con, bits: { in: bits2, out: bits }, signed: { in: sgn, out: sgn }})
                     .testFun(s => fun(false, sgn, bits)({in2: s.in, in1: Vector3vl.fromNumber(con, bits2)}), { no_random_x : true });
             });
         });
@@ -418,7 +432,7 @@ describe.each([
 ])('%s', (name, fun) => {
     describe.each(numTestBits)('%i bits', (bits) => {
         describe.each([0,1,4])('plus %i bits', (pbits) => {
-            new SingleCellTestFixture({celltype: name, extend: { input: bits, output: bits + pbits }})
+            new SingleCellTestFixture(engine, {celltype: name, extend: { input: bits, output: bits + pbits }})
                 .testFun(fun(pbits));
         });
     });
@@ -431,7 +445,7 @@ describe('$busslice', () => {
         [0, Math.ceil(bits/2)],
         [Math.floor(bits/2), bits],
         ])('%i-%i', (b1, b2) => {
-            new SingleCellTestFixture({celltype: '$busslice', slice: { first: b1, count: b2 - b1 }})
+            new SingleCellTestFixture(engine, {celltype: '$busslice', slice: { first: b1, count: b2 - b1 }})
                 .testFun(s => ({ out: s.in.slice(b1, b2) }));
         });
     });
@@ -443,34 +457,34 @@ describe('$dff', () => {
     describe.each(smallTestBits)('%i bits', (bits) => {
         describe.each([true, false])('enable polarity %s', (en_pol) => {
             describe("default initialization to undefined", () => {
-                new SingleCellTestFixture({celltype: '$dff', bits: bits, polarity: {enable: en_pol}})
+                new SingleCellTestFixture(engine, {celltype: '$dff', bits: bits, polarity: {enable: en_pol}})
                     .testFun(s => ({out: Vector3vl.xes(bits)}), {fixed: {en: Vector3vl.fromBool(!en_pol)}});
             });
             describe.each([true, false])("initialization with %s", (initbit) => {
-                new SingleCellTestFixture({celltype: '$dff', bits: bits, initial: Vector3vl.fromBool(initbit, bits).toBin(), polarity: {enable: en_pol}})
+                new SingleCellTestFixture(engine, {celltype: '$dff', bits: bits, initial: Vector3vl.fromBool(initbit, bits).toBin(), polarity: {enable: en_pol}})
                     .testFun(s => ({out: Vector3vl.fromBool(initbit, bits)}), {fixed: {en: Vector3vl.fromBool(!en_pol)}});
             });
             describe("latching behavior", () => {
-                new SingleCellTestFixture({celltype: '$dff', bits: bits, polarity: {enable: en_pol}})
+                new SingleCellTestFixture(engine, {celltype: '$dff', bits: bits, polarity: {enable: en_pol}})
                     .testFun((s, old) => ({out: s.en.eq(Vector3vl.fromBool(en_pol)) ? s.in : old.out }));
             });
             describe.each([true, false])('reset polarity %s', (arst_pol) => {
                 describe("latching behavior with default reset", () => {
-                    new SingleCellTestFixture({celltype: '$dff', bits: bits, polarity: {enable: en_pol, arst: arst_pol}})
+                    new SingleCellTestFixture(engine, {celltype: '$dff', bits: bits, polarity: {enable: en_pol, arst: arst_pol}})
                         .testFun((s, old) => ({out: s.arst.eq(Vector3vl.fromBool(arst_pol)) ? Vector3vl.zeros(bits) : s.en.eq(Vector3vl.fromBool(en_pol)) ? s.in : old.out }));
                 });
                 describe.each([true, false])("latching behavior with reset to %s", (arst_val) => {
-                    new SingleCellTestFixture({celltype: '$dff', bits: bits, polarity: {enable: en_pol, arst: arst_pol}, arst_value: Vector3vl.fromBool(arst_val, bits).toBin()})
+                    new SingleCellTestFixture(engine, {celltype: '$dff', bits: bits, polarity: {enable: en_pol, arst: arst_pol}, arst_value: Vector3vl.fromBool(arst_val, bits).toBin()})
                         .testFun((s, old) => ({out: s.arst.eq(Vector3vl.fromBool(arst_pol)) ? Vector3vl.fromBool(arst_val, bits) : s.en.eq(Vector3vl.fromBool(en_pol)) ? s.in : old.out }));
                 });
             });
             describe.each([true, false])('clock polarity %s', (clk_pol) => {
-                new SingleCellTestFixture({celltype: '$dff', bits: bits, polarity: {clock: clk_pol, enable: en_pol}})
+                new SingleCellTestFixture(engine, {celltype: '$dff', bits: bits, polarity: {clock: clk_pol, enable: en_pol}})
                     .testFun((s, old) => ({out: s.en.eq(Vector3vl.fromBool(en_pol)) ? s.in : old.out }), {clock: 'clk', clock_polarity: clk_pol});
             });
         });
         describe.each([true, false])('clock polarity %s', (clk_pol) => {
-            new SingleCellTestFixture({celltype: '$dff', bits: bits, polarity: {clock: clk_pol}})
+            new SingleCellTestFixture(engine, {celltype: '$dff', bits: bits, polarity: {clock: clk_pol}})
                 .testFun((s, old) => ({out: s.in}), {clock: 'clk', clock_polarity: clk_pol});
         });
     });
@@ -520,20 +534,23 @@ describe('$fsm', () => {
         ["parity_moore", parity_moore, parity_moore_trans, parity_moore_out],
         ["parity_mealy", parity_mealy, parity_mealy_trans, parity_mealy_out],
         ["parity2",      parity2,      parity2_trans,      parity2_out]
-    ])('automaton %s', (x, test_automaton, trans, out) => {
+    ])('automaton %s', (x, orig_test_automaton, trans, out) => {
         describe.each([true, false])('clock polarity %s', clk_pol => {
             describe.each([true, false])('reset polarity %s', arst_pol => {
+                const test_automaton = _.clone(orig_test_automaton);
                 _.assign(test_automaton, {
                     celltype: '$fsm',
                     polarity: { clock: clk_pol, arst: arst_pol }
                 });
                 let state = test_automaton.init_state;
-                new SingleCellTestFixture(test_automaton)
+                new SingleCellTestFixture(engine, test_automaton)
                     .testFunRandomized(s => ({out: out(test_automaton.init_state, s.in)}), {no_random_x: true, fixed: {arst: Vector3vl.fromBool(arst_pol)}})
                     .testFunRandomized(s => { state = trans(state, s.in); return {out: out(state, s.in)}}, {no_random_x: true, fixed: {arst: Vector3vl.fromBool(!arst_pol)}, clock: 'clk', clock_polarity: clk_pol});
             });
         });
     });
+});
+
 });
 
 // TODO: tests for public circuit interface

@@ -5,7 +5,7 @@ import * as help from '../help.mjs';
 import { BaseEngine } from './base.mjs';
 
 export class SynchEngine extends BaseEngine {
-    constructor(graph, cells) {
+    constructor(graph, {cells}) {
         super(graph);
         this._queue = new Map();
         this._pq = new FastPriorityQueue();
@@ -102,7 +102,7 @@ export class SynchEngine extends BaseEngine {
         this._queue.delete(k);
         this._tick = (k + 1) | 0;
         this.trigger('postUpdateGates', k, count);
-        return count;
+        return Promise.resolve(count);
     }
     updateGates() {
         if (this._pq.peek() == this._tick) return this.updateGatesNext();
@@ -110,8 +110,11 @@ export class SynchEngine extends BaseEngine {
             const k = this._tick | 0;
             this._tick = (k + 1) | 0;
             this.trigger('postUpdateGates', k, 0);
-            return 0;
+            return Promise.resolve(0);
         }
+    }
+    synchronize() {
+        return Promise.resolve();
     }
     start() {
         throw new Error("start() not supported");
@@ -120,6 +123,7 @@ export class SynchEngine extends BaseEngine {
         throw new Error("startFast() not supported");
     }
     stop() {
+        return Promise.resolve()
     }
     get interval() {
         throw new Error("interval not supported");

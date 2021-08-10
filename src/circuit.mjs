@@ -66,12 +66,13 @@ export function getCellType(tp) {
 }
         
 export class HeadlessCircuit {
-    constructor(data, {cellsNamespace = {}, engine = SynchEngine} = {}) {
+    constructor(data, {cellsNamespace = {}, engine = SynchEngine, engineOptions = {}} = {}) {
         this._cells = Object.assign(cells, cellsNamespace);
         this._display3vl = new Display3vl();
         this._display3vl.addDisplay(new help.Display3vlASCII());
         this._graph = this._makeGraph(data, data.subcircuits);
-        this._engine = new engine(this._graph, this._cells);
+        engineOptions.cells = this._cells;
+        this._engine = new engine(this._graph, engineOptions);
         this.makeLabelIndex();
         this.listenTo(this._engine, 'postUpdateGates', (tick, count) => {
             this.trigger('postUpdateGates', tick, count);
@@ -170,11 +171,14 @@ export class HeadlessCircuit {
         if (laid_out) graph.set('laid_out', true);
         return graph;
     }
-    updateGatesNext() {
-        this._engine.updateGatesNext();
+    updateGatesNext(opts) {
+        return this._engine.updateGatesNext(opts);
     }
-    updateGates() {
-        this._engine.updateGates();
+    updateGates(opts) {
+        return this._engine.updateGates(opts);
+    }
+    synchronize() {
+        return this._engine.synchronize();
     }
     get hasPendingEvents() {
         return this._engine.hasPendingEvents;
@@ -185,15 +189,15 @@ export class HeadlessCircuit {
     start() {
         if (this.hasWarnings())
             return; //todo: print/show error
-        this._engine.start();
+        return this._engine.start();
     }
     startFast() {
         if (this.hasWarnings())
             return; //todo: print/show error
-        this._engine.startFast();
+        return this._engine.startFast();
     }
-    stop() {
-        this._engine.stop();
+    stop(opts) {
+        return this._engine.stop(opts);
     }
     get interval() {
         return this._engine.interval;
@@ -229,7 +233,8 @@ export class HeadlessCircuit {
                 devices: {},
                 subcircuits: {},
                 inputs: {},
-                outputs: {}
+                outputs: {},
+                graph
             };
             for (const elem of graph.getElements()) {
                 if (elem.has('net')) {
@@ -310,6 +315,12 @@ export class HeadlessCircuit {
     }
     unmonitor(monitorId) {
         this._engine.unmonitor(monitorId);
+    }
+    observeGraph(path = []) {
+        this._engine.observeGraph(this.getLabelIndex(path).graph);
+    }
+    unobserveGraph(path = []) {
+        this._engine.observeGraph(this.getLabelIndex(path).graph);
     }
 };
 
