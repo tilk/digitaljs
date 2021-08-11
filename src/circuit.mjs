@@ -338,6 +338,12 @@ export class HeadlessCircuit {
     unobserveGraph(path = []) {
         this._engine.observeGraph(this.getLabelIndex(path).graph);
     }
+    alarm(tick, callback, options = {}) {
+        return this._engine.alarm(tick, callback, options);
+    }
+    unalarm(alarmId) {
+        this._engine.unalarm(alarmId);
+    }
 };
 
 _.extend(HeadlessCircuit.prototype, Backbone.Events);

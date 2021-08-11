@@ -150,6 +150,8 @@ class WorkerEngineWorker {
         this._graphs = Object.create(null);
         this._monitors = Object.create(null);
         this._monitorChecks = Object.create(null);
+        this._alarms = Object.create(null);
+        this._alarmQueue = new Map();
         this._queue = new Map();
         this._pq = new FastPriorityQueue();
         this._toUpdate = new Map();
@@ -304,12 +306,12 @@ class WorkerEngineWorker {
         gate.memdata.set(addr, Vector3vl.fromClonable(data));
         this._enqueue(gate);
     }
-    monitor(graphId, gateId, port, monitorId, {triggerValues, stopOnTrigger, oneShot}) {
+    monitor(graphId, gateId, port, monitorId, {triggerValues, stopOnTrigger, oneShot, synchronous }) {
         if (triggerValues != undefined)
             for (const k of triggerValues.keys())
                 triggerValues[k] = Vector3vl.fromClonable(triggerValues[k]);
         const gate = this._graphs[graphId].getGate(gateId);
-        this._monitors[monitorId] = { gate, port, triggerValues, stopOnTrigger, oneShot };
+        this._monitors[monitorId] = { gate, port, triggerValues, stopOnTrigger, oneShot, synchronous };
         gate.monitor(port, monitorId);
         if (triggerValues == undefined)
             postMessage({ type: 'monitorValue', args: [monitorId, this._tick, gate.get('outputSignals')[port]] });
@@ -320,6 +322,25 @@ class WorkerEngineWorker {
         monitor.gate.unmonitor(monitor.port, monitorId);
         delete this._monitors[monitorId];
         delete this._monitorChecks[monitorId];
+    }
+    alarm(tick, alarmId, {stopOnAlarm, synchronous}) {
+        if (tick <= this._tick) return;
+        this._alarms[alarmId] = { tick, stopOnAlarm, synchronous };
+        if (!this._alarmQueue.has(tick))
+            this._alarmQueue.set(tick, new Set());
+        this._alarmQueue.get(tick).add(alarmId);
+        this._pq.add(tick-1);
+        if (!this._queue.has(tick-1))
+            this._queue.set(tick-1, new Map());
+    }
+    unalarm(alarmId) {
+        const alarm = this._alarms[alarmId];
+        if (alarm == undefined) return;
+        const tick = alarm.tick;
+        this._alarmQueue.get(tick).delete(alarmId);
+        if (this._alarmQueue.get(tick).size == 0)
+            this._alarmQueue.delete(tick);
+        delete this._alarms[alarmId];
     }
     _enqueue(gate) {
         const k = (this._tick + gate.get('propagation')) | 0;
@@ -347,6 +368,16 @@ class WorkerEngineWorker {
             }
         }
         this._monitorChecks = Object.create(null);
+        if (this._alarmQueue.get(this._tick)) {
+            for (const alarmId of this._alarmQueue.get(this._tick)) {
+                const { stopOnAlarm, synchronous } = this._alarms[alarmId];
+                if (synchronous) this._sendUpdates();
+                delete this._alarms[alarmId];
+                postMessage({ type: 'alarmReached', args: [alarmId, this._tick, stopOnAlarm] });
+                if (stopOnAlarm) this._stop();
+            }
+            this._alarmQueue.delete(this._tick);
+        }
     }
     _setGateOutputSignals(gate, newOutputs) {
         for (const [port, sig] of Object.entries(newOutputs)) {

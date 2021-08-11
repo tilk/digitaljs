@@ -12,6 +12,8 @@ export class SynchEngine extends BaseEngine {
         this._tick = 0;
         this._cells = cells;
         this._monitorChecks = new Map();
+        this._alarms = new Map();
+        this._alarmQueue = new Map();
         this._addGraph(graph);
     }
     get hasPendingEvents() {
@@ -154,6 +156,28 @@ export class SynchEngine extends BaseEngine {
     unmonitor(monitorId) {
         monitorId.gate.off('change:outputSignals', monitorId.callback);
     }
+    alarm(tick, callback, {stopOnAlarm}) {
+        console.assert(tick > this._tick);
+        const cb = () => {
+            this.unalarm(cb);
+            callback();
+        };
+        this._alarms.set(cb, { tick, stopOnAlarm });
+        if (!this._alarmQueue.has(tick))
+            this._alarmQueue.set(tick, new Set());
+        this._alarmQueue.get(tick).add(cb);
+        this._pq.add(tick-1);
+        if (!this._queue.has(tick-1))
+            this._queue.set(tick-1, new Map());
+        return cb;
+    }
+    unalarm(alarmId) {
+        const { tick } = this._alarms.get(alarmId);
+        this._alarmQueue.get(tick).delete(alarmId);
+        if (this._alarmQueue.get(tick).size == 0)
+            this._alarmQueue.delete(tick);
+        this._alarms.delete(alarmId);
+    }
     _checkMonitors() {
         for (const {gate, sig, cb, callback, triggerValues, stopOnTrigger, oneShot} of this._monitorChecks.values()) {
             let triggered = true;
@@ -166,6 +190,14 @@ export class SynchEngine extends BaseEngine {
             }
         }
         this._monitorChecks = new Map();
+        if (this._alarmQueue.get(this._tick)) {
+            for (const cb of this._alarmQueue.get(this._tick)) {
+                const { stopOnAlarm } = this._alarms.get(cb);
+                const ret = cb();
+                if (ret && stopOnAlarm) this.stop();
+            }
+            this._alarmQueue.delete(this._tick);
+        }
     }
 };
 

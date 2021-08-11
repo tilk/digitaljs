@@ -15,6 +15,7 @@ export class WorkerEngine extends BaseEngine {
         this._graphs = Object.create(null);
         this._monitors = Object.create(null);
         this._promises = Object.create(null);
+        this._alarms = Object.create(null);
         this._uniqueCounter = 0;
         this._worker = workerURL ? new Worker(workerURL) : new Worker(new URL('./worker-worker.mjs', import.meta.url));
         this._worker.onmessage = (e) => this._handleMessage(e.data);
@@ -177,6 +178,18 @@ export class WorkerEngine extends BaseEngine {
         this._worker.postMessage({ type: 'unmonitor', arg: monitorId });
         delete this._monitors[monitorId];
     }
+    alarm(tick, callback, options) {
+        console.assert(tick > this._tickCache);
+        const alarmId = this._generateUniqueId();
+        this._alarms[alarmId] = callback;
+        this._worker.postMessage({ type: 'alarm', args: [tick, alarmId, options] });
+        return alarmId;
+    }
+    unalarm(alarmId) {
+        if (!(alarmId in this._alarms)) return;
+        this._worker.postMessage({ type: 'unalarm', arg: alarmId });
+        delete this._alarms[alarmId];
+    }
     _handleMessage(msg) {
         const name = '_handle_' + msg.type;
         if ('arg' in msg)
@@ -225,6 +238,19 @@ export class WorkerEngine extends BaseEngine {
         if (callback == undefined) return;
         if (oneShot) delete this._monitors[monitorId];
         const ret = callback(tick, Vector3vl.fromClonable(sig));
+        if (stopped) {
+            if (ret) {
+                this._running = false;
+                this.trigger('changeRunning');
+            } else if (this._running)
+                this._worker.postMessage({ type: this._running == 'fast' ? 'startFast' : 'start' });
+        }
+    }
+    _handle_alarmReached(alarmId, tick, stopped) {
+        const callback = this._alarms[alarmId];
+        if (callback == undefined) return;
+        delete this._alarms[alarmId];
+        const ret = callback();
         if (stopped) {
             if (ret) {
                 this._running = false;
