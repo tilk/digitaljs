@@ -81,7 +81,7 @@ class Gate {
         this._monitors[port].add(monitorId);
     }
     unmonitor(port, monitorId) {
-        this._monitors[port].delete(monitorId);
+        this._monitors[port].delete(Number(monitorId));
     }
     getMonitors(port) {
         return this._monitors[port];
@@ -149,6 +149,7 @@ class WorkerEngineWorker {
         this._interval = 10;
         this._graphs = Object.create(null);
         this._monitors = Object.create(null);
+        this._monitorChecks = Object.create(null);
         this._queue = new Map();
         this._pq = new FastPriorityQueue();
         this._toUpdate = new Map();
@@ -165,6 +166,7 @@ class WorkerEngineWorker {
     updateGates(reqid, sendUpdates) {
         const count = this._updateGates();
         if (sendUpdates) this._sendUpdates();
+        this._postMonitors();
         this._sendAck(reqid, count);
     }
     _updateGates() {
@@ -178,6 +180,7 @@ class WorkerEngineWorker {
     updateGatesNext(reqid, sendUpdates) {
         const count = this._updateGatesNext();
         if (sendUpdates) this._sendUpdates();
+        this._postMonitors();
         this._sendAck(reqid, count);
     }
     _updateGatesNext() {
@@ -212,14 +215,17 @@ class WorkerEngineWorker {
         this._stop();
         this._updater = setInterval(() => {
             this._updateGates();
+            this._postMonitors();
         }, this._interval);
     }
     startFast() {
         this._stop();
         this._updater = setInterval(() => {
             const startTime = Date.now();
-            while (Date.now() - startTime < 10 && this._hasPendingEvents() && this._updater)
+            while (Date.now() - startTime < 10 && this._hasPendingEvents() && this._updater) {
                 this._updateGatesNext();
+                this._postMonitors();
+            }
         }, 10);
     }
     stop(reqid, sendUpdates) {
@@ -298,12 +304,12 @@ class WorkerEngineWorker {
         gate.memdata.set(addr, Vector3vl.fromClonable(data));
         this._enqueue(gate);
     }
-    monitor(graphId, gateId, port, monitorId, {triggerValues, stopOnTrigger}) {
+    monitor(graphId, gateId, port, monitorId, {triggerValues, stopOnTrigger, oneShot}) {
         if (triggerValues != undefined)
             for (const k of triggerValues.keys())
                 triggerValues[k] = Vector3vl.fromClonable(triggerValues[k]);
         const gate = this._graphs[graphId].getGate(gateId);
-        this._monitors[monitorId] = { gate, port, triggerValues, stopOnTrigger };
+        this._monitors[monitorId] = { gate, port, triggerValues, stopOnTrigger, oneShot };
         gate.monitor(port, monitorId);
         if (triggerValues == undefined)
             postMessage({ type: 'monitorValue', args: [monitorId, this._tick, gate.get('outputSignals')[port]] });
@@ -312,6 +318,8 @@ class WorkerEngineWorker {
         const monitor = this._monitors[monitorId];
         if (monitor == undefined) return;
         monitor.gate.unmonitor(monitor.port, monitorId);
+        delete this._monitors[monitorId];
+        delete this._monitorChecks[monitorId];
     }
     _enqueue(gate) {
         const k = (this._tick + gate.get('propagation')) | 0;
@@ -324,6 +332,21 @@ class WorkerEngineWorker {
             return q1;
         })();
         sq.set(gate, gate.get('inputSignals'));
+    }
+    _postMonitors() {
+        for (const [monitorId, sig] of Object.entries(this._monitorChecks)) {
+            const {triggerValues, stopOnTrigger, oneShot, synchronous} = this._monitors[monitorId];
+            let triggered = true;
+            if (triggerValues)
+                triggered = triggerValues.some((triggerValue) => sig.eq(triggerValue));
+            if (triggered) {
+                if (oneShot) this.unmonitor(monitorId);
+                if (synchronous) this._sendUpdates();
+                postMessage({ type: 'monitorValue', args: [monitorId, this._tick, sig, stopOnTrigger, oneShot] });
+                if (stopOnTrigger) this._stop();
+            }
+        }
+        this._monitorChecks = Object.create(null);
     }
     _setGateOutputSignals(gate, newOutputs) {
         for (const [port, sig] of Object.entries(newOutputs)) {
@@ -341,18 +364,8 @@ class WorkerEngineWorker {
             this._setGateInputSignal(targetGate, target.port, sig);
         }
         const monitors = gate.getMonitors(port);
-        if (monitors.size > 0) {
-            for (const monitorId of monitors) {
-                const {triggerValues, stopOnTrigger} = this._monitors[monitorId];
-                let triggered = true;
-                if (triggerValues)
-                    triggered = triggerValues.some((triggerValue) => sig.eq(triggerValue));
-                if (triggered) {
-                    postMessage({ type: 'monitorValue', args: [monitorId, this._tick, sig, stopOnTrigger] });
-                    if (stopOnTrigger) this._stop();
-                }
-            }
-        }
+        for (const monitorId of monitors)
+            this._monitorChecks[monitorId] = sig;
     }
     _setGateInputSignal(targetGate, port, sig) {
         const inputs = targetGate.get('inputSignals');

@@ -220,9 +220,10 @@ export class WorkerEngine extends BaseEngine {
         if (gate === undefined) return;
         gate.set(name, value);
     }
-    _handle_monitorValue(monitorId, tick, sig, stopped) {
+    _handle_monitorValue(monitorId, tick, sig, stopped, oneShot) {
         const callback = this._monitors[monitorId];
         if (callback == undefined) return;
+        if (oneShot) delete this._monitors[monitorId];
         const ret = callback(tick, Vector3vl.fromClonable(sig));
         if (stopped) {
             if (ret) {
