@@ -304,6 +304,22 @@ export class HeadlessCircuit {
         ret.subcircuits = subcircuits;
         return ret;
     }
+    waitForWire(wire, trigger) {
+        if (trigger instanceof Vector3vl)
+            trigger = [trigger];
+        return new Promise(resolve => {
+            this.monitorWire(wire, (tick, sig) => { resolve(tick) }, 
+                { synchronous: true, oneShot: true, stopOnTrigger: true, triggerValues: trigger });
+        });
+    }
+    waitFor(cell, port, trigger) {
+        if (trigger instanceof Vector3vl)
+            trigger = [trigger];
+        return new Promise(resolve => {
+            this.monitor(cell, port, (tick, sig) => { resolve(tick) }, 
+                { synchronous: true, oneShot: true, stopOnTrigger: true, triggerValues: trigger });
+        });
+    }
     monitorWire(wire, callback, options = {}) {
         const src = wire.get('source');
         const gate = wire.getSourceElement();

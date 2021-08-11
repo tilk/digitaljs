@@ -11,14 +11,17 @@ export class BrowserSynchEngine extends SynchEngine {
     start() {
         this._interval = setInterval(() => {
             this.updateGates();
+            this._checkMonitors();
         }, this._interval_ms);
         this.trigger('changeRunning');
     }
     startFast() {
         const idle = () => {
             this._idle = requestIdleCallback((dd) => {
-                while (dd.timeRemaining() > 0 && this.hasPendingEvents && this._idle !== null)
+                while (dd.timeRemaining() > 0 && this.hasPendingEvents && this._idle !== null) {
                     this.updateGatesNext();
+                    this._checkMonitors();
+                }
                 if (this._idle !== null) {
                     idle();
                 }

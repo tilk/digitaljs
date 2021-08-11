@@ -11,6 +11,7 @@ export class SynchEngine extends BaseEngine {
         this._pq = new FastPriorityQueue();
         this._tick = 0;
         this._cells = cells;
+        this._monitorChecks = new Map();
         this._addGraph(graph);
     }
     get hasPendingEvents() {
@@ -101,6 +102,7 @@ export class SynchEngine extends BaseEngine {
         }
         this._queue.delete(k);
         this._tick = (k + 1) | 0;
+        this._checkMonitors();
         this.trigger('postUpdateGates', k, count);
         return Promise.resolve(count);
     }
@@ -109,6 +111,7 @@ export class SynchEngine extends BaseEngine {
         else {
             const k = this._tick | 0;
             this._tick = (k + 1) | 0;
+            this._checkMonitors();
             this.trigger('postUpdateGates', k, 0);
             return Promise.resolve(0);
         }
@@ -138,16 +141,10 @@ export class SynchEngine extends BaseEngine {
     }
     unobserveGraph(graph) {
     }
-    monitor(gate, port, callback, {triggerValues, stopOnTrigger}) {
+    monitor(gate, port, callback, {triggerValues, stopOnTrigger, oneShot}) {
         const cb = (gate, sigs) => {
             const sig = sigs[port];
-            let triggered = true;
-            if (triggerValues != undefined)
-                triggered = triggerValues.some((triggerValue) => sig.eq(triggerValue));
-            if (triggered) {
-                const ret = callback(this._tick, sig);
-                if (ret && stopOnTrigger) this.stop();
-            }
+            this._monitorChecks.set(cb, {gate, sig, cb, callback, triggerValues, stopOnTrigger, oneShot});
         };
         gate.on('change:outputSignals', cb);
         if (triggerValues == undefined)
@@ -156,6 +153,19 @@ export class SynchEngine extends BaseEngine {
     }
     unmonitor(monitorId) {
         monitorId.gate.off('change:outputSignals', monitorId.callback);
+    }
+    _checkMonitors() {
+        for (const {gate, sig, cb, callback, triggerValues, stopOnTrigger, oneShot} of this._monitorChecks.values()) {
+            let triggered = true;
+            if (triggerValues != undefined)
+                triggered = triggerValues.some((triggerValue) => sig.eq(triggerValue));
+            if (triggered) {
+                if (oneShot) gate.off('change:outputSignals', cb);
+                const ret = callback(this._tick, sig);
+                if (ret && stopOnTrigger) this.stop();
+            }
+        }
+        this._monitorChecks = new Map();
     }
 };
 
