@@ -352,7 +352,7 @@ class WorkerEngineWorker {
             this._pq.add(k);
             return q1;
         })();
-        sq.set(gate, gate.get('inputSignals'));
+        sq.set(gate, Object.assign({}, gate.get('inputSignals')));
     }
     _postMonitors() {
         for (const [monitorId, sig] of Object.entries(this._monitorChecks)) {
