@@ -43,7 +43,8 @@ export const paperOptions = {
         args: {
             startDirections: ['right'],
             endDirections: ['left'],
-            maximumLoops: 200
+            maximumLoops: 200,
+            step: 2.5
         }
     },
     defaultConnector: {

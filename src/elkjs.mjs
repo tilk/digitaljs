@@ -8,7 +8,7 @@ function to_elkjs(graph) {
         properties: {
             algorithm: 'sporeOverlap',
             underlyingLayoutAlgorithm: 'layered',
-            'elk.layered.spacing.nodeNodeBetweenLayers': 90.0,
+            'elk.layered.spacing.nodeNodeBetweenLayers': 40.0,
         },
         children: [],
         edges: []
