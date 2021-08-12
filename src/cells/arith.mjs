@@ -485,7 +485,7 @@ export const CompareConst = BaseCompareConst.define('CompareConst', {}, {
         const sgn = this.get('signed');
         const constant = this.get('constant');
         if (!data.in.isFullyDefined)
-            return { out: Vector3vl.xes(bits.out) };
+            return { out: Vector3vl.x };
         if (this.get('leftOp'))
             return {
                 out: Vector3vl.fromBool(this.arithcomp(
