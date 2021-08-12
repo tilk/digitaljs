@@ -132,7 +132,7 @@ export class MonitorView extends Backbone.View {
             const row = $(e.target).closest('tr');
             const trig = row.find('input[name=trigger]');
             trig.attr('pattern', display3vl.pattern(base));
-            if (settings.trigger)
+            if (settings.trigger.length)
                 trig.val(display3vl.show(base, settings.trigger[0]));
             this.trigger('change');
         });
