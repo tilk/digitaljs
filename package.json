@@ -30,8 +30,8 @@
   "license": "BSD-2-Clause",
   "devDependencies": {
     "@babel/cli": "^7.14.8",
-    "@babel/core": "^7.14.8",
-    "@babel/preset-env": "^7.14.8",
+    "@babel/core": "^7.15.0",
+    "@babel/preset-env": "^7.15.0",
     "acorn": "^6.4.2",
     "babel-jest": "^26.6.3",
     "babel-loader": "^8.2.2",
@@ -44,8 +44,8 @@
     "html-webpack-plugin": "^5.3.2",
     "jest": "^27.0.6",
     "style-loader": "^3.2.1",
-    "webpack": "^5.47.0",
-    "webpack-cli": "^4.7.2"
+    "webpack": "^5.50.0",
+    "webpack-cli": "^4.8.0"
   },
   "dependencies": {
     "3vl": "^1.0.0",
