@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## [0.9.0] -- 2021-08-17
 
 ### Added
 - A new simulation engine, using Web Workers, has been added. It is more responsible and can be much faster than the original one (25x measured improvement).
