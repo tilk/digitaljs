@@ -298,7 +298,7 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
     getGateParams(layout) {
         return _.cloneDeep(_.pick(this.attributes, this._gateParams.concat(layout ? this._gateLayoutParams : [])));
     },
-    _gateParams: ['label', 'type', 'propagation'],
+    _gateParams: ['label', 'type', 'propagation', 'source_positions'],
     _gateLayoutParams: ['position'],
     _unsupportedPropChanges: [],
     _operationHelpers: [],
