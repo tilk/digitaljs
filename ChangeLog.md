@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - The `Dff` block can now have built-in synchronous reset.
+- The `Dff` block can now have `set` and `clr` inputs for setting/resetting individual bits.
 
 ## [0.9.0] -- 2021-08-17
 
