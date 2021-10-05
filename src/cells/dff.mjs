@@ -98,7 +98,7 @@ export const Dff = Box.define('Dff', {
             srbitmask = srbitmask ? clrbitmask.and(srbitmask) : clrbitmask;
         }
         if ('enable' in polarity && data.en.get(0) != pol('enable') && this.get('enable_srst'))
-            return apply_sr(this.get('outputSignals'));
+            return apply_sr(this.get('outputSignals').out);
         if (!('clock' in polarity) || data.clk.get(0) == pol('clock') && last_clk == -pol('clock')) {
             if ('srst' in polarity && data.srst.get(0) == pol('srst'))
                 return apply_sr(Vector3vl.fromBin(this.get('srst_value'), this.get('bits')));
