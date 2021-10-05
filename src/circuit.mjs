@@ -165,7 +165,8 @@ export class HeadlessCircuit {
                 source: {id: conn.from.id, port: conn.from.port, magnet: 'port' },
                 target: {id: conn.to.id, port: conn.to.port, magnet: 'port'},
                 netname: conn.name,
-                vertices: conn.vertices || []
+                vertices: conn.vertices || [],
+                source_positions: conn.source_positions || []
             }));
         }
         if (laid_out) graph.set('laid_out', true);
