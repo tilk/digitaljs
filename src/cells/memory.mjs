@@ -48,6 +48,16 @@ export const Memory = Box.define('Memory', {
                 { id: portname + 'data', group: 'out', dir: 'out', bits: bits, portlabel: 'data', labelled: true, args: { idxOffset: idxOffset } }
             );
             num += 1;
+            if ('srst_polarity' in port) {
+                num++;
+                idxOffset++;
+                ports.push({ id: portname + 'srst', group: 'in', dir: 'in', bits: 1, portlabel: 'srst', polarity: port.srst_polarity, labelled: true });
+            }
+            if ('arst_polarity' in port) {
+                num++;
+                idxOffset++;
+                ports.push({ id: portname + 'arst', group: 'in', dir: 'in', bits: 1, portlabel: 'arst', polarity: port.arst_polarity, labelled: true });
+            }
             if ('enable_polarity' in port) {
                 num++;
                 idxOffset++;
@@ -57,8 +67,6 @@ export const Memory = Box.define('Memory', {
                 num++;
                 idxOffset++;
                 ports.push({ id: portname + 'clk', group: 'in', dir: 'in', bits: 1, portlabel: 'clk', polarity: port.clock_polarity, decor: Box.prototype.decorClock, labelled: true });
-            } else {
-                port.transparent = true;
             }
             portsplits.push(num);
         }
@@ -70,7 +78,7 @@ export const Memory = Box.define('Memory', {
             );
             if ('enable_polarity' in port) {
                 num++;
-                ports.push({ id: portname + 'en', group: 'in', dir: 'in', bits: bits, portlabel: 'en', polarity: port.enable_polarity, labelled: true });
+                ports.push({ id: portname + 'en', group: 'in', dir: 'in', bits: port.no_bit_enable ? 1 : bits, portlabel: 'en', polarity: port.enable_polarity, labelled: true });
             }
             if ('clock_polarity' in port) {
                 num++;
@@ -98,6 +106,15 @@ export const Memory = Box.define('Memory', {
             this.attr('path.portsplit/d', 'M ' + path.join(' M '));
         });
     },
+    _resetPortValue(port) {
+        if (port.dir == "out") {
+            const res = /^rd([0-9]+)data$/.exec(port.id);
+            const portdata = res ? this.get('rdports')[res[1]] : {};
+            if ('init_value' in portdata)
+                return Vector3vl.fromBin(portdata.init_value, port.bits);
+        }
+        return Box.prototype._resetPortValue.call(this, port);
+    },
     prepare() {
         const bits = this.get('bits');
         var words = this.get('words');
@@ -120,53 +137,97 @@ export const Memory = Box.define('Memory', {
         }
     },
     operation(data) {
+        const bits = this.get('bits');
         const out = {};
-        const check_enabled = (portname, port) => {
-            const pol = what => port[what + '_polarity'] ? 1 : -1;
-            const clkname = portname + 'clk';
-            let last_clk;
-            if ('clock_polarity' in port) {
-                last_clk = this.last_clk[clkname];
-                this.last_clk[clkname] = data[clkname].get(0);
-            }
-            if ('enable_polarity' in port && !data[portname + 'en'].toArray().some(x => x == pol('enable')))
+        const pol = (port, what) => port[what + '_polarity'] ? 1 : -1;
+        const is_enabled = (portname, port) => {
+            if ('enable_polarity' in port && !data[portname + 'en'].toArray().some(x => x == pol(port, 'enable')))
                 return false;
+            return true;
+        };
+        const port_active = (portname, port) => {
+            const clkname = portname + 'clk';
             if ('clock_polarity' in port) {
-                return (data[clkname].get(0) == pol('clock') && last_clk == -pol('clock'));
+                return (data[clkname].get(0) == pol(port, 'clock') && this.last_clk[clkname] == -pol(port, 'clock'));
             }
             return true;
         };
         const valid_addr = n => n >= 0 && n < this.get('words');
-        const do_read = (portname, port) => {
-            if (!check_enabled(portname, port)) {
-                if ('clock_polarity' in port)
-                    out[portname + 'data'] = this.get('outputSignals')[portname + 'data'];
-                else
-                    out[portname + 'data'] = Vector3vl.xes(this.get('bits'));
-                return;
-            }
+        const do_comb_read = (portname, port) => {
             const addr = this._calcaddr(data[portname + 'addr']);
             if (valid_addr(addr))
                 out[portname + 'data'] = this.memdata.get(addr);
             else
-                out[portname + 'data'] = Vector3vl.xes(this.get('bits'));
+                out[portname + 'data'] = Vector3vl.xes(bits);
+        };
+        const write_value = (portname, port, oldval, val) => {
+            if (port.no_bit_enable || !('enable_polarity' in port))
+                return val;
+            const mask = port.enable_polarity ? data[portname + 'en'] : data[portname + 'en'].not();
+            return val.and(mask).or(oldval.and(mask.not()));
+        };
+        const do_read = (portname, port) => {
+            do_comb_read(portname, port);
+            for (const [num, wrport] of this.get('wrports').entries()) {
+                const wrportname = 'wr' + num;
+                const mask_ok = (val, num) => typeof val == 'boolean' ? val : val[num];
+                if ('transparent' in port && mask_ok(port.transparent, num) && port_active(wrportname, wrport) && data[portname + 'addr'] == data[wrportname + 'addr'])
+                    out[portname + 'data'] = write_value(wrportname, wrport, out[portname + 'data'], data[wrportname + 'data']);
+                if ('collision' in port && mask_ok(port.collision, num) && port_active(wrportname, wrport) && data[portname + 'addr'] == data[wrportname + 'addr'])
+                    out[portname + 'data'] = write_value(wrportname, wrport, out[portname + 'data'], Vector3vl.xes(bits));
+            }
+
         };
         const do_write = (portname, port) => {
-            if (!check_enabled(portname, port)) return;
             const addr = this._calcaddr(data[portname + 'addr']);
             if (valid_addr(addr)) {
-                const changed = !this.memdata.get(addr).eq(data[portname + 'data']);
-                this.memdata.set(addr, data[portname + 'data']);
+                const oldval = this.memdata.get(addr);
+                const newval = write_value(portname, port, oldval, data[portname + 'data']);
+                const changed = !oldval.eq(newval);
+                this.memdata.set(addr, newval);
                 if (changed)
-                    this.trigger("memChange", addr, data[portname + 'data']);
+                    this.trigger("memChange", addr, newval);
             }
         };
-        for (const [portname, port] of this._memrdports())
-            if (!port.transparent) do_read(portname, port);
+        const do_srst = (portname, port) => {
+            if (data[portname + 'srst'].get(0) == pol(port, 'srst'))
+                out[portname + 'data'] = 'srst_value' in port
+                                       ? Vector3vl.fromBin(port.srst_value, bits)
+                                       : Vector3vl.zeros(bits);
+        };
+        const do_arst = (portname, port) => {
+            if (data[portname + 'arst'].get(0) == pol(port, 'arst'))
+                out[portname + 'data'] = 'arst_value' in port
+                                       ? Vector3vl.fromBin(port.arst_value, bits)
+                                       : Vector3vl.zeros(bits);
+        };
+        const update_last_clk = (portname, port) => {
+            if ('clock_polarity' in port) {
+                const clkname = portname + 'clk';
+                this.last_clk[clkname] = data[clkname].get(0);
+            }
+        };
+        for (const [portname, port] of this._memrdports()) {
+            out[portname + 'data'] = this.get('outputSignals')[portname + 'data'];
+            if ('clock_polarity' in port && is_enabled(portname, port) && port_active(portname, port))
+                do_read(portname, port);
+        }
         for (const [portname, port] of this._memwrports())
-            do_write(portname, port);
+            if (is_enabled(portname, port) && port_active(portname, port))
+                do_write(portname, port);
         for (const [portname, port] of this._memrdports())
-            if (port.transparent) do_read(portname, port);
+            if (!('clock_polarity' in port) && is_enabled(portname, port))
+                do_comb_read(portname, port);
+        for (const [portname, port] of this._memrdports()) {
+            if ('srst_polarity' in port && (is_enabled(portname, port) || !('enable_srst' in port)) && port_active(portname, port))
+                do_srst(portname, port);
+            if ('arst_polarity' in port)
+                do_arst(portname, port);
+        }
+        for (const [portname, port] of this._memrdports())
+            update_last_clk(portname, port);
+        for (const [portname, port] of this._memwrports())
+            update_last_clk(portname, port);
         return out;
     },
     _calcaddr(sig) {

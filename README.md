@@ -131,11 +131,11 @@ instance.
     * Outputs: `out` (`bits`-bit)
  * Memory: `Memory`
     * Attributes: `bits`, `abits`, `words`, `offset` (natural number), `rdports` (array of read port descriptors), `wrports` (array of write port descriptors), `memdata` (memory contents description)
-    * Read port descriptor attributes: `enable_polarity`, `clock_polarity`, `transparent` (optional booleans)
-    * Write port descriptor attributes: `enable_polarity`, `clock_polarity` (optional booleans)
-    * Inputs (per read port): `rdKaddr` (`abits`-bit), `rdKen` (1-bit, if `enable_polarity` is present), `rdKclk` (1-bit, if `clock_polarity` is present)
+    * Read port descriptor attributes: `enable_polarity`, `clock_polarity`, `arst_polarity`, `srst_polarity` (optional booleans), `init_value`, `arst_value`, `srst_value` (optional binary strings), `transparent`, `collision` (optional booleans or arrays of booleans)
+    * Write port descriptor attributes: `enable_polarity`, `clock_polarity`, `no_bit_enable` (optional booleans)
+    * Inputs (per read port): `rdKaddr` (`abits`-bit), `rdKen` (1-bit, if `enable_polarity` is present), `rdKclk` (1-bit, if `clock_polarity` is present), `rdKarst` (1-bit, if `arst_polarity` is present), `rdKsrst` (1-bit, if `srst_polarity` is present)
     * Outputs (per read port): `rdKdata` (`bits`-bit)
-    * Inputs (per write port): `wrKaddr` (`abits`-bit), `wrKdata` (`bits`-bit), `wrKen` (1-bit, if `enable_polarity` is present), `wrKclk` (1-bit, if `clock_polarity` is present)
+    * Inputs (per write port): `wrKaddr` (`abits`-bit), `wrKdata` (`bits`-bit), `wrKen` (1-bit (when `no_bit_enable` is true) or `bits`-bit (otherwise), if `enable_polarity` is present), `wrKclk` (1-bit, if `clock_polarity` is present)
  * Clock source: `Clock` 
     * Outputs: `out` (1-bit)
  * Button input: `Button`

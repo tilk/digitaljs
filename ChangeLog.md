@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 ### Added
 - The `Dff` block can now have built-in synchronous reset.
 - The `Dff` block can now have `set` and `clr` inputs for setting/resetting individual bits.
+- The `Memory` block can now have an initialization value, synchronous and asynchronous reset for synchronous read ports.
+- The `Memory` block can now have port transparency behavior different for each write port.
+
+### Changed
+- The `Memory` block has working bit enables for write ports.
+- The `Memory` block can now have single bit write enables.
 
 ## [0.9.0] -- 2021-08-17
 
