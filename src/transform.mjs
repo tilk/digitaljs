@@ -13,9 +13,7 @@ export function removeRepeater(model, dev, id) {
         for (const outConn of Object.values(outConns)) {
             if (outConn.to.id == id) continue;
             const conn = {from: inConn.from, to: outConn.to};
-            if ('name' in inConn) conn.name = inConn.name;
-            if ('name' in outConn) conn.name = outConn.name;
-            model.addConnector(conn);
+            model.addConnector(conn, [inConn, outConn]);
         }
     }
     return true;
@@ -48,8 +46,7 @@ export function integrateNegation(model, dev, id) {
     model.removeDevice(outConnList[0].to.id);
     for (const negOutConn of Object.values(negOutConns)) {
         const conn = {from: outConnList[0].from, to: negOutConn.to};
-        if ('name' in negOutConn) conn.name = negOutConn.name;
-        model.addConnector(conn);
+        model.addConnector(conn, [negOutConn, outConnList[0]]);
     }
     return true;
 }
@@ -202,9 +199,9 @@ export function makeBinaryMuxes(model, dev, id)
             const constInConnList = Object.values(model.inputConnectors(groupId));
             if (constInConnList.length != 1) return false;
             if (srcsignal == undefined)
-                srcsignal = constInConnList[0].from;
-            if (srcsignal.id != constInConnList[0].from.id ||
-                srcsignal.port != constInConnList[0].from.port) return false;
+                srcsignal = constInConnList[0];
+            if (srcsignal.from.id != constInConnList[0].from.id ||
+                srcsignal.from.port != constInConnList[0].from.port) return false;
             const constBits = (groupDev.bits || {}).in || 1;
             if (bits == -1)
                 bits = constBits;
@@ -255,23 +252,23 @@ export function makeBinaryMuxes(model, dev, id)
         });
     }
     model.addDevice(newDev, id);
-    model.addConnector({ from: srcsignal, to: selConnList[0].to });
+    model.addConnector({ from: srcsignal.from, to: selConnList[0].to }, [srcsignal, selConnList[0]]);
     for (const conn of outConnList)
         model.addConnector(conn);
     if (sparse) {
         for (const [n, constant] of Object.entries(newDev.inputs)) {
             const new_n = newDev.default_input ? Number(n) + 1 : n;
             for (const conn of muxInputs[mapping[constant]])
-                model.addConnector({ from: conn.from, to: { id: id, port: 'in'+new_n }});
+                model.addConnector({ from: conn.from, to: { id: id, port: 'in'+new_n }}, [conn]);
         }
         if (newDev.default_input)
             for (const conn of muxInputs[0])
-                model.addConnector({ from: conn.from, to: { id: id, port: 'in0' }});
+                model.addConnector({ from: conn.from, to: { id: id, port: 'in0' }}, [conn]);
     } else {
         for (let n = 0; n < 2 ** bits; n++) {
             const inputNo = n in mapping ? mapping[n] : 0;
             for (const conn of muxInputs[inputNo])
-                model.addConnector({ from: conn.from, to: { id: id, port: 'in'+n }});
+                model.addConnector({ from: conn.from, to: { id: id, port: 'in'+n }}, [conn]);
         }
     }
     for (const conn of muxInputs[0]) {
@@ -303,9 +300,9 @@ export function makeDffWithEnable(model, dev, id)
         const selConnList = Object.values(model.inputPortConnectors(preId, "sel"));
         model.removeDevice(preId);
         for (const conn of dffInConnList)
-            model.addConnector({ from: conn.from, to: { id: id, port: "in" } });
+            model.addConnector({ from: conn.from, to: { id: id, port: "in" } }, [conn]);
         for (const conn of selConnList)
-            model.addConnector({ from: conn.from, to: { id: id, port: "en" }});
+            model.addConnector({ from: conn.from, to: { id: id, port: "en" }}, [conn]);
         return true;
     }
     return help(in0ConnList, in1ConnList, true)
@@ -355,9 +352,22 @@ export class CircuitModel {
         for (const connId of Object.keys(conns))
             this.removeConnector(connId);
     }
-    addConnector(conn) {
+    addConnector(conn, fromConns = []) {
         console.assert(conn.from.id in this._devices);
         console.assert(conn.to.id in this._devices);
+        if (!('name' in conn)) {
+            for (const conn2 of fromConns)
+                if ('name' in conn2) {
+                    conn.name = conn2.name;
+                    break;
+                }
+        }
+        if (!conn.source_positions) {
+            conn.source_positions = [];
+            for (const conn2 of fromConns)
+                if (conn2.source_positions)
+                    conn.source_positions.push(...conn2.source_positions);
+        }
         const id = this._freshConnectorId();
         this._connectors[id] = _.cloneDeep(conn);
         function addAdjacent(adjacent, endpoint) {
