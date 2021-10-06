@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [0.10.0] -- 2021-10-06
 
 ### Added
 - The `Dff` block can now have built-in synchronous reset.
