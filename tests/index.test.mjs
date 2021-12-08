@@ -11,54 +11,22 @@ import { WorkerEngine } from '../lib/engines/worker.mjs';
 
 console.assert = (stmt, msg) => { if (!stmt) throw new Error(msg); };
 
-class SingleCellTestFixture {
-    constructor(engine, celldata) {
-        this.inlist = [];
-        this.outlist = [];
-        const celltype = celldata.type ? cells[celldata.type] : getCellType(celldata.celltype);
-        const cell = new celltype(JSON.parse(JSON.stringify(celldata)));
-        const circ = {
-            "devices": {
-                "dut": celldata
-            },
-            "connectors": []
-        };
-        for (const [name, sig] of Object.entries(cell.get("inputSignals"))) {
-            this.inlist.push({name: name, bits: sig.bits});
-            circ.devices[name] = {
-                celltype: "$input",
-                bits: sig.bits
-            };
-            circ.connectors.push({
-                from: {
-                    id: name,
-                    port: "out"
-                },
-                to: {
-                    id: "dut",
-                    port: name
-                }
-            });
-        }
-        for (const [name, sig] of Object.entries(cell.get("outputSignals"))) {
-            this.outlist.push({name: name, bits: sig.bits});
-            circ.devices[name] = {
-                celltype: "$output",
-                bits: sig.bits
-            };
-            circ.connectors.push({
-                from: {
-                    id: "dut",
-                    port: name
-                },
-                to: {
-                    id: name,
-                    port: "in"
-                }
-            });
-        }
+function deepcopy(obj) {
+    if (typeof obj !== "object" || obj === null)
+        return obj;
+    let res = Array.isArray(obj) ? [] : {};
+    for (let key in obj)
+        res[key] = deepcopy(obj[key]);
+    return res;
+}
+
+class CircuitTestFixture {
+    constructor(circ, inlist, outlist, engine) {
+        this.circ_data = circ;
+        this.inlist = inlist;
+        this.outlist = outlist;
         beforeAll(() => {
-            this.circuit = new HeadlessCircuit(circ, { engine, engineOptions: { workerURL: new URL('../lib/engines/worker-worker.js', require('url').pathToFileURL(__filename).toString()) }});
+            this.circuit = new HeadlessCircuit(this.circ_data, { engine, engineOptions: { workerURL: new URL('../lib/engines/worker-worker.js', require('url').pathToFileURL(__filename).toString()) }});
             this.circuit.observeGraph();
         });
         afterAll(() => {
@@ -201,7 +169,57 @@ class SingleCellTestFixture {
         this.circuit.setInput(clk, Vector3vl.fromBool(!polarity));
         await this.waitUntilStable(timeout);
         this.circuit.setInput(clk, Vector3vl.fromBool(polarity));
-        await this.waitUntilStable(timeout);        
+        await this.waitUntilStable(timeout);
+    }
+}
+
+class SingleCellTestFixture extends CircuitTestFixture {
+    constructor(engine, celldata) {
+        const inlist = [];
+        const outlist = [];
+        const celltype = celldata.type ? cells[celldata.type] : getCellType(celldata.celltype);
+        const cell = new celltype(deepcopy(celldata));
+        const circ = {
+            "devices": {
+                "dut": celldata
+            },
+            "connectors": []
+        };
+        for (const [name, sig] of Object.entries(cell.get("inputSignals"))) {
+            inlist.push({name: name, bits: sig.bits});
+            circ.devices[name] = {
+                celltype: "$input",
+                bits: sig.bits
+            };
+            circ.connectors.push({
+                from: {
+                    id: name,
+                    port: "out"
+                },
+                to: {
+                    id: "dut",
+                    port: name
+                }
+            });
+        }
+        for (const [name, sig] of Object.entries(cell.get("outputSignals"))) {
+            outlist.push({name: name, bits: sig.bits});
+            circ.devices[name] = {
+                celltype: "$output",
+                bits: sig.bits
+            };
+            circ.connectors.push({
+                from: {
+                    id: "dut",
+                    port: name
+                },
+                to: {
+                    id: name,
+                    port: "in"
+                }
+            });
+        }
+        super(circ, inlist, outlist, engine);
     }
 };
 
