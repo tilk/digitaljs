@@ -5,6 +5,10 @@ import { Gate, GateView } from './base.mjs';
 import * as help from '../help.mjs';
 import { Vector3vl } from '3vl';
 
+function isSafeInteger(v) {
+    return v <= Number.MAX_SAFE_INTEGER && v >= -Number.MAX_SAFE_INTEGER;
+}
+
 // base class for arithmetic operations displayed with a circle
 export const Arith = Gate.define('Arith', {
     size: { width: 40, height: 40 },
@@ -368,6 +372,13 @@ export const OpConst = Arith.define('OpConst', {
     initialize() {
         Arith.prototype.initialize.apply(this, arguments);
 
+        let constant = this.get('constant');
+        if (typeof constant === 'string' || constant instanceof String) {
+            constant = BigInt(constant);
+            if (isSafeInteger(constant))
+                constant = Number(constant);
+            this.set('constant', constant);
+        }
         const genLabel = () => {
             const constantSize = String(this.get('constant')).length;
             const diameter = 30 + constantSize * 10;
@@ -383,6 +394,19 @@ export const OpConst = Arith.define('OpConst', {
         });
         this.on('change:constant', () => genLabel());
         this.on('change:leftOp', () => genLabel());
+    },
+    getGateParams() {
+        const params = Arith.prototype.getGateParams.apply(this, arguments);
+        // `constant` may be a bigint and we need to encode it manually
+        if (typeof params.constant === 'bigint') {
+            if (isSafeInteger(params.constant)) {
+                params.constant = Number(params.constant);
+            }
+            else {
+                params.constant = String(params.constant);
+            }
+        }
+        return params;
     },
     _gateParams: Arith.prototype._gateParams.concat(['leftOp', 'constant'])
 });
@@ -452,10 +476,12 @@ export const ShiftConst = OpConst.define('ShiftConst', {
             return { 
                 out: shiftHelp(sig, am * this.shiftdir, sig.bits, bits.out, constant < 0, sgn.out, fillx) 
             };
-        } else
-            return { 
-                out: shiftHelp(data.in, constant * this.shiftdir, bits.in, bits.out, sgn.in, sgn.out, fillx) 
+        } else {
+            console.assert(isSafeInteger(constant));
+            return {
+                out: shiftHelp(data.in, Number(constant) * this.shiftdir, bits.in, bits.out, sgn.in, sgn.out, fillx)
             };
+        }
     },
     _gateParams: OpConst.prototype._gateParams.concat(['fillx']),
     _operationHelpers: OpConst.prototype._operationHelpers.concat(['shiftdir'])

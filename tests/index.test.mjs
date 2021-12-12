@@ -8,8 +8,13 @@ import { Vector3vl } from '3vl';
 import * as cells from '../lib/cells.mjs';
 import { SynchEngine } from '../lib/engines/synch.mjs';
 import { WorkerEngine } from '../lib/engines/worker.mjs';
+import { transformCircuit } from '../lib/transform.mjs';
 
 console.assert = (stmt, msg) => { if (!stmt) throw new Error(msg); };
+
+function randInt(lb, ub) {
+    return Math.floor((ub - lb + 1) * Math.random()) + lb;
+}
 
 function deepcopy(obj) {
     if (typeof obj !== "object" || obj === null)
@@ -117,6 +122,18 @@ class CircuitTestFixture {
         if (totbits <= 6) return this.testFunComplete(fun, opts);
         else return this.testFunRandomized(fun, opts);
     }
+    testJSON() {
+        test("serialization test", async () => {
+            let json1 = this.circuit.toJSON();
+            // Make sure the object can be serialized as JSON
+            let jsonstr1 = JSON.stringify(json1);
+            // Test round trip
+            let circuit2 = new HeadlessCircuit(JSON.parse(jsonstr1));
+            let json2 = circuit2.toJSON();
+            expect(json2).toEqual(json1);
+        });
+        return this;
+    }
     expect(ins, outs, opts) {
         if (opts.clock) return this.expectSeq(ins, outs, opts);
         else return this.expectComb(ins, outs, opts);
@@ -220,6 +237,71 @@ class SingleCellTestFixture extends CircuitTestFixture {
             });
         }
         super(circ, inlist, outlist, engine);
+    }
+};
+
+class SingleCellConstTestFixture extends CircuitTestFixture {
+    constructor(engine, celldata, constin) {
+        const inlist = [];
+        const outlist = [];
+        const celltype = celldata.type ? cells[celldata.type] : getCellType(celldata.celltype);
+        const cell = new celltype(deepcopy(celldata));
+        const circ = {
+            "devices": {
+                "dut": celldata,
+                "constin": {type: 'Constant', constant: constin.bits}
+            },
+            "connectors": []
+        };
+        for (const [name, sig] of Object.entries(cell.get("inputSignals"))) {
+            if (name == constin.input) {
+                circ.connectors.push({
+                    from: {
+                        id: "constin",
+                        port: "out"
+                    },
+                    to: {
+                        id: "dut",
+                        port: name
+                    }
+                });
+                continue;
+            }
+            inlist.push({name: name, bits: sig.bits});
+            circ.devices[name] = {
+                celltype: "$input",
+                bits: sig.bits
+            };
+            circ.connectors.push({
+                from: {
+                    id: name,
+                    port: "out"
+                },
+                to: {
+                    id: "dut",
+                    port: name
+                }
+            });
+        }
+        for (const [name, sig] of Object.entries(cell.get("outputSignals"))) {
+            outlist.push({name: name, bits: sig.bits});
+            circ.devices[name] = {
+                celltype: "$output",
+                bits: sig.bits
+            };
+            circ.connectors.push({
+                from: {
+                    id: "dut",
+                    port: name
+                },
+                to: {
+                    id: name,
+                    port: "in"
+                }
+            });
+        }
+        const new_circ = transformCircuit(circ);
+        super(new_circ, inlist, outlist, engine);
     }
 };
 
@@ -328,16 +410,40 @@ describe.each([
                 .testFun(fun(sgn1, sgn2), { no_random_x : true });
         });
     });
-    describe.each([0, 1, 2])('with constant %i', con => {
+    describe.each([-4546263468923059135n, -10n, -2, -1, 0, 1, 2, 12n, 4546263468923059135n])('with constant %i', con => {
         describe.each([false, true])('%s', sgn => {
-            describe.each(numTestBits)('%i bits', (bits) => {
-                if (sgn && con > 2**(bits-1)-1) return;
-                if (!sgn && con > 2**bits-1) return;
+            describe.each(testBits)('%i bits', (bits) => {
+                if (sgn && (con > 2**(bits-1) - 1 || con < -(2**(bits-1)))) return;
+                if (!sgn && (con > 2**bits-1 || con < 0)) return;
                 new SingleCellTestFixture(engine, {type: name + 'Const', leftOp: false, constant: con, bits: { in: bits }, signed: { in: sgn }})
-                    .testFun(s => fun(sgn, sgn)({in1: s.in, in2: Vector3vl.fromNumber(con, bits)}), { no_random_x : true });
+                    .testFun(s => fun(sgn, sgn)({in1: s.in, in2: Vector3vl.fromNumber(con, bits)}), { no_random_x : true })
+                    .testJSON();
                 new SingleCellTestFixture(engine, {type: name + 'Const', leftOp: true, constant: con, bits: { in: bits }, signed: { in: sgn }})
-                    .testFun(s => fun(sgn, sgn)({in2: s.in, in1: Vector3vl.fromNumber(con, bits)}), { no_random_x : true });
+                    .testFun(s => fun(sgn, sgn)({in2: s.in, in1: Vector3vl.fromNumber(con, bits)}), { no_random_x : true })
+                    .testJSON();
             });
+        });
+    });
+    describe.each(testBits)('with %i bits constant', (bits) => {
+        describe.each([false, true])('%s', sgn => {
+            const testcon = con => {
+                const conbits = Vector3vl.fromNumber(con, bits);
+                const conbin = conbits.toBin();
+                new SingleCellConstTestFixture(engine, {type: name, bits: { in1: bits, in2: bits }, signed: { in1: sgn, in2: sgn }}, {input: 'in1', bits: conbin})
+                    .testFun(s => fun(sgn, sgn)({in1: conbits, in2: s.in2}), { no_random_x : true })
+                    .testJSON();
+                new SingleCellConstTestFixture(engine, {type: name, bits: { in1: bits, in2: bits }, signed: { in1: sgn, in2: sgn }}, {input: 'in2', bits: conbin})
+                    .testFun(s => fun(sgn, sgn)({in1: s.in1, in2: conbits}), { no_random_x : true })
+                    .testJSON();
+            };
+            // This is the value range for which `integrateArithConstant`
+            // will create a constant operation.
+            testcon(randInt(0, 999));
+            testcon(randInt(-99, -1));
+            if (2**bits - 1 <= Number.MAX_SAFE_INTEGER)
+                return;
+            testcon(randInt(Number.MAX_SAFE_INTEGER + 1, 2**bits - 1));
+            testcon(-randInt(Number.MAX_SAFE_INTEGER + 1, 2**bits - 1));
         });
     });
 });
@@ -370,18 +476,51 @@ describe.each([
                 .testFun(fun(sgn1, sgn2, bits2), { no_random_x : true });
         });
     });
-    describe.each([0, 1, 2])('with constant %i', con => {
+    describe.each([-21n, -2, -1, 0, 1, 2, 17n])('with constant %i', con => {
         describe.each([false, true])('%s', sgn => {
             describe.each(numTestBits)('%i bits', (bits) => {
-                if (sgn && con > 2**(bits-1)-1) return;
-                if (!sgn && con > 2**bits-1) return;
+                if (sgn && (con > 2**(bits-1) - 1 || con < -(2**(bits-1)))) return;
+                if (!sgn && (con > 2**bits-1 || con < 0)) return;
                 if (name == 'Multiplication' && bits >= 24) return; // tests use JS numbers
                 if (name == 'Power' && bits >= 4) return; // power grows crazy fast
                 new SingleCellTestFixture(engine, {type: name + 'Const', leftOp: false, constant: con, bits: { in: bits, out: bits }, signed: { in: sgn }})
-                    .testFun(s => fun(sgn, sgn, bits)({in1: s.in, in2: Vector3vl.fromNumber(con, bits)}), { no_random_x : true });
+                    .testFun(s => fun(sgn, sgn, bits)({in1: s.in, in2: Vector3vl.fromNumber(con, bits)}), { no_random_x : true })
+                    .testJSON();
                 new SingleCellTestFixture(engine, {type: name + 'Const', leftOp: true, constant: con, bits: { in: bits, out: bits }, signed: { in: sgn }})
-                    .testFun(s => fun(sgn, sgn, bits)({in2: s.in, in1: Vector3vl.fromNumber(con, bits)}), { no_random_x : true });
+                    .testFun(s => fun(sgn, sgn, bits)({in2: s.in, in1: Vector3vl.fromNumber(con, bits)}), { no_random_x : true })
+                    .testJSON();
             });
+        });
+    });
+    describe.each(testBits)('with %i bits constant', (bits) => {
+        if (name == 'Power' && bits >= 4) return; // power grows crazy fast
+        describe.each([false, true])('%s', sgn => {
+            const testcon = (con) => {
+                let testval = true;
+                // tests use JS numbers
+                if (name == 'Multiplication' && bits >= 24)
+                    testval = false;
+                else if (bits >= 53)
+                    testval = false;
+                const conbits = Vector3vl.fromNumber(con, bits);
+                const conbin = conbits.toBin();
+                const test1 = new SingleCellConstTestFixture(engine, {type: name, bits: { in1: bits, in2: bits, out: bits }, signed: { in1: sgn, in2: sgn }}, {input: 'in1', bits: conbin})
+                    .testJSON();
+                const test2 = new SingleCellConstTestFixture(engine, {type: name, bits: { in1: bits, in2: bits, out: bits }, signed: { in1: sgn, in2: sgn }}, {input: 'in2', bits: conbin})
+                    .testJSON();
+                if (testval) {
+                    test1.testFun(s => fun(sgn, sgn, bits)({in1: conbits, in2: s.in2}), { no_random_x : true });
+                    test2.testFun(s => fun(sgn, sgn, bits)({in1: s.in1, in2: conbits}), { no_random_x : true });
+                }
+            };
+            // This is the value range for which `integrateArithConstant`
+            // will create a constant operation.
+            testcon(randInt(0, 999));
+            testcon(randInt(-99, -1));
+            if (2**bits - 1 <= Number.MAX_SAFE_INTEGER)
+                return;
+            testcon(randInt(Number.MAX_SAFE_INTEGER + 1, 2**bits - 1));
+            testcon(-randInt(Number.MAX_SAFE_INTEGER + 1, 2**bits - 1));
         });
     });
 });
@@ -429,17 +568,52 @@ describe.each([
                 .testFun(fun(sgn1, sgn2, bits2), { no_random_x : true });
         });
     });
-    describe.each([0, 1, 2])('with constant %i', con => {
+    describe.each([-4n, -2, -1, 0, 1, 2, 5n])('with constant %i', con => {
         describe.each([false, true])('%s', sgn => {
             describe.each(numTestBits)('%i bits', (bits) => {
                 const bits2 = Math.ceil(Math.log2(bits)) + 1;
                 new SingleCellTestFixture(engine, {type: name + 'Const', leftOp: false, constant: con, bits: { in: bits, out: bits }, signed: { in: sgn, out: sgn }})
-                    .testFun(s => fun(sgn, false, bits)({in1: s.in, in2: Vector3vl.fromNumber(con)}), { no_random_x : true });
-                if (sgn && con > 2**(bits-1)-1) return;
-                if (!sgn && con > 2**bits-1) return;
+                    .testFun(s => fun(sgn, con < 0, bits)({in1: s.in, in2: Vector3vl.fromNumber(con)}), { no_random_x : true })
+                    .testJSON();
+                if (sgn && (con > 2**(bits-1) - 1 || con < -(2**(bits-1)))) return;
+                if (!sgn && (con > 2**bits-1 || con < 0)) return;
                 new SingleCellTestFixture(engine, {type: name + 'Const', leftOp: true, constant: con, bits: { in: bits2, out: bits }, signed: { in: sgn, out: sgn }})
-                    .testFun(s => fun(false, sgn, bits)({in2: s.in, in1: Vector3vl.fromNumber(con, bits2)}), { no_random_x : true });
+                    .testFun(s => fun(con < 0, sgn, bits)({in2: s.in, in1: Vector3vl.fromNumber(con, bits2)}), { no_random_x : true })
+                    .testJSON();
             });
+        });
+    });
+    describe.each(testBits)('with %i bits constant', (bits) => {
+        describe.each([false, true])('%s', sgn => {
+            const bits2 = Math.ceil(Math.log2(bits)) + 1;
+
+            const con = randInt(0, Math.min(2**bits - 1, 999));
+            const conbits = Vector3vl.fromNumber(con, bits);
+            const conbin = conbits.toBin();
+            new SingleCellConstTestFixture(engine, {type: name, bits: { in1: bits, in2: bits2, out: bits }, signed: { in1: sgn, in2: sgn, out: sgn }}, {input: 'in1', bits: conbin})
+                .testFun(s => fun(sgn, sgn, bits)({in1: conbits, in2: s.in2}), { no_random_x : true })
+                .testJSON();
+
+            const ncon = -randInt(1, Math.min(2**(bits - 1), 99));
+            const nconbits = Vector3vl.fromNumber(ncon, bits);
+            const nconbin = nconbits.toBin();
+            new SingleCellConstTestFixture(engine, {type: name, bits: { in1: bits, in2: bits2, out: bits }, signed: { in1: true, in2: sgn, out: true }}, {input: 'in1', bits: nconbin})
+                .testFun(s => fun(true, sgn, bits)({in1: nconbits, in2: s.in2}), { no_random_x : true })
+                .testJSON();
+
+            const con2 = randInt(0, bits - 1);
+            const conbits2 = Vector3vl.fromNumber(con2, bits2);
+            const conbin2 = conbits2.toBin();
+            new SingleCellConstTestFixture(engine, {type: name, bits: { in1: bits, in2: bits2, out: bits }, signed: { in1: sgn, in2: sgn, out: sgn }}, {input: 'in2', bits: conbin2})
+                .testFun(s => fun(sgn, sgn, bits)({in1: s.in1, in2: conbits2}), { no_random_x : true })
+                .testJSON();
+
+            const ncon2 = -randInt(1, bits - 1);
+            const nconbits2 = Vector3vl.fromNumber(ncon2, bits2);
+            const nconbin2 = nconbits2.toBin();
+            new SingleCellConstTestFixture(engine, {type: name, bits: { in1: bits, in2: bits2, out: bits }, signed: { in1: sgn, in2: true, out: sgn }}, {input: 'in2', bits: nconbin2})
+                .testFun(s => fun(sgn, true, bits)({in1: s.in1, in2: nconbits2}), { no_random_x : true })
+                .testJSON();
         });
     });
 });
