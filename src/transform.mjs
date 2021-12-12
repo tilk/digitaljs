@@ -91,7 +91,7 @@ export function integrateArithConstant(model, dev, id) {
         }
         newDev.leftOp = in1 == "in1";
         newDev.type = arith_constant.get(newDev.type);
-        newDev.constant = i;
+        newDev.constant = Number(i);
         model.removeDevice(id);
         const constOutConnList = Object.values(model.outputPortConnectors(inId, "out"));
         if (constOutConnList.length == 0)
