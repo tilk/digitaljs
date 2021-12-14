@@ -6,6 +6,10 @@ import { Box, BoxView } from './base.mjs';
 import { IO, Input, Output } from './io.mjs';
 import * as help from '../help.mjs';
 
+// add offset of 10pt to account for the top label at layout time
+const subcircuit_pos_offset = 10;
+const subcircuit_size_offset = 10;
+
 // Subcircuit model -- embeds a circuit graph in an element
 export const Subcircuit = Box.define('Subcircuit', {
     /* default properties */
@@ -68,17 +72,25 @@ export const Subcircuit = Box.define('Subcircuit', {
             return graph.getCell(iomap[port.id]).get('inputSignals').in;
         return Box.prototype._resetPortValue.call(this, port);
     },
-    //add offset of 10pt to account for the top label at layout time
     getLayoutSize() {
         const size = this.size();
-        size.height += 10;
+        size.height += subcircuit_size_offset;
         return size;
     },
     setLayoutPosition(position) {
         this.set('position', {
             x: position.x,
-            y: position.y + 10
+            y: position.y + subcircuit_pos_offset
         });
+    },
+    getPortsPositions() {
+        const positions = Box.prototype.getPortsPositions.apply(this, arguments);
+        const res = {};
+        for (const id in positions) {
+            res[id] = { ...positions[id] };
+            res[id].y = res[id].y + subcircuit_pos_offset;
+        }
+        return res;
     },
     markup: [{
             tagName: 'rect',
