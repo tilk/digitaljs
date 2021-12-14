@@ -6,6 +6,10 @@ import { Gate, GateView, portGroupAttrs } from './base.mjs';
 import * as help from '../help.mjs';
 import { Vector3vl } from '3vl';
 
+// add offset of 30pt to account for the top selection port and oversized box at layout time
+const mux_pos_offset = 20;
+const mux_size_offset = 30;
+
 // Multiplexers
 export const GenMux = Gate.define('GenMux', {
     /* default properties */
@@ -69,17 +73,25 @@ export const GenMux = Gate.define('GenMux', {
         if (i === undefined) return { out: Vector3vl.xes(this.get('bits').in) };
         return { out: data['in' + i] };
     },
-    //add offset of 30pt to account for the top selection port and oversized box at layout time
     getLayoutSize() {
         const size = this.size();
-        size.height += 30;
+        size.height += mux_size_offset;
         return size;
     },
     setLayoutPosition(position) {
         this.set('position', {
             x: position.x,
-            y: position.y + 20
+            y: position.y + mux_pos_offset
         });
+    },
+    getPortsPositions() {
+        const positions = Gate.prototype.getPortsPositions.apply(this, arguments);
+        const res = {};
+        for (const id in positions) {
+            res[id] = { ...positions[id] };
+            res[id].y = res[id].y + mux_pos_offset;
+        }
+        return res;
     },
     markup: Gate.prototype.markup.concat([{
             tagName: 'polygon',
