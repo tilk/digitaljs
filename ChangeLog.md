@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+- The `elkjs` layout engine now includes laying out edges via adding bend points. The SPOrE algorithm was disabled because it did not work well with the change. (Contributor: Yichao Yu)
+
 ## [0.10.0] -- 2021-10-06
 
 ### Added
