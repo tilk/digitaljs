@@ -28,7 +28,8 @@ export class IOPanelView extends Backbone.View {
         this.listenTo(this.model, "display:add", () => { this.render() });
     }
     render() {
-        this.$el.html('<form>' + this._inputPanelMarkup + this._outputPanelMarkup + '</form>');
+        // Disable the default action of submission since it will usually cause a page refresh.
+        this.$el.html('<form onsubmit="return false">' + this._inputPanelMarkup + this._outputPanelMarkup + '</form>');
         for (const element of this.model.getInputCells())
             this._handleAddInput(element);
         for (const element of this.model.getOutputCells())
