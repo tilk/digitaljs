@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - The `*Const` family of arithmetic operations is now correctly JSON serialized, and they are better tested. (Contributor: Yichao Yu)
+- Parameter changes (e.g. clock speed) are now propagated to the worker thread in the WebWorker engine.
 
 ## [0.10.0] -- 2021-10-06
 
