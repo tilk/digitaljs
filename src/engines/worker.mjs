@@ -51,6 +51,16 @@ export class WorkerEngine extends BaseEngine {
                 this._worker.postMessage({ type: 'manualMemChange', args: [gate.graph.cid, gate.id, addr, data] });
             });
         }
+        for (const paramName of gate._gateParams) {
+            if (gate._unsupportedPropChanges.includes(paramName) || gate._presentationParams.includes(paramName))
+                continue;
+            this.listenTo(gate, 'change:' + paramName, (gate, val) => {
+                this._worker.postMessage({
+                    type: 'changeParam',
+                    args: [graph.cid, gate.id, paramName, val]
+                });
+            });
+        }
     }
     _addLink(graph, link) {
         if (!link.get('warning') && link.get('source').id && link.get('target').id)

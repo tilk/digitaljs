@@ -301,6 +301,10 @@ class WorkerEngineWorker {
         const gate = this._graphs[graphId].getGate(gateId);
         this._setGateOutputSignals(gate, { out: Vector3vl.fromClonable(sig) });
     }
+    changeParam(graphId, gateId, paramName, val) {
+        const gate = this._graphs[graphId].getGate(gateId);
+        gate.set(paramName, val);
+    }
     manualMemChange(graphId, gateId, addr, data) {
         const gate = this._graphs[graphId].getGate(gateId);
         gate.memdata.set(addr, Vector3vl.fromClonable(data));
