@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- The `Dff` block can now have asynchronous loading.
+
 ### Changed
 - The `elkjs` layout engine now includes laying out edges via adding bend points. The SPOrE algorithm was disabled because it did not work well with the change. (Contributor: Yichao Yu)
 

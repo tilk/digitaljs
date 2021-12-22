@@ -41,6 +41,11 @@ export const Dff = Box.define('Dff', {
             this.set('srst_value', Array(bits).fill('0').join(''));
 
         let num = 1;
+        if ('aload' in polarity) {
+            num += 2;
+            ports.push({ id: 'ain', group: 'in', dir: 'in', bits: bits, portlabel: 'AD', labelled: true });
+            ports.push({ id: 'aload', group: 'in', dir: 'in', bits: 1, polarity: polarity.aload, labelled: true });
+        }
         if ('clock' in polarity) {
             num++;
             ports.push({ id: 'clk', group: 'in', dir: 'in', bits: 1, polarity: polarity.clock, decor: Box.prototype.decorClock, labelled: true });
@@ -88,6 +93,8 @@ export const Dff = Box.define('Dff', {
         }
         if ('arst' in polarity && data.arst.get(0) == pol('arst'))
             return { out: Vector3vl.fromBin(this.get('arst_value'), this.get('bits')) };
+        if ('aload' in polarity && data.aload.get(0) == pol('aload'))
+            return { out: data.ain };
         if ('set' in polarity) {
             srbits = polarity.set ? data.set : data.set.not();
             srbitmask = polarity.set ? data.set.not() : data.set;
