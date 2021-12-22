@@ -126,8 +126,8 @@ instance.
     * Inputs: `in0` ... `inN` (`bits.in`-bit, `N` = `inputs.length`, +1 if `default_input` is true)
     * Outputs: `out` (`bits.in`-bit)
  * D flip-flop: `Dff`
-    * Attributes: `bits` (natural number), `polarity.clock`, `polarity.arst`, `polarity.srst`, `polarity.set`, `polarity.clr`, `polarity.enable`, `enable_srst` (optional booleans), `initial` (optional binary string), `arst_value`, `srst_value` (optional binary string), `no_data` (optional boolean)
-    * Inputs: `in` (`bits`-bit), `clk` (1-bit, if `polarity.clock` is present), `arst` (1-bit, if `polarity.arst` is present), `en` (1-bit, if `polarity.enable` is present)
+    * Attributes: `bits` (natural number), `polarity.clock`, `polarity.arst`, `polarity.srst`, `polarity.aload`, `polarity.set`, `polarity.clr`, `polarity.enable`, `enable_srst` (optional booleans), `initial` (optional binary string), `arst_value`, `srst_value` (optional binary string), `no_data` (optional boolean)
+    * Inputs: `in` (`bits`-bit), `clk` (1-bit, if `polarity.clock` is present), `arst` (1-bit, if `polarity.arst` is present), `srst` (1-bit, if `polarity.srst` is present), `en` (1-bit, if `polarity.enable` is present), `set` (1-bit, if `polarity.set` is present), `clr` (1-bit, if `polarity.clr` is present), `ain` (`bits`-bit, if `polarity.aload` is present), `aload` (1-bit, if `polarity.aload` is present)
     * Outputs: `out` (`bits`-bit)
  * Memory: `Memory`
     * Attributes: `bits`, `abits`, `words`, `offset` (natural number), `rdports` (array of read port descriptors), `wrports` (array of write port descriptors), `memdata` (memory contents description)
