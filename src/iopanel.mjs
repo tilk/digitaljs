@@ -44,7 +44,7 @@ export class IOPanelView extends Backbone.View {
     }
     _handleAdd(cell) {
         if (cell.isInput) this._handleAddInput(cell);
-        else if (cell.isOutput) this.handleAddOutput(cell);
+        else if (cell.isOutput) this._handleAddOutput(cell);
     }
     _addLabel(row, cell) {
         const label = $(this._labelMarkup)
