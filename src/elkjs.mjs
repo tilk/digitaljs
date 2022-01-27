@@ -62,6 +62,7 @@ function to_elkjs(graph) {
 }
 
 function from_elkjs(graph, elkGraph) {
+    graph.startBatch('layout');
     for (const child of elkGraph.children) {
         const cell = graph.getCell(child.id);
         cell.setLayoutPosition({
@@ -119,6 +120,7 @@ function from_elkjs(graph, elkGraph) {
         add_point(edge.sections[0].endPoint, true);
         graph.getCell(edge.id).vertices(vertices);
     }
+    graph.stopBatch('layout');
 }
 
 export function elk_layout(graph) {
