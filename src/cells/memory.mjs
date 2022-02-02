@@ -266,6 +266,7 @@ export const MemoryView = BoxView.extend({
     events: {
         "click foreignObject.tooltip": "stopprop",
         "mousedown foreignObject.tooltip": "stopprop",
+        "touchstart foreignObject.tooltip": "stopprop", // make sure the input receives focus
         "click a.zoom": "_displayEditor"
     },
     _displayEditor(evt) {

@@ -46,7 +46,8 @@ export const NumBaseView = BoxView.extend({
     _autoResizeBox: true,
     events: {
         "click select.numbase": "stopprop",
-        "mousedown select.numbase": "stopprop",
+        "mousedown select.numbase": "stopprop", // Prevent drag
+        "touchstart select.numbase": "stopprop", // Prevent drag & make sure select works
         "change select.numbase": "_changeNumbase"
     },
     _changeNumbase(evt) {
@@ -273,10 +274,12 @@ export const InputView = IOView.extend({
     events: _.merge({
         //button
         "click .btnface": "_onButton",
-        "mousedown .btnface": "stopprop",
+        "mousedown .btnface": "stopprop", // Prevent drag
+        "touchstart .btnface": "stopprop", // Prevent drag & make sure click is generated
         //numEntry
         "click input": "stopprop",
-        "mousedown input": "stopprop",
+        "mousedown input": "stopprop", // Prevent drag
+        "touchstart input": "stopprop", // Prevent drag & make sure the input receives focus
         "change input": "_onNumEntry"
     }, NumBaseView.prototype.events),
     _onButton() {
@@ -494,6 +497,7 @@ export const ClockView = BoxView.extend({
     events: {
         "click input": "stopprop",
         "mousedown input": "stopprop",
+        "touchstart input": "stopprop", // make sure the input receives focus
         "change input": "_changePropagation",
         "input input": "_changePropagation"
     },
