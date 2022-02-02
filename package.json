@@ -56,7 +56,7 @@
     "graphlib": "^2.1.8",
     "jointjs": "^3.4.4",
     "jquery": "^3.6.0",
-    "jquery-ui": "^1.12.1",
+    "jquery-ui": "^1.13.1",
     "regenerator-runtime": "^0.13.9",
     "resize-observer-polyfill": "^1.5.1",
     "wavecanvas": "^1.1.0",
