@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - The `elkjs` layout engine now includes laying out edges via adding bend points. The SPOrE algorithm was disabled because it did not work well with the change. (Contributor: Yichao Yu)
+- The interface now works better with touch devices. (Contributor: Yichao Yu)
 
 ### Fixed
 - The `*Const` family of arithmetic operations is now correctly JSON serialized, and they are better tested. (Contributor: Yichao Yu)
