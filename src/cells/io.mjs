@@ -155,7 +155,7 @@ export const IO = NumBase.define('IO', {
             selector: 'ioname'
         }
     ]),
-    _gateParams: NumBase.prototype._gateParams.concat(['bits','net'])
+    _gateParams: NumBase.prototype._gateParams.concat(['bits','net','order'])
 });
 export const IOView = NumBaseView.extend({
     _calculateBoxWidth() {

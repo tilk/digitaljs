@@ -122,11 +122,13 @@ class CircuitTestFixture {
         if (totbits <= 6) return this.testFunComplete(fun, opts);
         else return this.testFunRandomized(fun, opts);
     }
-    testJSON() {
+    testJSON(json) {
         test("serialization test", async () => {
             let json1 = this.circuit.toJSON();
             // Make sure the object can be serialized as JSON
             let jsonstr1 = JSON.stringify(json1);
+            if (json)
+                expect(json1).toMatchObject(json);
             // Test round trip
             let circuit2 = new HeadlessCircuit(JSON.parse(jsonstr1));
             let json2 = circuit2.toJSON();
@@ -741,6 +743,40 @@ describe('$fsm', () => {
             });
         });
     });
+});
+
+describe('order', () => {
+    // A circuit with order parameters on the ports
+    const circuit = {
+        subcircuits: {
+            sub_mod: {
+                devices: {
+                    dev0: { type: "Input", net: "in1", order: 0, bits: 1 },
+                    dev1: { type: "Input", net: "in2", order: 1, bits: 1 },
+                    dev2: { type: "Output", net: "out1", order: 2, bits: 1 },
+                    dev3: { type: "Output", net: "out2", order: 3, bits: 1 }
+                },
+                connectors: []
+            }
+        },
+        devices: {
+            dev0: { type: "Button", net: "in1", order: 0, bits: 1, label: "in1" },
+            dev1: { type: "Button", net: "in2", order: 1, bits: 1, label: "in2" },
+            dev2: { type: "Lamp", net: "out1", order: 2, bits: 1, label: "out1" },
+            dev3: { type: "Lamp", net: "out2", order: 3, bits: 1, label: "out2" },
+            dev4: { label: "m", type: "Subcircuit", celltype: "sub_mod" }
+        },
+        connectors: [
+            { to: { id: "dev4", port: "in1" }, from: { id: "dev0", port: "out" }, name: "in1" },
+            { to: { id: "dev4", port: "in2" }, from: { id: "dev1", port: "out" }, name: "in2" },
+            { to: { id: "dev2", port: "in" }, from: { id: "dev4", port: "out1" }, name: "out1" },
+            { to: { id: "dev3", port: "in" }, from: { id: "dev4", port: "out2" }, name: "out2" }
+        ]
+    };
+    const inlist = [{ name: 'in1', bits: 1 }, { name: 'in2', bits: 1 }];
+    const outlist = [{ name: 'out1', bits: 1 }, { name: 'out2', bits: 1 }];
+    new CircuitTestFixture(circuit, inlist, outlist, engine)
+        .testJSON(circuit);
 });
 
 });
