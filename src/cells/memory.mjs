@@ -271,9 +271,10 @@ export const MemoryView = BoxView.extend({
     },
     _displayEditor(evt) {
         evt.stopPropagation();
-        const display3vl = this.model.graph._display3vl;
+        const model = this.model;
+        const display3vl = model.graph._display3vl;
         const div = $('<div>', {
-            title: "Memory contents: " + this.model.get('label')
+            title: "Memory contents: " + model.get('label')
         }).appendTo('html > body');
         div.append($(
             '<div class="btn-toolbar" role="toolbar">' +
@@ -286,14 +287,14 @@ export const MemoryView = BoxView.extend({
 //            '<button type="button" class="btn btn-secondary" title="Save contents">Save</button>' +
 //            '</div>' + 
             '<div class="input-group">' +
-            help.baseSelectMarkupHTML(display3vl, this.model.get('bits'), 'hex') +
+            help.baseSelectMarkupHTML(display3vl, model.get('bits'), 'hex') +
             '</div>' +
             '</div>' +
             '<table class="memeditor">' +
             '</table>'));
-        const words = this.model.get('words');
-        const memdata = this.model.memdata;
-        const ahex = Math.ceil(this.model.get('abits')/4);
+        const words = model.get('words');
+        const memdata = model.memdata;
+        const ahex = Math.ceil(model.get('abits')/4);
         const rows = 8;
         let columns, address = 0;
         const get_numbase = () => div.find('select[name=base]').val();
@@ -303,19 +304,19 @@ export const MemoryView = BoxView.extend({
             return div.find('table tr:nth-child('+(r+1)+') td:nth-child('+(c+2)+') input');
         }
         const clearMarkings = (sigs) => {
-            for (const [portname, port] of this.model._memrdports()) {
-                getCell(this.model._calcaddr(sigs[portname + 'addr'])).removeClass('isread');
+            for (const [portname, port] of model._memrdports()) {
+                getCell(model._calcaddr(sigs[portname + 'addr'])).removeClass('isread');
             }
-            for (const [portname, port] of this.model._memwrports()) {
-                getCell(this.model._calcaddr(sigs[portname + 'addr'])).removeClass('iswrite');
+            for (const [portname, port] of model._memwrports()) {
+                getCell(model._calcaddr(sigs[portname + 'addr'])).removeClass('iswrite');
             }
         }
         const displayMarkings = (sigs) => {
-            for (const [portname, port] of this.model._memrdports()) {
-                getCell(this.model._calcaddr(sigs[portname + 'addr'])).addClass('isread');
+            for (const [portname, port] of model._memrdports()) {
+                getCell(model._calcaddr(sigs[portname + 'addr'])).addClass('isread');
             }
-            for (const [portname, port] of this.model._memwrports()) {
-                getCell(this.model._calcaddr(sigs[portname + 'addr'])).addClass('iswrite');
+            for (const [portname, port] of model._memwrports()) {
+                getCell(model._calcaddr(sigs[portname + 'addr'])).addClass('iswrite');
             }
         }
         const updateStuff = () => {
@@ -323,7 +324,7 @@ export const MemoryView = BoxView.extend({
             div.find('button[name=prev]').prop('disabled', address <= 0);
             div.find('button[name=next]').prop('disabled', address + rows * columns >= words);
             let row = div.find('table tr:first-child');
-            const memdata = this.model.memdata;
+            const memdata = model.memdata;
             for (let r = 0; r < rows; r++, row = row.next()) {
                 if (address + r * columns >= words) break;
                 const addrs = (address + r * columns).toString(16);
@@ -336,12 +337,12 @@ export const MemoryView = BoxView.extend({
                                      .removeClass('invalid');
                 }
             }
-            displayMarkings(this.model.get('inputSignals'));
+            displayMarkings(model.get('inputSignals'));
         };
         const redraw = () => {
             const numbase = get_numbase();
             const ptrn = display3vl.pattern(numbase);
-            const ds = display3vl.size(numbase, this.model.get('bits')); 
+            const ds = display3vl.size(numbase, model.get('bits')); 
             columns = Math.min(words, 16, Math.ceil(32/ds));
             address = Math.max(0, Math.min(words - rows * columns, address));
             const table = div.find('table');
@@ -367,12 +368,12 @@ export const MemoryView = BoxView.extend({
         redraw();
         div.find("select[name=base]").on('change', redraw);
         div.find("button[name=prev]").on('click', () => {
-            clearMarkings(this.model.get('inputSignals'));
+            clearMarkings(model.get('inputSignals'));
             address = Math.max(0, address - rows * columns);
             updateStuff();
         });
         div.find("button[name=next]").on('click', () => {
-            clearMarkings(this.model.get('inputSignals'));
+            clearMarkings(model.get('inputSignals'));
             address = Math.min(words - rows * columns, address + rows * columns);
             updateStuff();
         });
@@ -382,17 +383,17 @@ export const MemoryView = BoxView.extend({
             const c = target.closest('td').index() - 1;
             const r = target.closest('tr').index();
             const addr = address + r * columns + c;
-            const bits = this.model.get('bits');
+            const bits = model.get('bits');
             if (display3vl.validate(numbase, evt.target.value, bits)) {
                 const val = display3vl.read(numbase, evt.target.value, bits);
                 memdata.set(addr, val);
-                this.model.trigger('manualMemChange', this.model, addr, val);
+                model.trigger('manualMemChange', model, addr, val);
                 target.removeClass('invalid');
             } else {
                 target.addClass('invalid');
             }
         });
-        this.listenTo(this.model, "memChange", (addr, data) => {
+        const mem_change_cb = (addr, data) => {
             if (addr < address || addr > address + rows * columns) return;
             const numbase = get_numbase();
             const z = getCell(addr)
@@ -400,14 +401,17 @@ export const MemoryView = BoxView.extend({
                 .removeClass('invalid')
                 .removeClass('flash');
             setTimeout(() => { z.addClass('flash') }, 10);
-        });
-        this.listenTo(this.model, "change:inputSignals", (gate, sigs) => {
-            clearMarkings(this.model.previous('inputSignals'));
+        };
+        const input_change_cb = (gate, sigs) => {
+            clearMarkings(model.previous('inputSignals'));
             displayMarkings(sigs);
-        });
+        };
+        model.on("memChange", mem_change_cb);
+        model.on("change:inputSignals", input_change_cb);
         this.paper.trigger('open:memorycontent', div, () => {
             div.remove();
-            this.stopListening();
+            model.off("memChange", mem_change_cb);
+            model.off("change:inputSignals", input_change_cb);
         });
         return false;
     }

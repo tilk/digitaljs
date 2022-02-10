@@ -214,7 +214,7 @@ export const FSMView = BoxView.extend({
             graph.set('laid_out', true);
         }
         // auto-resizing
-        this.listenTo(graph, 'change:position', (elem) => {
+        paper.listenTo(graph, 'change:position', (elem) => {
             paper.fitToContent({ padding: 30, allowNewOrigin: 'any' });
         });
         paper.fitToContent({ padding: 30, allowNewOrigin: 'any' });
