@@ -183,6 +183,22 @@ export function makeBinaryMuxes(model, dev, id)
     function traverse(groupId, baseNo) {
         groupIds.push(groupId);
         const groupDev = model.getDevice(groupId);
+        function handleConst(value, pBits, pInConnList) {
+            if (value < 0) return false;
+            if (value in mapping) return false;
+            const constInConnList = pInConnList;
+            if (constInConnList.length != 1) return false;
+            if (srcsignal == undefined)
+                srcsignal = constInConnList[0];
+            if (srcsignal.from.id != constInConnList[0].from.id ||
+                srcsignal.from.port != constInConnList[0].from.port) return false;
+            const constBits = pBits || 1;
+            if (bits == -1)
+                bits = constBits;
+            if (bits != constBits) return false;
+            mapping[value] = baseNo;
+            return true;
+        }
         if (groupDev.type == "BusGroup") {
             let offset = 0;
             for (const [inputNo, groupSize] of (groupDev.groups || [1]).entries()) {
@@ -194,20 +210,9 @@ export function makeBinaryMuxes(model, dev, id)
             }
             return true;
         } else if (groupDev.type == "EqConst") {
-            if (groupDev.constant < 0) return false;
-            if (groupDev.constant in mapping) return false;
-            const constInConnList = Object.values(model.inputConnectors(groupId));
-            if (constInConnList.length != 1) return false;
-            if (srcsignal == undefined)
-                srcsignal = constInConnList[0];
-            if (srcsignal.from.id != constInConnList[0].from.id ||
-                srcsignal.from.port != constInConnList[0].from.port) return false;
-            const constBits = (groupDev.bits || {}).in || 1;
-            if (bits == -1)
-                bits = constBits;
-            if (bits != constBits) return false;
-            mapping[groupDev.constant] = baseNo;
-            return true;
+            return handleConst(groupDev.constant, (groupDev.bits || {}).in, Object.values(model.inputConnectors(groupId)));
+        } else if (groupDev.type == "NorReduce") {
+            return handleConst(0, groupDev.bits, Object.values(model.inputPortConnectors(groupId, "in")));
         } else if (groupDev.type == "OrReduce") {
             const constInConnList = Object.values(model.inputPortConnectors(groupId, "in"));
             if (constInConnList.length != 1) return false;
