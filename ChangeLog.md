@@ -1,7 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [0.12.0] -- 2022-02-22
+
+### Fixed
+- Fix the lifetime of the event listeners for the sub-windows (Contributor: Yichao Yu)
+- Fix binary mux transform for Yosys 0.12 and later
+- Elkjs layout change marked as batch (Contributor: Yichao Yu)
+- Save IO port orders for subcircuits (Contributor: Yichao Yu)
 
 ## [0.11.0] -- 2022-02-03
 
