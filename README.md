@@ -4,7 +4,7 @@
 
 This project is a digital circuit simulator implemented in Javascript.
 It is designed to simulate circuits synthesized by hardware design tools
-like [Yosys](http://www.clifford.at/yosys/), and it has a companion project
+like [Yosys](https://yosyshq.net/yosys/) (Github repo [here](https://github.com/YosysHQ/yosys/)), and it has a companion project
 [yosys2digitaljs](https://github.com/tilk/yosys2digitaljs), which converts
 Yosys output files to DigitalJS. It is also intended to be a teaching tool,
 therefore readability and ease of inspection is one of top concerns for
