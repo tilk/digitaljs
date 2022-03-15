@@ -6,7 +6,12 @@ import Backbone from 'backbone';
 import { Vector3vl, Display3vl } from '3vl';
 import * as cells from './cells.mjs';
 import * as help from './help.mjs';
+import * as engines from './engines.mjs';
+import * as tools from './tools.mjs';
+import * as transform from './transform.mjs';
 import { SynchEngine } from './engines/synch.mjs';
+
+export { cells, tools, engines, transform };
     
 export function getCellType(tp) {
     const types = {
