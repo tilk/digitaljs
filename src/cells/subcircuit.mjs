@@ -28,7 +28,9 @@ export const Subcircuit = Box.define('Subcircuit', {
     }
 }, {
     initialize() {
-        this.bindAttrToProp('text.type/text', 'celltype');
+        if (!this.get('disp_celltype'))
+            this.set('disp_celltype', this.get('celltype'))
+        this.bindAttrToProp('text.type/text', 'disp_celltype');
         
         const graph = this.get('graph');
         console.assert(graph instanceof joint.dia.Graph);
@@ -102,7 +104,7 @@ export const Subcircuit = Box.define('Subcircuit', {
             selector: 'type'
         }
     ], Box.prototype.markupZoom),
-    _gateParams: Box.prototype._gateParams.concat(['celltype']),
+    _gateParams: Box.prototype._gateParams.concat(['celltype', 'disp_celltype']),
     _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['celltype'])
 });
 

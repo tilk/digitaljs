@@ -162,7 +162,7 @@ export class Circuit extends HeadlessCircuit {
         // subcircuit display
         this.listenTo(paper, 'open:subcircuit', (model) => {
             const div = $('<div>', { 
-                title: model.get('celltype') + ' ' + model.get('label')
+                title: model.get('disp_celltype') + ' ' + model.get('label')
             }).appendTo('html > body');
             const pdiv = $('<div>').appendTo(div);
             const graph = model.get('graph');

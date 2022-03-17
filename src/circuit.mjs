@@ -297,8 +297,19 @@ export class HeadlessCircuit {
             for (const elem of graph.getElements()) {
                 const args = ret.devices[elem.get('id')] = elem.getGateParams(layout);
                 if (!laid_out) delete args.position;
-                if (elem instanceof this._cells.Subcircuit && !subcircuits[elem.get('celltype')]) {
-                    subcircuits[elem.get('celltype')] = fromGraph(elem.get('graph'));
+                if (elem instanceof this._cells.Subcircuit) {
+                    const celltype = elem.get('celltype');
+                    const subcircuit = {
+                        dev: args,
+                        graph: fromGraph(elem.get('graph'))
+                    };
+                    const prev_sub = subcircuits[celltype];
+                    if (!prev_sub) {
+                        subcircuits[celltype] = [subcircuit];
+                    }
+                    else {
+                        prev_sub.push(subcircuit);
+                    }
                 }
             }
             for (const elem of graph.getLinks()) {
@@ -307,7 +318,43 @@ export class HeadlessCircuit {
             return ret;
         }
         const ret = fromGraph(this._graph);
-        ret.subcircuits = subcircuits;
+        ret.subcircuits = {};
+        for (const celltype in subcircuits) {
+            const subs = subcircuits[celltype];
+            const nsubs = subs.length;
+            if (nsubs == 1) {
+                // We check for conflict of generated names with
+                // both the original names and the new names
+                // so it's guaranteed that none of the original names conflict
+                // with the generated names
+                console.assert(!(celltype in ret.subcircuits));
+                ret.subcircuits[celltype] = subs[0].graph;
+                continue;
+            }
+            let cnt = -1;
+            const gen_name = () => {
+                while (true) {
+                    const id = cnt++;
+                    // Use the original name for the first one to keep the file closer
+                    // to the old one.
+                    if (id == -1)
+                        return celltype;
+                    const name = `${celltype}$${id}`;
+                    if (name in subcircuits || name in ret.subcircuits)
+                        continue;
+                    return name;
+                }
+            };
+            for (let i = 0; i < nsubs; i++) {
+                const sub = subs[i];
+                // Rename, assign to return value, and fix the reference (celltype)
+                // in the device tree.
+                sub.dev.celltype = gen_name();
+                if (!sub.dev.disp_celltype && sub.dev.celltype !== celltype)
+                    sub.dev.disp_celltype = celltype;
+                ret.subcircuits[sub.dev.celltype] = sub.graph;
+            }
+        }
         return ret;
     }
     waitForWire(wire, trigger) {
