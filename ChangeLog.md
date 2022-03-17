@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.12.1] -- 2022-03-17
+
+### Fixed
+- The cells, tools, engines and transforms namespaces are now exported for non-browser environments.
+
 ## [0.12.0] -- 2022-02-22
 
 ### Fixed
