@@ -10,4 +10,4 @@ export * from "./cells/mux.mjs";
 export * from "./cells/dff.mjs";
 export * from "./cells/memory.mjs";
 export * from "./cells/fsm.mjs";
-
+export * from "./cells/display7.mjs";
