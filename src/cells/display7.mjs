@@ -9,8 +9,8 @@ const lowColor = '#3c3c3c';
  * It is designed to take an 8-bit number as an input.
  *
  * The most significant bit determines the decimal point state (dp).
- * The latter bits determine respectively: a,b,c,d,e,f,g segments of the display.
- * (g is determined by the least significant bit).
+ * The following bits determine states of respectively: a,b,c,d,e,f,g
+ * segments of the display. (g is determined by the least significant bit).
  *
  * The placement of single segments of the display can be checked
  * on the wikipedia page here:
