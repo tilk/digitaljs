@@ -1,135 +1,29 @@
-import { IO, IOView } from './io.mjs';
-import _ from 'lodash';
+import { IO, IOView, NumBase } from './io.mjs';
+import { BoxView } from './base.mjs';
 
-const highColor = '#03c03c'; 
-const Display7HexMapping = {
-  r: {
-    LEDs: { fill: '#3c3c3c' }
-  },
-  '0': {
-    a: { fill: highColor },
-    b: { fill: highColor },
-    c: { fill: highColor },
-    d: { fill: highColor },
-    e: { fill: highColor },
-    f: { fill: highColor },
-  },
-  '1': {
-    b: { fill: highColor },
-    c: { fill: highColor },
-  },
-  '2': {
-    a: { fill: highColor },
-    b: { fill: highColor },
-    g: { fill: highColor },
-    e: { fill: highColor },
-    d: { fill: highColor },
-  },
-  '3': {
-    a: { fill: highColor },
-    b: { fill: highColor },
-    g: { fill: highColor },
-    c: { fill: highColor },
-    d: { fill: highColor },
-  },
-  '4': {
-    f: { fill: highColor },
-    g: { fill: highColor },
-    b: { fill: highColor },
-    c: { fill: highColor },    
-  },
-  '5': {
-    a: { fill: highColor },
-    f: { fill: highColor },
-    g: { fill: highColor },
-    c: { fill: highColor },
-    d: { fill: highColor },
-  },
-  '6': {
-    a: { fill: highColor },
-    f: { fill: highColor },
-    g: { fill: highColor },
-    c: { fill: highColor },
-    d: { fill: highColor },
-    e: { fill: highColor },
-  },
-  '7': {
-    a: { fill: highColor },
-    b: { fill: highColor },
-    c: { fill: highColor },
-  },
-  '8': {
-    a: { fill: highColor },
-    f: { fill: highColor },
-    g: { fill: highColor },
-    c: { fill: highColor },
-    d: { fill: highColor },
-    e: { fill: highColor },
-    b: { fill: highColor },
-  },
-  '9': {
-    a: { fill: highColor },
-    f: { fill: highColor },
-    g: { fill: highColor },
-    c: { fill: highColor },
-    d: { fill: highColor },
-    b: { fill: highColor },
-  },
-  a: {
-    a: { fill: highColor },
-    b: { fill: highColor },
-    c: { fill: highColor },
-    e: { fill: highColor },
-    f: { fill: highColor },
-    g: { fill: highColor },
-  },
-  b: {
-    c: { fill: highColor },
-    d: { fill: highColor },
-    e: { fill: highColor },
-    f: { fill: highColor },
-    g: { fill: highColor },
-  },
-  c: {
-    a: { fill: highColor },
-    d: { fill: highColor },
-    e: { fill: highColor },
-    f: { fill: highColor },
-  },
-  d: {
-    b: { fill: highColor },
-    c: { fill: highColor },
-    d: { fill: highColor },
-    e: { fill: highColor },
-    g: { fill: highColor },
-  },
-  e: {
-    a: { fill: highColor },
-    d: { fill: highColor },
-    e: { fill: highColor },
-    f: { fill: highColor },
-    g: { fill: highColor },
-  },
-  f: {
-    a: { fill: highColor },
-    e: { fill: highColor },
-    f: { fill: highColor },
-    g: { fill: highColor },
-  },
-  err: {
-    // a: { fill: highColor },
-    // g: { fill: highColor },
-    d: { fill: highColor },
-  }
-};
+const highColor = '#03c03c';
+const lowColor = '#3c3c3c';
 
-export const Display7 = IO.define('Display7', {
-  size: { height: 108 },
-
+/*
+ * This is a standard 7-segment display element.
+ * It is designed to take an 8-bit number as an input.
+ *
+ * The most significant bit determines the decimal point state (dp).
+ * The latter bits determine respectively: a,b,c,d,e,f,g segments of the display.
+ * (g is determined by the least significant bit).
+ *
+ * The placement of single segments of the display can be checked
+ * on the wikipedia page here:
+ * https://en.wikipedia.org/wiki/Seven-segment_display#/media/File:7_Segment_Display_with_Labeled_Segments.svg
+ */
+export const Display7 = IO.define('Display7',
+{
+  bits: 8,
+  size: { width: 76.5, height: 110 },
   attrs: {
     LEDs: {
-      fill: '#333333',
-      transform: 'scale(6 6)'
+      fill: lowColor,
+      transform: 'translate(1,1),scale(6)'
     },
     a: {
       points: '1, 1  2, 0  8, 0  9, 1  8, 2  2, 2'
@@ -152,79 +46,85 @@ export const Display7 = IO.define('Display7', {
     g: {
       points: '1, 9  2, 8  8, 8  9, 9  8,10  2,10'
     },
+    dp: {
+      cx: '11.3',
+      cy: '16.9',
+      r: '1.1'
+    },
     body: {
       height: 'calc(h)',
+      width: 'calc(w)',
       stroke: '#222222',
       fill: '#333333',
     }
   }
 }, {
   isOutput: true,
-
   _portDirection: 'in',
-  bits: 4,
+  bits: 8,
 
   getOutput() {
     return this.get('inputSignals').in;
   },
-  markupBus: IO.prototype.markupBus.concat([
+  markupBus: NumBase.prototype.markup.concat([
     {
-    tagName: 'rect',
-    selector: 'display'
-  }, 
-  {
-    tagName: 'polygon',
-    selector: 'a',
-    groupSelector: 'LEDs'
-  }, {
-    tagName: 'polygon',
-    selector: 'b',
-    groupSelector: 'LEDs'
-  }, {
-    tagName: 'polygon',
-    selector: 'c',
-    groupSelector: 'LEDs'
-  }, {
-    tagName: 'polygon',
-    selector: 'd',
-    groupSelector: 'LEDs'
-  }, {
-    tagName: 'polygon',
-    selector: 'e',
-    groupSelector: 'LEDs'
-  }, {
-    tagName: 'polygon',
-    selector: 'f',
-    groupSelector: 'LEDs'
-  }, {
-    tagName: 'polygon',
-    selector: 'g',
-    groupSelector: 'LEDs'
-  }]),
-
-  numBaseType: 'read',
+      tagName: 'rect',
+      selector: 'display'
+    },
+    {
+      tagName: 'polygon',
+      selector: 'a',
+      groupSelector: 'LEDs'
+    }, {
+      tagName: 'polygon',
+      selector: 'b',
+      groupSelector: 'LEDs'
+    }, {
+      tagName: 'polygon',
+      selector: 'c',
+      groupSelector: 'LEDs'
+    }, {
+      tagName: 'polygon',
+      selector: 'd',
+      groupSelector: 'LEDs'
+    }, {
+      tagName: 'polygon',
+      selector: 'e',
+      groupSelector: 'LEDs'
+    }, {
+      tagName: 'polygon',
+      selector: 'f',
+      groupSelector: 'LEDs'
+    }, {
+      tagName: 'polygon',
+      selector: 'g',
+      groupSelector: 'LEDs'
+    }, {
+      tagName: 'circle',
+      selector: 'dp',
+      groupSelector: 'LEDs'
+    }]),
 });
 
 export const Display7View = IOView.extend({
-  attrs: _.merge({ LEDs: Display7HexMapping }, IOView.prototype.attrs),
+  _autoResizeBox: false,
 
   confirmUpdate(flags) {
-    IOView.prototype.confirmUpdate.apply(this, arguments);
+    BoxView.prototype.confirmUpdate.apply(this, arguments);
     this._updateDisplay();
   },
   _updateDisplay() {
-    const numBase = this.model.get('numbase');
     const inputSignal = this.model.getOutput();
-    const display3vl = this.model.graph._display3vl;
-    const outputNumber = display3vl.show(numBase, inputSignal);
-
-    const newAttrs = Display7HexMapping.hasOwnProperty(outputNumber)
-      ? this.attrs.LEDs[outputNumber]
-      : this.attrs.LEDs[err];
-    this._resetDisplay();
+    const newAttrs = {
+      dp: { fill: inputSignal.get(7) === 1 ? highColor : lowColor },
+      a: { fill: inputSignal.get(6) === 1 ? highColor : lowColor },
+      b: { fill: inputSignal.get(5) === 1 ? highColor : lowColor },
+      c: { fill: inputSignal.get(4) === 1 ? highColor : lowColor },
+      d: { fill: inputSignal.get(3) === 1 ? highColor : lowColor },
+      e: { fill: inputSignal.get(2) === 1 ? highColor : lowColor },
+      f: { fill: inputSignal.get(1) === 1 ? highColor : lowColor },
+      g: { fill: inputSignal.get(0) === 1 ? highColor : lowColor },
+    };
     this._applyAttrs(newAttrs);
   },
-  _resetDisplay() {
-    this._applyAttrs(Display7HexMapping.r);
-  }
 });
