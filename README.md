@@ -154,6 +154,8 @@ instance.
  * Subcircuit output: `Output`
     * Attributes: `bits` (natural number)
     * Inputs: `in` (`bits`-bit)
+ * 7 segment display output: `Display7`
+    * Inputs: `bits` (8-bit only - most significant bit controls decimal point LED)
  * Bus grouping: `BusGroup`
     * Attributes: `groups` (array of natural numbers)
     * Inputs: `in0` (`groups[0]`-bit) ... `inN` (`groups[N]`-bit)
@@ -187,7 +189,6 @@ Some ideas for further developing the simulator.
  * Undo-redo capability.
  * Saving and loading circuits, including layout and state.
  * Generic handling of negation for unary/binary gates (negation on inputs/outputs) for better clarity.
- * Zooming in/out on schematics.
  * SVG export.
  * Verilog export.
  * Smartphone and tablet compatible UI.
