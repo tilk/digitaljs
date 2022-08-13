@@ -310,6 +310,19 @@ export class HeadlessCircuit {
         ret.subcircuits = subcircuits;
         return ret;
     }
+    getSvgExportUrl(circuitSvgDOMElement) {
+        // Remove useless in export jointJS tooltips
+        circuitSvgDOMElement
+            .querySelectorAll('foreignObject.tooltip')
+            .forEach(obj => obj.remove());
+
+        // Serialize SVG to string & encode it as URL
+        let data = (new XMLSerializer()).serializeToString(circuitSvgDOMElement);
+        data = '<?xml version="1.0" standalone="no"?>\r\n' + data;
+        const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(data);
+
+        return url;
+    }
     waitForWire(wire, trigger) {
         if (trigger instanceof Vector3vl)
             trigger = [trigger];
