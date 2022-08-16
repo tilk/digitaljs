@@ -64,7 +64,8 @@ export function getCellType(tp) {
         '$busungroup': cells.BusUngroup,
         '$busslice': cells.BusSlice,
         '$zeroextend': cells.ZeroExtend,
-        '$signextend': cells.SignExtend
+        '$signextend': cells.SignExtend,
+        '$display7': cells.Display7,
     };
     if (tp in types) return types[tp];
     else return cells.Subcircuit;
