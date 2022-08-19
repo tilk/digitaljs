@@ -84,6 +84,12 @@ export class Circuit extends HeadlessCircuit {
             this.trigger('changeRunning');
         });
     }
+    getSvgExport(jointjsPaper) {
+        let svgString = (new XMLSerializer()).serializeToString(jointjsPaper.svg);
+        svgString = '<?xml version="1.0" standalone="no"?>\r\n' + svgString;
+
+        return svgString;
+    }
     _defaultWindowCallback(type, div, closingCallback) {
         const maxWidth = () => $(window).width() * 0.9;
         const maxHeight = () => $(window).height() * 0.9;
