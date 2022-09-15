@@ -51,6 +51,11 @@ export class WorkerEngine extends BaseEngine {
                 this._worker.postMessage({ type: 'manualMemChange', args: [gate.graph.cid, gate.id, addr, data] });
             });
         }
+        if (gate instanceof cells.LUT) {
+            this.listenTo(gate, 'manualLutChange', (gate, addr, data) => {
+                this._worker.postMessage({ type: 'manualLutChange', args: [gate.graph.cid, gate.id, addr, data] });
+            });
+        }
         for (const paramName of gate._gateParams) {
             if (gate._unsupportedPropChanges.includes(paramName) || gate._presentationParams.includes(paramName))
                 continue;

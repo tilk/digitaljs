@@ -45,6 +45,9 @@ export class SynchEngine extends BaseEngine {
         this.listenTo(graph, 'manualMemChange', (gate) => {
             this._enqueue(gate);
         });
+        this.listenTo(graph, 'manualLutChange', (gate) => {
+            this._enqueue(gate);
+        });
         this.listenTo(graph, 'change:constantCache', (gate) => {
             this._enqueue(gate);
         });

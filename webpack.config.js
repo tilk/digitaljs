@@ -14,6 +14,7 @@ const tests = [
     {name: 'rom', title: 'Async ROM'},
     {name: 'ram', title: 'Simple RAM'},
     {name: 'fsm', title: 'Finite State Machine'},
+    {name: 'lut', title: 'Lookup Tables (LUTs)'},
     {name: 'gates', title: 'All available gates'},
     {name: 'biggate', title: 'N-ary gates'},
     {name: 'muxsparse', title: 'Sparse mux'},

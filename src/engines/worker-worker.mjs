@@ -310,6 +310,11 @@ class WorkerEngineWorker {
         gate.memdata.set(addr, Vector3vl.fromClonable(data));
         this._enqueue(gate);
     }
+    manualLutChange(graphId, gateId, addr, data) {
+        const gate = this._graphs[graphId].getGate(gateId);
+        gate.lutdata.set(addr, Vector3vl.fromClonable(data));
+        this._enqueue(gate);
+    }
     monitor(graphId, gateId, port, monitorId, {triggerValues, stopOnTrigger, oneShot, synchronous }) {
         if (triggerValues != undefined)
             for (const k of triggerValues.keys())

@@ -177,6 +177,10 @@ instance.
     * Transition descriptor attributes: `ctrl_in`, `ctrl_out` (binary strings), `state_in`, `state_out` (natural numbers)
     * Inputs: `clk` (1-bit), `arst` (1-bit), `in` (`bits.in`-bit)
     * Outputs: `out` (`bits.out`-bit)
+ * Lookup tables: `LUT`
+    * Attributes: `bits.in`, `bits.out`, `lut` (array of binary strings)
+    * Inputs: `in` (`bits.in`-bit)
+    * Outputs: `out` (`bits.out`-bit)
 
 # TODO
 

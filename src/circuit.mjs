@@ -52,6 +52,7 @@ export function getCellType(tp) {
         '$pmux': cells.Mux1Hot,
         '$dff': cells.Dff,
         '$mem': cells.Memory,
+        '$lut': cells.LUT,
         '$fsm': cells.FSM,
         '$clock': cells.Clock,
         '$button': cells.Button,
