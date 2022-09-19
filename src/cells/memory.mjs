@@ -121,7 +121,7 @@ export const Memory = Box.define('Memory', {
         const memdata = this.get('memdata');
         
         if (!words) {
-            words = 1 << abits;
+            words = 1 << this.get('abits');
             this.prop('words', words, { init: true });
         }
         if (memdata)
