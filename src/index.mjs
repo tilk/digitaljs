@@ -161,25 +161,44 @@ export class Circuit extends HeadlessCircuit {
         paper.unfreeze();
         // subcircuit display
         this.listenTo(paper, 'open:subcircuit', (model) => {
-            const div = $('<div>', { 
+            const subcircuitModal = $('<div>', {
                 title: model.get('celltype') + ' ' + model.get('label')
             }).appendTo('html > body');
-            const pdiv = $('<div>').appendTo(div);
+            const btnId = model.get('label');
+            $(
+                `<div class="btn-group">
+                    <button id="${btnId}_zoomOut" class="btn btn-secondary"><strong>–</strong></button>
+                    <button id="${btnId}_zoomIn" class="btn btn-secondary"><strong>+</strong></button>
+                </div>`
+            ).appendTo(subcircuitModal);
+            const pdiv = $('<div>').appendTo(subcircuitModal);
             const graph = model.get('graph');
             const paper = this._makePaper(pdiv, graph);
             paper.once('render:done', () => {
-                this._windowCallback('Subcircuit', div, () => {
+                this._windowCallback('Subcircuit', subcircuitModal, () => {
                     this._engine.unobserveGraph(graph);
                     paper.remove();
-                    div.remove();
+                    subcircuitModal.remove();
                 });
             });
+
+            let scaleIndex = 0;
+            $(`button#${btnId}_zoomIn`).click((e) => {
+                scaleIndex++;
+                paper.scale(Math.pow(1.1, scaleIndex));
+                graph.resetCells(graph.getCells());
+            });
+            $(`button#${btnId}_zoomOut`).click((e) => {
+                scaleIndex--;
+                paper.scale(Math.pow(1.1, scaleIndex));
+                graph.resetCells(graph.getCells());
+            });
         });
-        this.listenTo(paper, 'open:memorycontent', (div, closeCallback) => {
-            this._windowCallback('Memory', div, closeCallback);
+        this.listenTo(paper, 'open:memorycontent', (subcircuitModal, closeCallback) => {
+            this._windowCallback('Memory', subcircuitModal, closeCallback);
         });
-        this.listenTo(paper, 'open:fsm', (div, closeCallback) => {
-            this._windowCallback('FSM', div, closeCallback);
+        this.listenTo(paper, 'open:fsm', (subcircuitModal, closeCallback) => {
+            this._windowCallback('FSM', subcircuitModal, closeCallback);
         });
         paper.fixed = function(fixed) {
             this.setInteractivity(!fixed);
