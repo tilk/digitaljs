@@ -83,6 +83,7 @@ export class Circuit extends HeadlessCircuit {
         this.listenTo(this._engine, 'changeRunning', () => {
             this.trigger('changeRunning');
         });
+        this.currentZoomIndex = 0;
     }
     _defaultWindowCallback(type, div, closingCallback) {
         const maxWidth = () => $(window).width() * 0.9;
@@ -112,6 +113,20 @@ export class Circuit extends HeadlessCircuit {
     }
     displayOn(elem) {
         return this._makePaper(elem, this._graph);
+    }
+    zoomIn(paper) {
+        this.currentZoomIndex++;
+        this._scaleAndRefreshPaper(paper);
+    }
+    zoomOut(paper) {
+        this.currentZoomIndex--;
+        this._scaleAndRefreshPaper(paper);
+    }
+    _scaleAndRefreshPaper(paper, scale = this.currentZoomIndex, graph) {
+        paper.scale(Math.pow(1.1, scale));
+        if (graph) {
+            graph.resetCells(graph.getCells());
+        }
     }
     _makePaper(elem, graph) {
         this._engine.observeGraph(graph);
@@ -185,13 +200,11 @@ export class Circuit extends HeadlessCircuit {
             let scaleIndex = 0;
             $(`button#${btnId}_zoomIn`).click((e) => {
                 scaleIndex++;
-                paper.scale(Math.pow(1.1, scaleIndex));
-                graph.resetCells(graph.getCells());
+                this._scaleAndRefreshPaper(paper, scaleIndex, graph);
             });
             $(`button#${btnId}_zoomOut`).click((e) => {
                 scaleIndex--;
-                paper.scale(Math.pow(1.1, scaleIndex));
-                graph.resetCells(graph.getCells());
+                this._scaleAndRefreshPaper(paper, scaleIndex, graph);
             });
         });
         this.listenTo(paper, 'open:memorycontent', (subcircuitModal, closeCallback) => {
