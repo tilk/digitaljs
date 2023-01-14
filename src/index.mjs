@@ -83,7 +83,6 @@ export class Circuit extends HeadlessCircuit {
         this.listenTo(this._engine, 'changeRunning', () => {
             this.trigger('changeRunning');
         });
-        this.currentZoomIndex = 0;
     }
     _defaultWindowCallback(type, div, closingCallback) {
         const maxWidth = () => $(window).width() * 0.9;
@@ -114,19 +113,13 @@ export class Circuit extends HeadlessCircuit {
     displayOn(elem) {
         return this._makePaper(elem, this._graph);
     }
-    zoomIn(paper) {
-        this.currentZoomIndex++;
-        this._scaleAndRefreshPaper(paper);
-    }
-    zoomOut(paper) {
-        this.currentZoomIndex--;
-        this._scaleAndRefreshPaper(paper);
-    }
-    _scaleAndRefreshPaper(paper, scale = this.currentZoomIndex, graph) {
+    _scaleAndRefreshPaper(paper, scale) {
         paper.scale(Math.pow(1.1, scale));
-        if (graph) {
-            graph.resetCells(graph.getCells());
-        }
+
+        const graph = paper.model;
+        paper.freeze();
+        graph.resetCells(graph.getCells());
+        paper.unfreeze();
     }
     _makePaper(elem, graph) {
         this._engine.observeGraph(graph);
@@ -197,14 +190,20 @@ export class Circuit extends HeadlessCircuit {
                 });
             });
 
+            // Since ids are generated dynamically, we should ensure,
+            // that we use a selector that escapes possible special characters
+            const btnIdSelector = btnId.replace(/[^A-Za-z0-9\s]/g, '\\$&');
+            const zoomInBtn = $(`#${btnIdSelector}_zoomIn`);
+            const zoomOutBtn = $(`#${btnIdSelector}_zoomOut`);
+
             let scaleIndex = 0;
-            $(`button#${btnId}_zoomIn`).click((e) => {
+            zoomInBtn.click(() => {
                 scaleIndex++;
-                this._scaleAndRefreshPaper(paper, scaleIndex, graph);
+                this._scaleAndRefreshPaper(paper, scaleIndex);
             });
-            $(`button#${btnId}_zoomOut`).click((e) => {
+            zoomOutBtn.click(() => {
                 scaleIndex--;
-                this._scaleAndRefreshPaper(paper, scaleIndex, graph);
+                this._scaleAndRefreshPaper(paper, scaleIndex);
             });
         });
         this.listenTo(paper, 'open:memorycontent', (subcircuitModal, closeCallback) => {
