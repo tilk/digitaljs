@@ -113,7 +113,7 @@ export class Circuit extends HeadlessCircuit {
     displayOn(elem) {
         return this._makePaper(elem, this._graph);
     }
-    _scaleAndRefreshPaper(paper, scale) {
+    scaleAndRefreshPaper(paper, scale) {
         paper.scale(Math.pow(1.1, scale));
 
         const graph = paper.model;
@@ -199,11 +199,11 @@ export class Circuit extends HeadlessCircuit {
             let scaleIndex = 0;
             zoomInBtn.click(() => {
                 scaleIndex++;
-                this._scaleAndRefreshPaper(paper, scaleIndex);
+                this.scaleAndRefreshPaper(paper, scaleIndex);
             });
             zoomOutBtn.click(() => {
                 scaleIndex--;
-                this._scaleAndRefreshPaper(paper, scaleIndex);
+                this.scaleAndRefreshPaper(paper, scaleIndex);
             });
         });
         this.listenTo(paper, 'open:memorycontent', (subcircuitModal, closeCallback) => {
