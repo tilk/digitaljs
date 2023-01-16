@@ -113,6 +113,14 @@ export class Circuit extends HeadlessCircuit {
     displayOn(elem) {
         return this._makePaper(elem, this._graph);
     }
+    scaleAndRefreshPaper(paper, scale) {
+        paper.scale(Math.pow(1.1, scale));
+
+        const graph = paper.model;
+        paper.freeze();
+        graph.resetCells(graph.getCells());
+        paper.unfreeze();
+    }
     _makePaper(elem, graph) {
         this._engine.observeGraph(graph);
         const opts = _.merge({ el: elem, model: graph }, paperOptions);
@@ -182,16 +190,20 @@ export class Circuit extends HeadlessCircuit {
                 });
             });
 
+            // Since ids are generated dynamically, we should ensure,
+            // that we use a selector that escapes possible special characters
+            const btnIdSelector = btnId.replace(/[^A-Za-z0-9\s]/g, '\\$&');
+            const zoomInBtn = $(`#${btnIdSelector}_zoomIn`);
+            const zoomOutBtn = $(`#${btnIdSelector}_zoomOut`);
+
             let scaleIndex = 0;
-            $(`button#${btnId}_zoomIn`).click((e) => {
+            zoomInBtn.click(() => {
                 scaleIndex++;
-                paper.scale(Math.pow(1.1, scaleIndex));
-                graph.resetCells(graph.getCells());
+                this.scaleAndRefreshPaper(paper, scaleIndex);
             });
-            $(`button#${btnId}_zoomOut`).click((e) => {
+            zoomOutBtn.click(() => {
                 scaleIndex--;
-                paper.scale(Math.pow(1.1, scaleIndex));
-                graph.resetCells(graph.getCells());
+                this.scaleAndRefreshPaper(paper, scaleIndex);
             });
         });
         this.listenTo(paper, 'open:memorycontent', (subcircuitModal, closeCallback) => {
