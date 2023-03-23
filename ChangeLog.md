@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.13.0] -- 2023-03-2023
+
+### Added
+- Circuit zooming buttons
+
+### Fixed
+- Fixed undefined reference in memory
+
 ## [0.12.1] -- 2022-03-17
 
 ### Fixed
