@@ -74,15 +74,50 @@ export const paperOptions = {
     }
 };
 
+const defaultSubcircuitButtons = [
+    {
+        id: "zoomOut",
+        hidden: false,
+        buttonText: "–",
+        callback: ({circuit, model, paper}) => {
+            const newZoom = model.get('zoomLevel') - 1;
+            circuit.scaleAndRefreshPaper(paper, newZoom);
+            model.set("zoomLevel", newZoom);
+        }
+    },
+    {
+        id: "zoomIn",
+        hidden: false,
+        buttonText: "+",
+        callback: ({circuit, model, paper}) => {
+            const newZoom = model.get('zoomLevel') + 1;
+            circuit.scaleAndRefreshPaper(paper, newZoom);
+            model.set("zoomLevel", newZoom);
+        }
+    }
+];
+
 export class Circuit extends HeadlessCircuit {
-    constructor(data, { windowCallback = Circuit.prototype._defaultWindowCallback, layoutEngine = "elkjs", ...options } = {}) {
+    constructor(data, { windowCallback = Circuit.prototype._defaultWindowCallback, layoutEngine = "elkjs", subcircuitButtons = [], ...options } = {}) {
         if (!options.engine) options.engine = BrowserSynchEngine;
         super(data, options);
         this._layoutEngine = layoutEngine
         this._windowCallback = windowCallback;
+        this._subcircuitButtons = this._mergeSubcircuitButtons(subcircuitButtons);
         this.listenTo(this._engine, 'changeRunning', () => {
             this.trigger('changeRunning');
         });
+    }
+    _mergeSubcircuitButtons(buttons = []) {
+        const res = new Map();
+        for (const button of defaultSubcircuitButtons.concat(buttons)) {
+            if (button?.hidden) {
+                res.delete(button.id);
+            } else {
+                res.set(button.id, button);
+            }
+        }
+        return Array.from(res.values());
     }
     _defaultWindowCallback(type, div, closingCallback) {
         const maxWidth = () => $(window).width() * 0.9;
@@ -168,17 +203,13 @@ export class Circuit extends HeadlessCircuit {
         });
         paper.unfreeze();
         // subcircuit display
+        const circuit = this;
         this.listenTo(paper, 'open:subcircuit', (model) => {
             const subcircuitModal = $('<div>', {
                 title: model.get('celltype') + ' ' + model.get('label')
             }).appendTo('html > body');
-            const btnId = model.get('label');
-            $(
-                `<div class="btn-group">
-                    <button id="${btnId}_zoomOut" class="btn btn-secondary"><strong>–</strong></button>
-                    <button id="${btnId}_zoomIn" class="btn btn-secondary"><strong>+</strong></button>
-                </div>`
-            ).appendTo(subcircuitModal);
+
+            // Create and set up paper
             const pdiv = $('<div>').appendTo(subcircuitModal);
             const graph = model.get('graph');
             const paper = this._makePaper(pdiv, graph);
@@ -190,21 +221,16 @@ export class Circuit extends HeadlessCircuit {
                 });
             });
 
-            // Since ids are generated dynamically, we should ensure,
-            // that we use a selector that escapes possible special characters
-            const btnIdSelector = btnId.replace(/[^A-Za-z0-9\s]/g, '\\$&');
-            const zoomInBtn = $(`#${btnIdSelector}_zoomIn`);
-            const zoomOutBtn = $(`#${btnIdSelector}_zoomOut`);
-
-            let scaleIndex = 0;
-            zoomInBtn.click(() => {
-                scaleIndex++;
-                this.scaleAndRefreshPaper(paper, scaleIndex);
-            });
-            zoomOutBtn.click(() => {
-                scaleIndex--;
-                this.scaleAndRefreshPaper(paper, scaleIndex);
-            });
+            // Create buttons
+            model.set("zoomLevel", 0);
+            const buttonGroup = $('<div class="btn-group"></div>')
+            for (const button of this._subcircuitButtons) {
+                $('<button class="btn btn-secondary"></button>')
+                    .append($('<strong></strong>').text(button.buttonText))
+                    .on('click', {circuit, model, paper}, (event) => button.callback(event.data))
+                    .appendTo(buttonGroup);
+            }
+            buttonGroup.prependTo(subcircuitModal);
         });
         this.listenTo(paper, 'open:memorycontent', (subcircuitModal, closeCallback) => {
             this._windowCallback('Memory', subcircuitModal, closeCallback);
