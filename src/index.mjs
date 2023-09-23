@@ -146,7 +146,7 @@ export class Circuit extends HeadlessCircuit {
         });
     }
     displayOn(elem) {
-        return this._makePaper(elem, this._graph);
+        return this._makePaper(elem, this._graph, []);
     }
     scaleAndRefreshPaper(paper, scale) {
         paper.scale(Math.pow(1.1, scale));
@@ -156,7 +156,9 @@ export class Circuit extends HeadlessCircuit {
         graph.resetCells(graph.getCells());
         paper.unfreeze();
     }
-    _makePaper(elem, graph) {
+    _makePaper(elem, graph, navHistory) {
+        navHistory = navHistory || [];
+
         this._engine.observeGraph(graph);
         const opts = _.merge({ el: elem, model: graph }, paperOptions);
         const paper = new joint.dia.Paper(opts);
@@ -205,6 +207,8 @@ export class Circuit extends HeadlessCircuit {
         // subcircuit display
         const circuit = this;
         this.listenTo(paper, 'open:subcircuit', (model) => {
+            const newNavHistory = navHistory.concat(model);
+
             const subcircuitModal = $('<div>', {
                 title: model.get('celltype') + ' ' + model.get('label')
             }).appendTo('html > body');
@@ -212,7 +216,7 @@ export class Circuit extends HeadlessCircuit {
             // Create and set up paper
             const pdiv = $('<div>').appendTo(subcircuitModal);
             const graph = model.get('graph');
-            const paper = this._makePaper(pdiv, graph);
+            const paper = this._makePaper(pdiv, graph, newNavHistory);
             paper.once('render:done', () => {
                 this._windowCallback('Subcircuit', subcircuitModal, () => {
                     this._engine.unobserveGraph(graph);
@@ -227,7 +231,7 @@ export class Circuit extends HeadlessCircuit {
             for (const button of this._subcircuitButtons) {
                 $('<button class="btn btn-secondary"></button>')
                     .append($('<strong></strong>').text(button.buttonText))
-                    .on('click', {circuit, model, paper}, (event) => button.callback(event.data))
+                    .on('click', {circuit, model, paper, navHistory: newNavHistory}, (event) => button.callback(event.data))
                     .appendTo(buttonGroup);
             }
             buttonGroup.prependTo(subcircuitModal);
