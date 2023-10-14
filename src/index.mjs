@@ -146,7 +146,7 @@ export class Circuit extends HeadlessCircuit {
         });
     }
     displayOn(elem) {
-        return this._makePaper(elem, this._graph);
+        return this._makePaper(elem, this._graph, null);
     }
     scaleAndRefreshPaper(paper, scale) {
         paper.scale(Math.pow(1.1, scale));
@@ -156,7 +156,13 @@ export class Circuit extends HeadlessCircuit {
         graph.resetCells(graph.getCells());
         paper.unfreeze();
     }
-    _makePaper(elem, graph) {
+    _makePaper(elem, graph, parentModel) {
+        if (!parentModel) {
+            parentModel = graph;
+            parentModel.set("parent", null);
+            parentModel.set("isTopLevel", true);
+        }
+
         this._engine.observeGraph(graph);
         const opts = _.merge({ el: elem, model: graph }, paperOptions);
         const paper = new joint.dia.Paper(opts);
@@ -212,7 +218,7 @@ export class Circuit extends HeadlessCircuit {
             // Create and set up paper
             const pdiv = $('<div>').appendTo(subcircuitModal);
             const graph = model.get('graph');
-            const paper = this._makePaper(pdiv, graph);
+            const paper = this._makePaper(pdiv, graph, model);
             paper.once('render:done', () => {
                 this._windowCallback('Subcircuit', subcircuitModal, () => {
                     this._engine.unobserveGraph(graph);
@@ -221,8 +227,11 @@ export class Circuit extends HeadlessCircuit {
                 });
             });
 
-            // Create buttons
             model.set("zoomLevel", 0);
+            model.set("parent", parentModel);
+            model.set("isTopLevel", false);
+
+            // Create buttons
             const buttonGroup = $('<div class="btn-group"></div>')
             for (const button of this._subcircuitButtons) {
                 $('<button class="btn btn-secondary"></button>')
