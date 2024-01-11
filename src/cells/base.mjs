@@ -114,6 +114,18 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
         this.attr(attr, this.get(prop));
         this.on('change:' + prop, (_, val) => this.attr(attr, val));
     },
+    setAttrs(attrs, path) {
+        path = path ?? [];
+
+        for (const [attrName, val] of Object.entries(attrs)) {
+            const attrPath = path.concat(attrName);
+            if (typeof val === 'object') {
+                this.setAttrs(val, attrPath);
+            } else {
+                this.attr(attrPath.join('/'), val);
+            }
+        }
+    },
   
     /*
      * Private methods.
