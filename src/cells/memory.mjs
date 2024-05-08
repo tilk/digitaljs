@@ -171,9 +171,9 @@ export const Memory = Box.define('Memory', {
             for (const [num, wrport] of this.get('wrports').entries()) {
                 const wrportname = 'wr' + num;
                 const mask_ok = (val, num) => typeof val == 'boolean' ? val : val[num];
-                if ('transparent' in port && mask_ok(port.transparent, num) && port_active(wrportname, wrport) && data[portname + 'addr'] == data[wrportname + 'addr'])
+                if ('transparent' in port && mask_ok(port.transparent, num) && port_active(wrportname, wrport) && is_enabled(wrportname, wrport) && data[portname + 'addr'] == data[wrportname + 'addr'])
                     out[portname + 'data'] = write_value(wrportname, wrport, out[portname + 'data'], data[wrportname + 'data']);
-                if ('collision' in port && mask_ok(port.collision, num) && port_active(wrportname, wrport) && data[portname + 'addr'] == data[wrportname + 'addr'])
+                if ('collision' in port && mask_ok(port.collision, num) && port_active(wrportname, wrport) && is_enabled(wrportname, wrport) && data[portname + 'addr'] == data[wrportname + 'addr'])
                     out[portname + 'data'] = write_value(wrportname, wrport, out[portname + 'data'], Vector3vl.xes(bits));
             }
 
