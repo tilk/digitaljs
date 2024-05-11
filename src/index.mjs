@@ -14,7 +14,7 @@ import * as cells from './cells.mjs';
 import * as engines from './engines.mjs';
 import * as tools from './tools.mjs';
 import * as transform from './transform.mjs';
-import { HeadlessCircuit, getCellType } from './circuit.mjs';
+import { HeadlessCircuit, getCellTypeStr, getCellType } from './circuit.mjs';
 import { BrowserSynchEngine } from './engines/browsersynch.mjs';
 import { MonitorView, Monitor } from './monitor.mjs';
 import { IOPanelView } from './iopanel.mjs';
@@ -26,7 +26,7 @@ import './style.css';
 // see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#Browser_compatibility
 import ResizeObserver from 'resize-observer-polyfill';
 
-export { HeadlessCircuit, getCellType, cells, tools, engines, transform, MonitorView, Monitor, IOPanelView };
+export { HeadlessCircuit, getCellTypeStr, getCellType, cells, tools, engines, transform, MonitorView, Monitor, IOPanelView };
 
 export const paperOptions = {
     async: true,
