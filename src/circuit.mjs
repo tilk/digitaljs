@@ -169,7 +169,7 @@ export class HeadlessCircuit {
             if (cellType == this._cells.Subcircuit)
                 cellArgs.graph = this._makeGraph(subcircuits[dev.celltype], subcircuits, { nested: true });
             const cell = new cellType(cellArgs);
-            const cellAttrs = this._cellAttributes[cell.get('type')];
+            const cellAttrs = this._cellAttributes[cell.get('celltype')] ?? this._cellAttributes[cell.get('type')];
             if (cellAttrs) {
                 cell.setAttrs(cellAttrs);
             }
