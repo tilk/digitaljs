@@ -12,68 +12,73 @@ import * as transform from './transform.mjs';
 import { SynchEngine } from './engines/synch.mjs';
 
 export { cells, tools, engines, transform };
-    
-export function getCellType(tp) {
-    const types = {
-        '$not': cells.Not,
-        '$and': cells.And,
-        '$nand': cells.Nand,
-        '$or': cells.Or,
-        '$nor': cells.Nor,
-        '$xor': cells.Xor,
-        '$xnor': cells.Xnor,
-        '$reduce_and': cells.AndReduce,
-        '$reduce_nand': cells.NandReduce,
-        '$reduce_or': cells.OrReduce,
-        '$reduce_nor': cells.NorReduce,
-        '$reduce_xor': cells.XorReduce,
-        '$reduce_xnor': cells.XnorReduce,
-        '$reduce_bool': cells.OrReduce,
-        '$logic_not': cells.NorReduce,
-        '$repeater': cells.Repeater,
-        '$shl': cells.ShiftLeft,
-        '$shr': cells.ShiftRight,
-        '$lt': cells.Lt,
-        '$le': cells.Le,
-        '$eq': cells.Eq,
-        '$ne': cells.Ne,
-        '$gt': cells.Gt,
-        '$ge': cells.Ge,
-        '$constant': cells.Constant,
-        '$neg': cells.Negation,
-        '$pos': cells.UnaryPlus,
-        '$add': cells.Addition,
-        '$sub': cells.Subtraction,
-        '$mul': cells.Multiplication,
-        '$div': cells.Division,
-        '$mod': cells.Modulo,
-        '$pow': cells.Power,
-        '$mux': cells.Mux,
-        '$pmux': cells.Mux1Hot,
-        '$dff': cells.Dff,
-        '$mem': cells.Memory,
-        '$fsm': cells.FSM,
-        '$clock': cells.Clock,
-        '$button': cells.Button,
-        '$lamp': cells.Lamp,
-        '$numdisplay': cells.NumDisplay,
-        '$numentry': cells.NumEntry,
-        '$input': cells.Input,
-        '$output': cells.Output,
-        '$busgroup': cells.BusGroup,
-        '$busungroup': cells.BusUngroup,
-        '$busslice': cells.BusSlice,
-        '$zeroextend': cells.ZeroExtend,
-        '$signextend': cells.SignExtend,
-        '$display7': cells.Display7,
-    };
-    if (tp in types) return types[tp];
-    else return cells.Subcircuit;
+
+const CELL_TYPES = {
+    '$not': 'Not',
+    '$and': 'And',
+    '$nand': 'Nand',
+    '$or': 'Or',
+    '$nor': 'Nor',
+    '$xor': 'Xor',
+    '$xnor': 'Xnor',
+    '$reduce_and': 'AndReduce',
+    '$reduce_nand': 'NandReduce',
+    '$reduce_or': 'OrReduce',
+    '$reduce_nor': 'NorReduce',
+    '$reduce_xor': 'XorReduce',
+    '$reduce_xnor': 'XnorReduce',
+    '$reduce_bool': 'OrReduce',
+    '$logic_not': 'NorReduce',
+    '$repeater': 'Repeater',
+    '$shl': 'ShiftLeft',
+    '$shr': 'ShiftRight',
+    '$lt': 'Lt',
+    '$le': 'Le',
+    '$eq': 'Eq',
+    '$ne': 'Ne',
+    '$gt': 'Gt',
+    '$ge': 'Ge',
+    '$constant': 'Constant',
+    '$neg': 'Negation',
+    '$pos': 'UnaryPlus',
+    '$add': 'Addition',
+    '$sub': 'Subtraction',
+    '$mul': 'Multiplication',
+    '$div': 'Division',
+    '$mod': 'Modulo',
+    '$pow': 'Power',
+    '$mux': 'Mux',
+    '$pmux': 'Mux1Hot',
+    '$dff': 'Dff',
+    '$mem': 'Memory',
+    '$fsm': 'FSM',
+    '$clock': 'Clock',
+    '$button': 'Button',
+    '$lamp': 'Lamp',
+    '$numdisplay': 'NumDisplay',
+    '$numentry': 'NumEntry',
+    '$input': 'Input',
+    '$output': 'Output',
+    '$busgroup': 'BusGroup',
+    '$busungroup': 'BusUngroup',
+    '$busslice': 'BusSlice',
+    '$zeroextend': 'ZeroExtend',
+    '$signextend': 'SignExtend',
+    '$display7': 'Display7',
+};
+
+export function getCellTypeStr(tp) {
+    return CELL_TYPES[tp] ?? null;
 }
-        
+
+export function getCellType(tp) {
+    return cells[getCellTypeStr(tp)] ?? cells.Subcircuit;
+}
+
 export class HeadlessCircuit {
-    constructor(data, {cellsNamespace = {}, engine = SynchEngine, engineOptions = {}} = {}) {
+    constructor(data, {cellsNamespace = {}, engine = SynchEngine, engineOptions = {}, cellAttributes = {}} = {}) {
         this._cells = Object.assign(cells, cellsNamespace);
+        this._cellAttributes = cellAttributes;
         this._display3vl = new Display3vl();
         this._display3vl.addDisplay(new help.Display3vlASCII());
         this._graph = this._makeGraph(data, data.subcircuits);
@@ -164,6 +169,14 @@ export class HeadlessCircuit {
             if (cellType == this._cells.Subcircuit)
                 cellArgs.graph = this._makeGraph(subcircuits[dev.celltype], subcircuits, { nested: true });
             const cell = new cellType(cellArgs);
+            const cellAttrs = _.merge(
+                {},
+                this._cellAttributes[cell.get('type')],
+                this._cellAttributes[cell.get('celltype')]
+            );
+            if (cellAttrs) {
+                cell.setAttrs(cellAttrs);
+            }
             graph.addCell(cell);
         }
         for (const conn of data.connectors) {
