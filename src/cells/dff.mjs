@@ -1,7 +1,6 @@
 "use strict";
 
 import { Box, BoxView } from './base.mjs';
-import * as help from '../help.mjs';
 import { Vector3vl } from '3vl';
 
 // D flip-flops

@@ -1,6 +1,6 @@
 "use strict";
 
-import { Vector3vl, Display3vlWithRegex, Display3vl } from '3vl';
+import { Vector3vl, Display3vlWithRegex } from '3vl';
 
 const controlCodes20 = [
     'NUL', 'SOH', 'STX', 'ETX', 'EOT', 'ENQ', 'ACK', 'BEL', 
