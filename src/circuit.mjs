@@ -1,6 +1,6 @@
 "use strict";
 
-import * as joint from 'jointjs';
+import * as joint from '@joint/core';
 import _ from 'lodash';
 import Backbone from 'backbone';
 import { Vector3vl, Display3vl } from '3vl';

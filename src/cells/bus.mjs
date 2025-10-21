@@ -1,6 +1,5 @@
 "use strict";
 
-import * as joint from 'jointjs';
 import { Box, BoxView } from './base.mjs';
 import * as help from '../help.mjs';
 import { Vector3vl } from '3vl';

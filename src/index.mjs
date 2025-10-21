@@ -3,7 +3,7 @@
 import 'babel-polyfill';
 import dagre from 'dagre';
 import graphlib from 'graphlib';
-import * as joint from 'jointjs';
+import * as joint from '@joint/core';
 import _ from 'lodash';
 import $ from 'jquery';
 import Backbone from 'backbone';

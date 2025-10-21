@@ -1,6 +1,5 @@
 "use strict";
 
-import * as joint from 'jointjs';
 import _ from 'lodash';
 import { Gate, GateView, portGroupAttrs } from './base.mjs';
 import * as help from '../help.mjs';
