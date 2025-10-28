@@ -1,10 +1,9 @@
 "use strict";
 
-import * as joint from 'jointjs';
+import * as joint from '@joint/core';
 import _ from 'lodash';
 import { Box, BoxView } from './base.mjs';
 import { IO, Input, Output } from './io.mjs';
-import * as help from '../help.mjs';
 
 // add offset of 10pt to account for the top label at layout time
 const subcircuit_pos_offset = 10;

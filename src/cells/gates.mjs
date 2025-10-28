@@ -1,9 +1,6 @@
 "use strict";
 
-import * as joint from 'jointjs';
 import { Gate, GateView } from './base.mjs';
-import * as help from '../help.mjs';
-import { Vector3vl } from '3vl';
 
 const and_path = "M19 0v32h16c9 0 16-7 16-16S44 0 35 0H20z";
 const or_path = "M14.3 0l1.6 2s4.5 5.6 4.5 14s-4.5 14-4.5 14l-1.6 2H28c3.8 0 16.6-.5 25-16h0A28 28 0 0028 0H16.8z";

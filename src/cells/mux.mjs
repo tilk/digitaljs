@@ -1,9 +1,7 @@
 "use strict";
 
-import * as joint from 'jointjs';
 import _ from 'lodash';
 import { Gate, GateView, portGroupAttrs } from './base.mjs';
-import * as help from '../help.mjs';
 import { Vector3vl } from '3vl';
 
 // add offset of 30pt to account for the top selection port and oversized box at layout time

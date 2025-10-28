@@ -3,11 +3,9 @@
 import 'babel-polyfill';
 import dagre from 'dagre';
 import graphlib from 'graphlib';
-import * as joint from 'jointjs';
+import * as joint from '@joint/core';
 import _ from 'lodash';
 import $ from 'jquery';
-import Backbone from 'backbone';
-import { Vector3vl } from '3vl';
 import 'jquery-ui/ui/widgets/dialog.js';
 import 'jquery-ui/themes/base/all.css';
 import * as cells from './cells.mjs';

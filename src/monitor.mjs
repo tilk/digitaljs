@@ -1,6 +1,5 @@
 "use strict";
 
-import joint from 'jointjs';
 import _ from 'lodash';
 import $ from 'jquery';
 import Backbone from 'backbone';

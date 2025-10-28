@@ -1,6 +1,6 @@
 "use strict";
 
-import * as joint from 'jointjs';
+import * as joint from '@joint/core';
 import _ from 'lodash';
 import { Vector3vl } from '3vl';
 import * as tools from '../tools.mjs';
@@ -37,11 +37,11 @@ export const portGroupAttrs = {
 };
 
 // Common base class for gate models
-export const Gate = joint.shapes.basic.Generic.define('Gate', {
+export const Gate = joint.dia.Element.define('Gate', {
     /* default properties */
     propagation: 1,
     label: '',
-    
+
     size: { width: 80, height: 30 },
     inputSignals: {},
     outputSignals: {},
@@ -91,8 +91,7 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
         if (ports.items) {
             this._preprocessPorts(ports.items);
         }
-        
-        joint.shapes.basic.Generic.prototype.initialize.apply(this, arguments);
+        joint.dia.Element.prototype.initialize.apply(this, arguments);
         this.prepare();
         
         this.bindAttrToProp('label/text', 'label');
@@ -218,14 +217,14 @@ export const Gate = joint.shapes.basic.Generic.define('Gate', {
     },
     addPorts(ports) {
         this._preprocessPorts(ports);
-        joint.shapes.basic.Generic.prototype.addPorts.apply(this, arguments);
+        joint.dia.Element.prototype.addPorts.apply(this, arguments);
     },
     removePort(port, opt) {
         this.removePorts([port]);
     },
     removePorts(ports, opt) {
         this._removePortsSignals(ports);
-        joint.shapes.basic.Generic.prototype.removePorts.apply(this, arguments);
+        joint.dia.Element.prototype.removePorts.apply(this, arguments);
     },
 
     /*
