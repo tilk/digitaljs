@@ -48,13 +48,11 @@ export const Gate = joint.dia.Element.define('Gate', {
     attrs: {
         '.': { magnet: false },
         body: { stroke: 'black', strokeWidth: 2 },
-        'text': {
-            fontSize: '8pt',
-            fill: 'black'
-        },
         label: {
             refX: .5, refDy: 3,
-            textAnchor: 'middle'
+            textAnchor: 'middle',
+            fontSize: '8pt',
+            fill: 'black'
         }
     },
     ports: {
@@ -93,12 +91,12 @@ export const Gate = joint.dia.Element.define('Gate', {
         }
         joint.dia.Element.prototype.initialize.apply(this, arguments);
         this.prepare();
-        
+
         this.bindAttrToProp('label/text', 'label');
         if (this._unsupportedPropChanges.length > 0) {
             this.on(this._unsupportedPropChanges.map(prop => 'change:'+prop).join(' '), (__, ___, opt) => {
                 if (opt.init) return;
-                
+
                 const changed = _.intersection(Object.keys(this.changed), this._unsupportedPropChanges);
                 changed.forEach(attr => {
                     this.set(attr, this.previous(attr), {init: true});
@@ -113,7 +111,7 @@ export const Gate = joint.dia.Element.define('Gate', {
         this.attr(attr, this.get(prop));
         this.on('change:' + prop, (_, val) => this.attr(attr, val));
     },
-  
+
     /*
      * Private methods.
      */
@@ -186,12 +184,12 @@ export const Gate = joint.dia.Element.define('Gate', {
             in: this.get('inputSignals'),
             out: this.get('outputSignals')
         }
-        
+
         for (const port of ports) {
             console.assert(port.bits >= 0);
             signals[port.dir][port.id] = this._resetPortValue(port);
         }
-        
+
         this.set('inputSignals', signals.in);
         this.set('outputSignals', signals.out);
     },
@@ -200,11 +198,11 @@ export const Gate = joint.dia.Element.define('Gate', {
             in: this.get('inputSignals'),
             out: this.get('outputSignals')
         }
-        
+
         for (const port of ports) {
             delete signals[port.dir][port.id];
         }
-        
+
         this.set('inputSignals', signals.in);
         this.set('outputSignals', signals.out);
     },
