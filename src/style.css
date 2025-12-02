@@ -132,6 +132,14 @@ body {
     font-style: normal;
 }
 
+.joint-element .body {
+    fill: rgb(255, 255, 255);
+}
+
+.joint-element path.decor {
+    fill: transparent;
+}
+
 .joint-element foreignObject {
     overflow: hidden;
 }

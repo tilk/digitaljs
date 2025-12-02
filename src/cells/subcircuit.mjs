@@ -22,13 +22,14 @@ export const Subcircuit = Box.define('Subcircuit', {
         },
         type: {
             refX: .5, refY: -10,
-            textAnchor: 'middle', textVerticalAnchor: 'middle'
+            textAnchor: 'middle', textVerticalAnchor: 'middle',
+            fontSize: '8pt'
         }
     }
 }, {
     initialize() {
-        this.bindAttrToProp('text.type/text', 'celltype');
-        
+        this.bindAttrToProp('type/text', 'celltype');
+
         const graph = this.get('graph');
         console.assert(graph instanceof joint.dia.Graph);
         graph.set('subcircuit', this);
@@ -59,7 +60,7 @@ export const Subcircuit = Box.define('Subcircuit', {
         this.set('circuitIOmap', iomap);
         this.get('ports').items = ports;
         this.set('warning', graph._warnings > 0);
-        
+
         Box.prototype.initialize.apply(this, arguments);
     },
     _resetPortValue(port) {

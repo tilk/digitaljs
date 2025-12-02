@@ -3,6 +3,7 @@
 import $ from 'jquery';
 import _ from 'lodash';
 import * as joint from '@joint/core';
+import { DirectedGraph } from '@joint/layout-directed-graph';
 import { Box, BoxView } from './base.mjs';
 import { Vector3vl } from '3vl';
 import dagre from 'dagre';
@@ -15,7 +16,7 @@ export const FSM = Box.define('FSM', {
     init_state: 0,
     states: 1,
     trans_table: [],
-    
+
     size: { width: 80, height: 3*16+8 },
     ports: {
         groups: {
@@ -31,28 +32,28 @@ export const FSM = Box.define('FSM', {
     initialize() {
         const bits = this.get('bits');
         const polarity = this.get('polarity');
-        
+
         const init_state = this.get('init_state');
         const states = this.get('states');
         const trans_table = this.get('trans_table');
-        
+
         this.get('ports').items = [
             { id: 'in', group: 'in', dir: 'in', bits: bits.in, labelled: true },
             { id: 'clk', group: 'in', dir: 'in', bits: 1, polarity: polarity.clock, decor: Box.prototype.decorClock, labelled: true },
             { id: 'arst', group: 'in', dir: 'in', bits: 1, polarity: polarity.arst, labelled: true },
             { id: 'out', group: 'out', dir: 'out', bits: bits.out, labelled: true }
         ];
-        
+
         Box.prototype.initialize.apply(this, arguments);
-        
+
         const current_state = this.get('current_state');
-        
+
         this.fsmgraph = new joint.dia.Graph;
         const statenodes = [];
         for (let n = 0; n < states; n++) {
             const node = new joint.shapes.standard.Circle({stateNo: n, id: 'state' + n, isInit: n == init_state});
             node.attr('label/text', String(n));
-            node.resize(100,50);
+            node.resize(50,50);
             if (n == init_state)
                 node.attr('body/strokeWidth', 3)
             if (n == current_state)
@@ -79,7 +80,7 @@ export const FSM = Box.define('FSM', {
                 trans.addTo(this.fsmgraph);
             }
         }
-        
+
         this.listenTo(this, 'change:current_state', (model, state) => {
             const pstate = model.previous('current_state');
             this.fsmgraph.getCell('state' + pstate).removeAttr('body/class');
@@ -206,7 +207,7 @@ export const FSMView = BoxView.extend({
         graph.resetCells(graph.getCells());
         // lazy layout
         if (!graph.get('laid_out')) {
-            joint.layout.DirectedGraph.layout(graph, {
+            DirectedGraph.layout(graph, {
                 dagre: dagre,
                 graphlib: graphlib
             });

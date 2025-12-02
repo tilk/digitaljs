@@ -4,6 +4,7 @@ import 'babel-polyfill';
 import dagre from 'dagre';
 import graphlib from 'graphlib';
 import * as joint from '@joint/core';
+import { DirectedGraph } from '@joint/layout-directed-graph';
 import _ from 'lodash';
 import $ from 'jquery';
 import 'jquery-ui/ui/widgets/dialog.js';
@@ -165,7 +166,7 @@ export class Circuit extends HeadlessCircuit {
         // lazy graph layout
         if (!graph.get('laid_out')) {
             if (this._layoutEngine == "dagre") {
-                joint.layout.DirectedGraph.layout(graph, {
+                DirectedGraph.layout(graph, {
                     nodeSep: 20,
                     edgeSep: 0,
                     rankSep: 110,
