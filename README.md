@@ -13,6 +13,13 @@ the project.
 You can [try it out online](https://digitaljs.tilk.eu/). The web app is
 [a separate Github project](https://github.com/tilk/digitaljs_online/).
 
+## Conference paper
+
+Marek Materzok. 2020. DigitalJS: a Visual Verilog Simulator for Teaching.
+In Proceedings of the 8th Computer Science Education Research Conference
+(CSERC '19). Association for Computing Machinery, New York, NY, USA,
+110–115. https://doi.org/10.1145/3375258.3375272
+
 # Usage
 
 You can use DigitalJS in your project by installing it from NPM:
