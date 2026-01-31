@@ -51,7 +51,6 @@
     "@joint/layout-directed-graph": "~4.1.4",
     "3vl": "^1.0.1",
     "babel-polyfill": "^6.26.0",
-    "backbone": "^1.6.1",
     "dagre": "^0.8.5",
     "elkjs": "^0.11.0",
     "fastpriorityqueue": "^0.7.5",

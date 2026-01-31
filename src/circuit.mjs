@@ -1,8 +1,6 @@
 "use strict";
 
 import * as joint from '@joint/core';
-import _ from 'lodash';
-import Backbone from 'backbone';
 import { Vector3vl, Display3vl } from '3vl';
 import * as cells from './cells.mjs';
 import * as help from './help.mjs';
@@ -159,7 +157,7 @@ export class HeadlessCircuit {
             const dev = data.devices[devid];
             if (dev.position) laid_out = true;
             const cellType = (dev.type in this._cells) ? this._cells[dev.type] : getCellType(dev.celltype);
-            const cellArgs = _.clone(dev);
+            const cellArgs = joint.util.clone(dev);
             cellArgs.id = devid;
             if (cellType == this._cells.Subcircuit)
                 cellArgs.graph = this._makeGraph(subcircuits[dev.celltype], subcircuits, { nested: true });
@@ -353,5 +351,5 @@ export class HeadlessCircuit {
     }
 };
 
-_.extend(HeadlessCircuit.prototype, Backbone.Events);
+joint.util.assign(HeadlessCircuit.prototype, joint.mvc.Events);
 
