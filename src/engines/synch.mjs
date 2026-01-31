@@ -1,5 +1,5 @@
 
-import _ from 'lodash';
+import * as joint from '@joint/core';
 import FastPriorityQueue from 'fastpriorityqueue';
 import * as help from '../help.mjs';
 import { BaseEngine } from './base.mjs';
@@ -59,7 +59,7 @@ export class SynchEngine extends BaseEngine {
                 if (subcir != true) {
                     console.assert(subcir != null);
                     const port = gate.get('net');
-                    const signals = _.clone(subcir.get('outputSignals'));
+                    const signals = joint.util.clone(subcir.get('outputSignals'));
                     signals[port] = gate.getOutput();
                     subcir.set('outputSignals', signals);
                 }

@@ -1,7 +1,6 @@
 "use strict";
 
 import $ from 'jquery';
-import _ from 'lodash';
 import * as joint from '@joint/core';
 import { DirectedGraph } from '@joint/layout-directed-graph';
 import { Box, BoxView } from './base.mjs';

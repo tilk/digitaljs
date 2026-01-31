@@ -1,6 +1,6 @@
 "use strict";
 
-import _ from 'lodash';
+import * as joint from '@joint/core';
 import { Gate, GateView, portGroupAttrs } from './base.mjs';
 import { Vector3vl } from '3vl';
 
@@ -18,7 +18,7 @@ export const GenMux = Gate.define('GenMux', {
         groups: {
             'in2': {
                 position: { name: 'top', args: { y: 5 } },
-                attrs: _.merge({}, portGroupAttrs, {
+                attrs: joint.util.merge({}, portGroupAttrs, {
                     wire: { x2: 0, y2: -25 },
                     port: { magnet: 'passive', refY: -25 },
                     bits: { refDx: -5, refDy: 2, textAnchor: 'start' }

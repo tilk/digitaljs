@@ -1,5 +1,5 @@
 
-import * as joint from '@joint/core';
+import { util, mvc } from '@joint/core';
 
 export class BaseEngine {
     constructor(graph) {
@@ -52,6 +52,6 @@ export class BaseEngine {
     }
 };
 
-joint.util.assign(BaseEngine.prototype, joint.mvc.Events);
+util.assign(BaseEngine.prototype, mvc.Events);
 
 

@@ -1,5 +1,5 @@
 
-import _ from 'lodash';
+import { util } from '@joint/core';
 import { BaseEngine } from './base.mjs';
 import { Vector3vl } from '3vl';
 import * as cells from '../cells.mjs';
@@ -219,7 +219,7 @@ export class WorkerEngine extends BaseEngine {
             const newOutputs = {};
             for (const [port, val] of Object.entries(vals))
                 newOutputs[port] = Vector3vl.fromClonable(val);
-            _.defaults(newOutputs, gate.get('outputSignals'));
+            util.defaults(newOutputs, gate.get('outputSignals'));
             gate.set('outputSignals', newOutputs);
         }
         this.trigger('postUpdateGates', tick);

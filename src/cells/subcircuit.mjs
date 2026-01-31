@@ -1,7 +1,6 @@
 "use strict";
 
 import * as joint from '@joint/core';
-import _ from 'lodash';
 import { Box, BoxView } from './base.mjs';
 import { IO, Input, Output } from './io.mjs';
 
@@ -107,7 +106,7 @@ export const Subcircuit = Box.define('Subcircuit', {
 });
 
 export const SubcircuitView = BoxView.extend({
-    attrs: _.merge({}, BoxView.prototype.attrs, {
+    attrs: joint.util.merge({}, BoxView.prototype.attrs, {
         warning: {
             warn: { wrapper: { 'stroke-opacity': '0.5' } },
             none: { wrapper: { 'stroke-opacity': '0' } }

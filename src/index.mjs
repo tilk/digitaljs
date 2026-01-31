@@ -5,7 +5,6 @@ import dagre from 'dagre';
 import graphlib from 'graphlib';
 import * as joint from '@joint/core';
 import { DirectedGraph } from '@joint/layout-directed-graph';
-import _ from 'lodash';
 import $ from 'jquery';
 import 'jquery-ui/ui/widgets/dialog.js';
 import 'jquery-ui/themes/base/all.css';
@@ -157,7 +156,7 @@ export class Circuit extends HeadlessCircuit {
     }
     _makePaper(elem, graph) {
         this._engine.observeGraph(graph);
-        const opts = _.merge({ el: elem, model: graph }, paperOptions);
+        const opts = joint.util.merge({ el: elem, model: graph }, paperOptions);
         const paper = new joint.dia.Paper(opts);
         paper.$el.addClass('djs');
         paper.freeze();
