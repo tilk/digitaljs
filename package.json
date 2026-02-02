@@ -56,7 +56,6 @@
     "fastpriorityqueue": "^0.7.5",
     "jquery": "^3.7.1",
     "jquery-ui": "^1.14.1",
-    "regenerator-runtime": "^0.14.1",
     "wavecanvas": "^1.1.1",
     "web-worker": "^1.5.0"
   },
