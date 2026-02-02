@@ -1,6 +1,5 @@
 "use strict";
 
-import 'babel-polyfill';
 import * as joint from '@joint/core';
 import { DirectedGraph } from '@joint/layout-directed-graph';
 import $ from 'jquery';
