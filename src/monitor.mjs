@@ -5,7 +5,6 @@ import $ from 'jquery';
 import * as help from './help.mjs';
 import { Vector3vl } from '3vl';
 import { Waveform, drawWaveform, defaultSettings, extendSettings, calcGridStep } from 'wavecanvas';
-import ResizeObserver from 'resize-observer-polyfill';
 
 function getWireId(wire) {
     const hier = [wire.cid];

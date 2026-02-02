@@ -17,11 +17,6 @@ import { IOPanelView } from './iopanel.mjs';
 import { elk_layout } from './elkjs.mjs';
 import './style.css';
 
-// polyfill ResizeObserver for e.g. Firefox ESR 68.8
-// this line and the node-module might be removed as soon as ResizeObserver is widely supported
-// see https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver#Browser_compatibility
-import ResizeObserver from 'resize-observer-polyfill';
-
 export { HeadlessCircuit, getCellType, cells, tools, engines, transform, MonitorView, Monitor, IOPanelView };
 
 export const paperOptions = {
