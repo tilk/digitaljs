@@ -5,8 +5,6 @@ import * as joint from '@joint/core';
 import { DirectedGraph } from '@joint/layout-directed-graph';
 import { Box, BoxView } from './base.mjs';
 import { Vector3vl } from '3vl';
-import dagre from 'dagre';
-import graphlib from 'graphlib';
 
 export const FSM = Box.define('FSM', {
     /* default properties */
@@ -206,10 +204,7 @@ export const FSMView = BoxView.extend({
         graph.resetCells(graph.getCells());
         // lazy layout
         if (!graph.get('laid_out')) {
-            DirectedGraph.layout(graph, {
-                dagre: dagre,
-                graphlib: graphlib
-            });
+            DirectedGraph.layout(graph);
             graph.set('laid_out', true);
         }
         // auto-resizing

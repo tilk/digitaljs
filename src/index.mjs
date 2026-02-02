@@ -1,8 +1,6 @@
 "use strict";
 
 import 'babel-polyfill';
-import dagre from 'dagre';
-import graphlib from 'graphlib';
 import * as joint from '@joint/core';
 import { DirectedGraph } from '@joint/layout-directed-graph';
 import $ from 'jquery';
@@ -180,9 +178,7 @@ export class Circuit extends HeadlessCircuit {
                     },
                     exportElement: (element) => {
                         return element.getLayoutSize();
-                    },
-                    dagre: dagre,
-                    graphlib: graphlib
+                    }
                 });
             } else if (this._layoutEngine == "elkjs") {
                 elk_layout(graph);
