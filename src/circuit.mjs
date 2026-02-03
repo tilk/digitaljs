@@ -70,8 +70,9 @@ export function getCellType(tp) {
 }
         
 export class HeadlessCircuit {
-    constructor(data, {cellsNamespace = {}, engine = SynchEngine, engineOptions = {}} = {}) {
+    constructor(data, {cellsNamespace = {}, engine = SynchEngine, engineOptions = {}, defaultCombinationalPropagation} = {}) {
         this._cells = Object.assign(cells, cellsNamespace);
+        this._defaultCombinationalPropagation = defaultCombinationalPropagation;
         this._display3vl = new Display3vl();
         this._display3vl.addDisplay(new help.Display3vlASCII());
         this._graph = this._makeGraph(data, data.subcircuits);
@@ -161,6 +162,8 @@ export class HeadlessCircuit {
             cellArgs.id = devid;
             if (cellType == this._cells.Subcircuit)
                 cellArgs.graph = this._makeGraph(subcircuits[dev.celltype], subcircuits, { nested: true });
+            if (this._defaultCombinationalPropagation !== undefined && !('propagation' in cellArgs) && cellType.prototype._gateKind == 'combinational')
+                cellArgs.propagation = this._defaultCombinationalPropagation;
             const cell = new cellType(cellArgs);
             graph.addCell(cell);
         }
