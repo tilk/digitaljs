@@ -1,12 +1,10 @@
 "use strict";
 
-import _ from 'lodash';
+import * as joint from '@joint/core';
 import $ from 'jquery';
-import Backbone from 'backbone';
 import * as help from './help.mjs';
 import { Vector3vl } from '3vl';
 import { Waveform, drawWaveform, defaultSettings, extendSettings, calcGridStep } from 'wavecanvas';
-import ResizeObserver from 'resize-observer-polyfill';
 
 function getWireId(wire) {
     const hier = [wire.cid];
@@ -89,9 +87,9 @@ export class Monitor {
     }
 }
 
-_.extend(Monitor.prototype, Backbone.Events);
+joint.util.assign(Monitor.prototype, joint.mvc.Events);
 
-export class MonitorView extends Backbone.View {
+export class MonitorView extends joint.mvc.View {
     initialize(args) {
         this._width = 800;
         this._settings = extendSettings(defaultSettings, {start: 0, pixelsPerTick: 5, gridStep: 1});

@@ -1,6 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 
 const outputDirectory = 'dist';
 
@@ -58,6 +59,7 @@ module.exports = {
     },
     plugins: [
         new CleanWebpackPlugin(),
+//        new BundleAnalyzerPlugin()
     ].concat(tests.map(t => new HtmlWebpackPlugin({
             title: t.title,
             template: 'examples/template.html',

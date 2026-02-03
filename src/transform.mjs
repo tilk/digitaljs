@@ -1,6 +1,6 @@
 "use strict";
 
-import _ from 'lodash';
+import { util } from '@joint/core';
 import { Vector3vl } from '3vl';
 
 export function removeRepeater(model, dev, id) {
@@ -78,7 +78,7 @@ export function integrateArithConstant(model, dev, id) {
         if (!val.isFullyDefined) return false;
         const i = val.toBigInt(sgn);
         if (i > 999 || i < -99) return false;
-        const newDev = _.cloneDeep(dev);
+        const newDev = util.cloneDeep(dev);
         if (newDev.bits) {
             newDev.bits.in = newDev.bits[in2] || 1;
             delete newDev.bits[in1];
@@ -100,7 +100,7 @@ export function integrateArithConstant(model, dev, id) {
         for (const conn of outConnList)
             model.addConnector(conn);
         for (const conn of inConnList2) {
-            const newConn = _.cloneDeep(conn);
+            const newConn = util.cloneDeep(conn);
             newConn.to.port = "in";
             model.addConnector(newConn);
         }
@@ -142,7 +142,7 @@ export function makeNAryGates(model, dev, id)
         const inputNo = inputNumber(conn.to.port);
         model.removeDevice(inId);
         model.removeDevice(id);
-        const newDev = _.cloneDeep(dev);
+        const newDev = util.cloneDeep(dev);
         newDev.inputs = inputs + mergeConnList.length - 1;
         model.addDevice(newDev, id);
         for (const conn of outConnList)
@@ -150,14 +150,14 @@ export function makeNAryGates(model, dev, id)
         for (const conn of inConnList) {
             const connInputNo = inputNumber(conn.to.port);
             if (connInputNo == inputNo) continue;
-            const newConn = _.cloneDeep(conn);
+            const newConn = util.cloneDeep(conn);
             if (connInputNo > inputNo)
                 newConn.to.port = "in" + (connInputNo + mergeConnList.length - 1);
             model.addConnector(newConn);
         }
         for (const conn of mergeConnList) {
             const connInputNo = inputNumber(conn.to.port);
-            const newConn = _.cloneDeep(conn);
+            const newConn = util.cloneDeep(conn);
             newConn.to.id = id;
             newConn.to.port = "in" + (connInputNo + inputNo - 1);
             model.addConnector(newConn);
@@ -243,7 +243,7 @@ export function makeBinaryMuxes(model, dev, id)
         if (constOutConnList.length == 0)
             model.removeDevice(groupId);
     }
-    const newDev = _.cloneDeep(dev);
+    const newDev = util.cloneDeep(dev);
     newDev.bits = newDev.bits || {};
     newDev.bits.sel = bits;
     newDev.type = sparse ? "MuxSparse" : "Mux";
@@ -337,7 +337,7 @@ export class CircuitModel {
     }
     addDevice(dev, id) {
         console.assert(!(id in this._devices));
-        this._devices[id] = _.cloneDeep(dev);
+        this._devices[id] = util.cloneDeep(dev);
         this._forward[id] = {};
         this._backward[id] = {};
     }
@@ -374,7 +374,7 @@ export class CircuitModel {
                     conn.source_positions.push(...conn2.source_positions);
         }
         const id = this._freshConnectorId();
-        this._connectors[id] = _.cloneDeep(conn);
+        this._connectors[id] = util.cloneDeep(conn);
         function addAdjacent(adjacent, endpoint) {
             if (!(endpoint.port in adjacent[endpoint.id]))
                 adjacent[endpoint.id][endpoint.port] = {};

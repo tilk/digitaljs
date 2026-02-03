@@ -1,7 +1,6 @@
 "use strict";
 
 import $ from 'jquery';
-import _ from 'lodash';
 import { Box, BoxView } from './base.mjs';
 import * as help from '../help.mjs';
 import { Vector3vl, Mem3vl } from '3vl';

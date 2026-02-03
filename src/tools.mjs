@@ -1,7 +1,6 @@
 "use strict";
 
 import * as joint from '@joint/core';
-import _ from 'lodash';
 
 const circleArrowhead = {
     tagName: 'circle',
@@ -14,8 +13,8 @@ const circleArrowhead = {
         'cursor': 'move'
     }
 };
-export const CircleSourceArrowhead = joint.linkTools.SourceArrowhead.extend(_.merge({}, circleArrowhead));
-export const CircleTargetArrowhead = joint.linkTools.TargetArrowhead.extend(_.merge({}, circleArrowhead));
+export const CircleSourceArrowhead = joint.linkTools.SourceArrowhead.extend(joint.util.merge({}, circleArrowhead));
+export const CircleTargetArrowhead = joint.linkTools.TargetArrowhead.extend(joint.util.merge({}, circleArrowhead));
 
 export const DoublyButton = joint.linkTools.Button.extend({
     update() {

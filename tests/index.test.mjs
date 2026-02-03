@@ -1,8 +1,6 @@
 "use strict";
 
 import _ from 'lodash';
-import 'core-js';
-import 'regenerator-runtime/runtime';
 import { HeadlessCircuit, getCellType } from '../lib/circuit.mjs';
 import { Vector3vl } from '3vl';
 import * as cells from '../lib/cells.mjs';

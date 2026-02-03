@@ -1,14 +1,13 @@
 "use strict";
 
-import _ from 'lodash';
+import * as joint from '@joint/core';
 import $ from 'jquery';
-import Backbone from 'backbone';
 import * as help from './help.mjs';
 import { Vector3vl } from '3vl';
 
 let uniq_cntr = 0;
 
-export class IOPanelView extends Backbone.View {
+export class IOPanelView extends joint.mvc.View {
     initialize(args) {
         this._idnum = uniq_cntr++;
         this._inputPanelMarkup = args.inputPanelMarkup || '<div data-iopanel="input"></div>';

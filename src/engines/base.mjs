@@ -1,6 +1,5 @@
 
-import _ from 'lodash';
-import Backbone from 'backbone';
+import { util, mvc } from '@joint/core';
 
 export class BaseEngine {
     constructor(graph) {
@@ -53,6 +52,6 @@ export class BaseEngine {
     }
 };
 
-_.extend(BaseEngine.prototype, Backbone.Events);
+util.assign(BaseEngine.prototype, mvc.Events);
 
 

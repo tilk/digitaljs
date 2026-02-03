@@ -1,7 +1,7 @@
 "use strict";
 
+import * as joint from '@joint/core';
 import { Box, BoxView } from './base.mjs';
-import _ from 'lodash';
 import $ from 'jquery';
 import { Vector3vl } from '3vl';
 
@@ -238,7 +238,7 @@ export const Input = IO.define('Input', {
     numbaseType: 'read'
 });
 export const InputView = IOView.extend({
-    attrs: _.merge({
+    attrs: joint.util.merge({
         button: {
             high: { btnface: { 'fill': 'black' } },
             low: { btnface: { 'fill': 'white' } }
@@ -271,7 +271,7 @@ export const InputView = IOView.extend({
         IOView.prototype.render.apply(this, arguments);
         this._updateView();
     },
-    events: _.merge({
+    events: joint.util.merge({
         //button
         "click .btnface": "_onButton",
         "mousedown .btnface": "stopprop", // Prevent drag
@@ -337,7 +337,7 @@ export const Output = IO.define('Output', {
     numbaseType: 'show'
 });
 export const OutputView = IOView.extend({
-    attrs: _.merge({
+    attrs: joint.util.merge({
         lamp: {
             high: { led: { 'fill': '#03c03c' } },
             low: { led: { 'fill': '#fc7c68' } },
