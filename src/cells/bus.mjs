@@ -41,7 +41,8 @@ export const BitExtend = Box.define('BitExtend', {
         }
     ]),
     _gateParams: Box.prototype._gateParams.concat(['extend']),
-    _operationHelpers: Box.prototype._operationHelpers.concat(['_extBit'])
+    _operationHelpers: Box.prototype._operationHelpers.concat(['_extBit']),
+    _gateKind: 'bus'
 });
 export const BitExtendView = BoxView.extend({
     _autoResizeBox: true,
@@ -102,7 +103,8 @@ export const BusSlice = Box.define('BusSlice', {
         const s = this.get('slice');
         return { out: data.in.slice(s.first, s.first + s.count) };
     },
-    _gateParams: Box.prototype._gateParams.concat(['slice'])
+    _gateParams: Box.prototype._gateParams.concat(['slice']),
+    _gateKind: 'bus'
 });
 export const BusSliceView = BoxView.extend({
     _autoResizeBox: true
@@ -137,7 +139,8 @@ export const BusRegroup = Box.define('BusRegroup', {
         Box.prototype.initialize.apply(this, arguments);
     },
     _gateParams: Box.prototype._gateParams.concat(['groups']),
-    _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['groups'])
+    _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['groups']),
+    _gateKind: 'bus'
 });
 export const BusRegroupView = BoxView.extend({
     _autoResizeBox: true
