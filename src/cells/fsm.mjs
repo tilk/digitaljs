@@ -178,7 +178,8 @@ export const FSM = Box.define('FSM', {
     markup: Box.prototype.markup.concat(Box.prototype.markupZoom),
     _gateParams: Box.prototype._gateParams.concat(['bits', 'polarity', 'states', 'init_state', 'trans_table']),
     _unsupportedPropChanges: Box.prototype._unsupportedPropChanges.concat(['bits', 'polarity', 'states', 'init_state', 'trans_table']),
-    _presentationParams: Box.prototype._presentationParams.concat(['current_state', 'next_trans'])
+    _presentationParams: Box.prototype._presentationParams.concat(['current_state', 'next_trans']),
+    _gateKind: 'stateful'
 });
 
 export const FSMView = BoxView.extend({

@@ -298,7 +298,8 @@ export const Gate = joint.dia.Element.define('Gate', {
     _gateLayoutParams: ['position'],
     _unsupportedPropChanges: [],
     _operationHelpers: [],
-    _presentationParams: []
+    _presentationParams: [],
+    _gateKind: 'combinational'
 });
 
 export const GateView = joint.dia.ElementView.extend({
