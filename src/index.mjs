@@ -88,12 +88,13 @@ const defaultSubcircuitButtons = [
 ];
 
 export class Circuit extends HeadlessCircuit {
-    constructor(data, { windowCallback = Circuit.prototype._defaultWindowCallback, layoutEngine = "elkjs", subcircuitButtons = [], ...options } = {}) {
+    constructor(data, { windowCallback = Circuit.prototype._defaultWindowCallback, layoutEngine = "elkjs", subcircuitButtons = [], symbols = "ansi", ...options } = {}) {
         if (!options.engine) options.engine = BrowserSynchEngine;
         super(data, options);
         this._layoutEngine = layoutEngine
         this._windowCallback = windowCallback;
         this._subcircuitButtons = this._mergeSubcircuitButtons(subcircuitButtons);
+        this._symbols = symbols;
         this.listenTo(this._engine, 'changeRunning', () => {
             this.trigger('changeRunning');
         });
@@ -137,6 +138,19 @@ export class Circuit extends HeadlessCircuit {
     }
     displayOn(elem) {
         return this._makePaper(elem, this._graph);
+    }
+    /* Gate symbol standard: 'ansi' (IEEE 91 distinctive shapes) or 'iec'
+       (IEC 60617-12 rectangles). Purely presentational -- not part of the
+       circuit data, so toJSON() is unaffected. */
+    get symbols() {
+        return this._symbols;
+    }
+    setSymbols(symbols) {
+        if (symbols !== 'ansi' && symbols !== 'iec')
+            throw new Error('Unknown gate symbol standard: ' + symbols);
+        if (symbols === this._symbols) return;
+        this._symbols = symbols;
+        this.trigger('change:symbols', symbols);
     }
     scaleAndRefreshPaper(paper, scale) {
         paper.scale(Math.pow(1.1, scale));
@@ -230,6 +244,10 @@ export class Circuit extends HeadlessCircuit {
             this.setInteractivity(!fixed);
             this.$el.toggleClass('fixed', fixed);
         };
+        // gate symbol standard; subcircuit papers inherit the current setting
+        const applySymbols = (symbols) => { paper.$el.attr('data-symbols', symbols); };
+        paper.listenTo(this, 'change:symbols', applySymbols);
+        applySymbols(this._symbols);
         this.trigger('new:paper', paper);
         return paper;
     }
