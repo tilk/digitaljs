@@ -12,6 +12,22 @@
     cursor: default;
 }
 
+/* Gate symbol standard, switched per paper by Circuit#setSymbols.
+   ANSI (IEEE 91) distinctive shapes are the default, IEC 60617-12
+   rectangular symbols are opt-in. The IEC nodes also carry display:none
+   in the markup, but that is only a fallback for an unstyled page: jointjs
+   strips the display attribute off any node it applies a `text` attr to
+   (see V.prototype.text), so the default state must live here in CSS. */
+.djs .iec {
+    display: none;
+}
+.djs[data-symbols="iec"] .iec {
+    display: block;
+}
+.djs[data-symbols="iec"] .ansi {
+    display: none;
+}
+
 
 
 /* .viewport is a <g> node wrapping all diagram elements in the paper */

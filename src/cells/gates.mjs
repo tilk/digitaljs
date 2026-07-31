@@ -6,9 +6,15 @@ const and_path = "M19 0v32h16c9 0 16-7 16-16S44 0 35 0H20z";
 const or_path = "M14.3 0l1.6 2s4.5 5.6 4.5 14s-4.5 14-4.5 14l-1.6 2H28c3.8 0 16.6-.5 25-16h0A28 28 0 0028 0H16.8z";
 const buf_path = "M18-2v36l2-1 32-17h0L20-1z";
 const xor_arc_path = "M6.8-1.2 10 2.7S14.2 8 14.2 16S10 29.3 10 29.3l-3.2 3.9H10l1.7-2.4s4.8-6 4.8-14.8c0-8.9-4.8-14.8-4.8-14.8l-1.7-2.4z";
-    
+
+const and_iec = "&";
+const or_iec = "≥1";
+const buf_iec = "1";
+const xor_iec = "=1";
+
 const xor_arc_path_markup = {
     tagName: 'path',
+    className: 'ansi',
     selector: 'xor_arc',
     attributes: {
         'fill': "#000",
@@ -29,6 +35,42 @@ const neg_markup = {
     }
 };
 
+// IEC 60617-12 style rectangular symbol, hidden unless explicitly enabled
+const iec_rect_markup = {
+    tagName: 'rect',
+    className: 'body iec',
+    selector: 'iec_rect',
+    attributes: {
+        'display': 'none',
+        'fill': "#fff",
+        'stroke': "#000",
+        'stroke-width': '2px',
+        'vector-effect': 'non-scaling-stroke',
+        'x': 19,
+        'y': 0,
+        'width': 32,
+        'height': 32
+    }
+};
+
+const iec_label_markup = {
+    tagName: 'text',
+    className: 'iec',
+    selector: 'iec_label',
+    attributes: {
+        'display': 'none',
+        'fill': "black",
+        // the enclosing 'body' group carries stroke/stroke-width for the gate
+        // outlines, which text would otherwise inherit and render outlined
+        'stroke': 'none',
+        'font-size': '8pt',
+        'text-anchor': 'middle',
+        'dominant-baseline': 'central',
+        'x': 35,
+        'y': 16
+    }
+};
+
 function gateMarkup(children = []) {
     return {
         tagName: 'g',
@@ -36,9 +78,11 @@ function gateMarkup(children = []) {
         children: [
             {
                 tagName: 'path',
-                className: 'body gate',
+                className: 'body gate ansi',
                 selector: 'gate'
-            }
+            },
+            iec_rect_markup,
+            iec_label_markup
         ].concat(children)
     }
 }
@@ -157,7 +201,7 @@ export const GateReduce = GateSVG.define('GateReduce', {}, {
 
 // Repeater (buffer) gate model
 export const Repeater = Gate11.define('Repeater', {
-    attrs: { gate: { d: buf_path }}
+    attrs: { gate: { d: buf_path }, iec_label: { text: buf_iec }}
 }, {
     operation(data) {
         return { out: data.in };
@@ -167,7 +211,7 @@ export const RepeaterView = GateView;
 
 // Not gate model
 export const Not = Gate11.define('Not', {
-    attrs: { gate: { d: buf_path }}
+    attrs: { gate: { d: buf_path }, iec_label: { text: buf_iec }}
 }, {
     operation(data) {
         return { out: data.in.not() };
@@ -178,7 +222,7 @@ export const NotView = GateView;
 
 // Or gate model
 export const Or = GateX1.define('Or', {
-    attrs: { gate: { d: or_path }}
+    attrs: { gate: { d: or_path }, iec_label: { text: or_iec }}
 }, {
     binoperation(in1, in2) {
         return in1.or(in2);
@@ -188,7 +232,7 @@ export const OrView = GateView;
 
 // And gate model
 export const And = GateX1.define('And', {
-    attrs: { gate: { d: and_path }}
+    attrs: { gate: { d: and_path }, iec_label: { text: and_iec }}
 }, {
     binoperation(in1, in2) {
         return in1.and(in2);
@@ -198,7 +242,7 @@ export const AndView = GateView;
 
 // Nor gate model
 export const Nor = GateX1.define('Nor', {
-    attrs: { gate: { d: or_path }}
+    attrs: { gate: { d: or_path }, iec_label: { text: or_iec }}
 }, {
     binoperation(in1, in2) {
         return in1.or(in2);
@@ -212,7 +256,7 @@ export const NorView = GateView;
 
 // Nand gate model
 export const Nand = GateX1.define('Nand', {
-    attrs: { gate: { d: and_path }}
+    attrs: { gate: { d: and_path }, iec_label: { text: and_iec }}
 }, {
     binoperation(in1, in2) {
         return in1.and(in2);
@@ -226,7 +270,7 @@ export const NandView = GateView;
 
 // Xor gate model
 export const Xor = GateX1.define('Xor', {
-    attrs: { gate: { d: or_path }}
+    attrs: { gate: { d: or_path }, iec_label: { text: xor_iec }}
 }, {
     binoperation(in1, in2) {
         return in1.xor(in2);
@@ -237,7 +281,7 @@ export const XorView = GateView;
 
 // Xnor gate model
 export const Xnor = GateX1.define('Xnor', {
-    attrs: { gate: { d: or_path }}
+    attrs: { gate: { d: or_path }, iec_label: { text: xor_iec }}
 }, {
     binoperation(in1, in2) {
         return in1.xor(in2);
@@ -251,7 +295,7 @@ export const XnorView = GateView;
 
 // Reducing Or gate model
 export const OrReduce = GateReduce.define('OrReduce', {
-    attrs: { gate: { d: or_path }}
+    attrs: { gate: { d: or_path }, iec_label: { text: or_iec }}
 }, {
     operation(data) {
         return { out: data.in.reduceOr() };
@@ -261,7 +305,7 @@ export const OrReduceView = GateView;
 
 // Reducing Nor gate model
 export const NorReduce = GateReduce.define('NorReduce', {
-    attrs: { gate: { d: or_path }}
+    attrs: { gate: { d: or_path }, iec_label: { text: or_iec }}
 }, {
     operation(data) {
         return { out: data.in.reduceNor() };
@@ -272,7 +316,7 @@ export const NorReduceView = GateView;
 
 // Reducing And gate model
 export const AndReduce = GateReduce.define('AndReduce', {
-    attrs: { gate: { d: and_path }}
+    attrs: { gate: { d: and_path }, iec_label: { text: and_iec }}
 }, {
     operation(data) {
         return { out: data.in.reduceAnd() };
@@ -282,7 +326,7 @@ export const AndReduceView = GateView;
 
 // Reducing Nand gate model
 export const NandReduce = GateReduce.define('NandReduce', {
-    attrs: { gate: { d: and_path }}
+    attrs: { gate: { d: and_path }, iec_label: { text: and_iec }}
 }, {
     operation(data) {
         return { out: data.in.reduceNand() };
@@ -293,7 +337,7 @@ export const NandReduceView = GateView;
 
 // Reducing Xor gate model
 export const XorReduce = GateReduce.define('XorReduce', {
-    attrs: { gate: { d: or_path }}
+    attrs: { gate: { d: or_path }, iec_label: { text: xor_iec }}
 }, {
     operation(data) {
         return { out: data.in.reduceXor() };
@@ -304,7 +348,7 @@ export const XorReduceView = GateView;
 
 // Reducing Xnor gate model
 export const XnorReduce = GateReduce.define('XnorReduce', {
-    attrs: { gate: { d: or_path }}
+    attrs: { gate: { d: or_path }, iec_label: { text: xor_iec }}
 }, {
     operation(data) {
         return { out: data.in.reduceXnor() };
